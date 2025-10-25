@@ -11,3 +11,13 @@ html,
 body {
   height: 100%;
 }
+
+/* Aurora Background Animation */
+@keyframes aurora {
+  from {
+    background-position: 50% 50%, 50% 50%;
+  }
+  to {
+    background-position: 350% 50%, 350% 50%;
+  }
+}

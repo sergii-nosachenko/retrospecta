@@ -2,6 +2,9 @@ import Link from 'next/link';
 
 import { Box, Button, Container, Heading, Stack, Text } from '@chakra-ui/react';
 
+import { AnimatedBackground } from '@/components/AnimatedBackground';
+import { IconReveal } from '@/components/IconReveal';
+
 export default function Home() {
   return (
     <Box
@@ -9,12 +12,15 @@ export default function Home() {
       display="flex"
       alignItems="center"
       justifyContent="center"
-      bg="gray.50"
-      _dark={{ bg: 'gray.900' }}
+      bg="transparent"
+      position="relative"
+      overflow="hidden"
     >
+      <AnimatedBackground />
       <Container maxW="4xl" p={8}>
         <Stack gap={8} alignItems="center" textAlign="center">
           <Stack gap={4}>
+            <IconReveal />
             <Heading size="4xl" fontWeight="bold">
               Retrospecta
             </Heading>
@@ -47,8 +53,14 @@ export default function Home() {
             </Link>
           </Stack>
 
-          <Stack gap={6} mt={8} maxW="2xl">
-            <Box>
+          <Stack
+            direction={{ base: 'column', lg: 'row' }}
+            gap={6}
+            mt={8}
+            maxW="4xl"
+            alignItems="stretch"
+          >
+            <Box flex={1}>
               <Heading size="md" mb={2}>
                 🎯 Understand Your Decisions
               </Heading>
@@ -58,7 +70,7 @@ export default function Home() {
               </Text>
             </Box>
 
-            <Box>
+            <Box flex={1}>
               <Heading size="md" mb={2}>
                 🧠 Identify Cognitive Biases
               </Heading>
@@ -67,7 +79,7 @@ export default function Home() {
               </Text>
             </Box>
 
-            <Box>
+            <Box flex={1}>
               <Heading size="md" mb={2}>
                 💡 Explore Alternatives
               </Heading>
