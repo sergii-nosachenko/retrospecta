@@ -1,3 +1,6 @@
+// @ts-expect-error - No type definitions available
+import { PrismaPlugin } from '@prisma/nextjs-monorepo-workaround-plugin';
+
 import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
@@ -7,11 +10,7 @@ const nextConfig: NextConfig = {
   // Ensure Prisma binaries are included in Vercel deployment
   webpack: (config, { isServer }) => {
     if (isServer) {
-      config.externals = config.externals || [];
-      // Don't externalize Prisma Client
-      config.externals.push({
-        '.prisma/client/index-browser': '@prisma/client/index-browser',
-      });
+      config.plugins = [...config.plugins, new PrismaPlugin()];
     }
     return config;
   },
