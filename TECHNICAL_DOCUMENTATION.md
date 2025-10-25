@@ -5,7 +5,7 @@
 **Retrospecta** is an AI-Powered Decision Journal application that helps users record complex life or work decisions and receive deep insights through LLM analysis. The system analyzes decisions to identify decision types, cognitive biases, and overlooked alternatives.
 
 **Timeline:** 2 days
-**Status:** Technical Planning Complete
+**Status:** Phase 2 Complete, Phase 3 In Progress (UX Polish Complete)
 **Deployment:** Vercel
 **Demo URL:** TBD
 
@@ -332,29 +332,39 @@ model Decision {
 - [x] Design analysis prompt templates
 - [x] Test basic LLM integration
 
-### Phase 2: Core Features (Day 1, Afternoon - 4-5 hours)
+### Phase 2: Core Features (Day 1, Afternoon - 4-5 hours) ✅ COMPLETED
 
-#### 2.1 Decision Entry (2 hours)
+#### 2.1 Decision Entry (2 hours) ✅ COMPLETED
 
-- [ ] Create decision form with validation
-- [ ] Implement form submission with Server Action
-- [ ] Save decision to database (status: PENDING)
-- [ ] Implement optimistic UI response
+- [x] Create decision form with validation
+- [x] Implement form submission with Server Action
+- [x] Save decision to database (status: PENDING)
+- [x] Implement optimistic UI response
+- [x] Migrate form to modal for better UX
+- [x] Fix React hydration errors (nested h2 tags)
 
-#### 2.2 LLM Analysis Processing (2 hours)
+#### 2.2 LLM Analysis Processing (2 hours) ✅ COMPLETED
 
-- [ ] Create background analysis Server Action
-- [ ] Implement structured LLM output parsing
-- [ ] Update decision with analysis results
-- [ ] Handle analysis errors with retry logic
-- [ ] Implement polling mechanism on client
+- [x] Create background analysis Server Action
+- [x] Implement structured LLM output parsing
+- [x] Update decision with analysis results
+- [x] Handle analysis errors with retry logic
+- [x] Migrate to server-side polling (10-second intervals)
+- [x] Implement Server-Sent Events (SSE) for real-time updates
 
-#### 2.3 Decision History View (1 hour)
+#### 2.3 Decision History View (1 hour) ✅ COMPLETED
 
-- [ ] Create decision list page
-- [ ] Display decisions with status indicators
-- [ ] Show analysis results when completed
-- [ ] Implement basic sorting (newest first)
+- [x] Create decision list page
+- [x] Display decisions with status indicators
+- [x] Show analysis results when completed
+- [x] Implement basic sorting (newest first)
+- [x] Add connection status indicators
+- [x] Replace dedicated routes with modal-based UI
+- [x] Add status change notifications with toast
+- [x] Implement comprehensive padding/spacing improvements
+- [x] Replace all loading states with Skeleton components
+- [x] Center all modals on screen
+- [x] Add minimum height constraints to form textareas
 
 ### Phase 3: MVP Enhancements (Day 2, Morning - 3-4 hours)
 
@@ -377,13 +387,16 @@ model Decision {
 - [ ] Update UI with new analysis
 - [ ] Track analysis attempts
 
-#### 3.4 Error Handling & UX Polish (1 hour)
+#### 3.4 Error Handling & UX Polish (1 hour) ✅ PARTIALLY COMPLETED
 
-- [ ] Add loading skeletons
+- [x] Add loading skeletons
 - [ ] Implement error boundaries
-- [ ] Add retry mechanisms
-- [ ] Toast notifications for feedback
-- [ ] Empty states for no decisions
+- [x] Add retry mechanisms
+- [x] Toast notifications for feedback
+- [x] Empty states for no decisions
+- [x] Comprehensive padding improvements across all components
+- [x] Proper button padding for better UX
+- [x] Modal inner and outer padding optimization
 
 ### Phase 4: Polish & Deploy (Day 2, Afternoon - 3-4 hours)
 
@@ -597,7 +610,93 @@ export async function middleware(request: NextRequest) {
 }
 ```
 
-### 2. Decision Creation & Analysis Flow
+### 2. Real-Time Updates with Server-Sent Events (SSE)
+
+```typescript
+// Server-Side Polling (every 10 seconds)
+// app/api/decisions/stream/route.ts
+export async function GET(request: NextRequest) {
+  // Authenticate user
+  const supabase = await createClient();
+  const { user } = await supabase.auth.getUser();
+
+  // Create SSE stream
+  const stream = new ReadableStream({
+    async start(controller) {
+      const checkPendingDecisions = async () => {
+        // Query database for pending decisions
+        const pendingDecisions = await prisma.decision.findMany({
+          where: { userId: user.id, status: { in: ['PENDING', 'PROCESSING'] } },
+        });
+
+        // Send all decisions to client
+        const allDecisions = await prisma.decision.findMany({
+          where: { userId: user.id },
+          orderBy: { createdAt: 'desc' },
+        });
+
+        // Push update via SSE
+        controller.enqueue(
+          `data: ${JSON.stringify({
+            type: 'update',
+            decisions: allDecisions,
+          })}\n\n`
+        );
+      };
+
+      // Poll every 10 seconds
+      await checkPendingDecisions();
+      const intervalId = setInterval(checkPendingDecisions, 10000);
+
+      // Cleanup on disconnect
+      request.signal.addEventListener('abort', () => {
+        clearInterval(intervalId);
+        controller.close();
+      });
+    },
+  });
+
+  return new Response(stream, {
+    headers: {
+      'Content-Type': 'text/event-stream',
+      'Cache-Control': 'no-cache',
+      Connection: 'keep-alive',
+    },
+  });
+}
+
+// Client-Side Hook
+// hooks/useDecisionStream.ts
+export function useDecisionStream() {
+  const [decisions, setDecisions] = useState([]);
+  const [isConnected, setIsConnected] = useState(false);
+
+  useEffect(() => {
+    const eventSource = new EventSource('/api/decisions/stream');
+
+    eventSource.onopen = () => setIsConnected(true);
+
+    eventSource.onmessage = (event) => {
+      const data = JSON.parse(event.data);
+      if (data.type === 'update') {
+        setDecisions(data.decisions);
+      }
+    };
+
+    eventSource.onerror = () => {
+      setIsConnected(false);
+      eventSource.close();
+      // Reconnect with exponential backoff
+    };
+
+    return () => eventSource.close();
+  }, []);
+
+  return { decisions, isConnected };
+}
+```
+
+### 3. Decision Creation & Analysis Flow
 
 ```typescript
 // Step 1: User submits decision form
