@@ -2,11 +2,12 @@
 
 import { memo, useCallback, useState } from 'react';
 import { HiOutlineDotsVertical } from 'react-icons/hi';
-import { LuRefreshCw, LuTrash2 } from 'react-icons/lu';
+import { LuBrainCircuit, LuRefreshCw, LuTrash2 } from 'react-icons/lu';
 
 import {
   Badge,
   Box,
+  Button,
   Card,
   IconButton,
   Stack,
@@ -27,6 +28,7 @@ import { toaster } from '@/components/ui/toaster';
 import { useDecisions } from '@/contexts/DecisionsContext';
 
 import { DecisionDetailModal } from './DecisionDetailModal';
+import { DecisionFormModal } from './DecisionFormModal';
 
 interface Decision {
   id: string;
@@ -343,7 +345,21 @@ export function DecisionList({ decisions }: DecisionListProps) {
       <EmptyState
         title="No decisions yet"
         description="Start recording your decisions to receive AI-powered insights about your decision-making patterns."
-      />
+        py={12}
+        icon={
+          <Box color="gray.400" _dark={{ color: 'gray.600' }} fontSize="128px">
+            <LuBrainCircuit />
+          </Box>
+        }
+      >
+        <DecisionFormModal
+          trigger={
+            <Button colorPalette="blue" size="lg" mt={4} px={6}>
+              New Decision
+            </Button>
+          }
+        />
+      </EmptyState>
     );
   }
 

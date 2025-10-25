@@ -17,6 +17,7 @@ import {
 } from '@chakra-ui/react';
 
 import { getCurrentUser, signOut } from '@/actions/auth';
+import { Logo } from '@/components/Logo';
 import { DecisionFormModal } from '@/components/decisions/DecisionFormModal';
 import { DecisionList } from '@/components/decisions/DecisionList';
 import {
@@ -99,7 +100,7 @@ function DecisionsPageContent() {
   // Show loading state while checking authentication
   if (isCheckingAuth) {
     return (
-      <Box p={{ base: 5, md: 8 }} maxW="7xl" mx="auto">
+      <Box p={{ base: 5, md: 8 }} maxW="7xl" mx="auto" minH="100vh">
         <Stack gap={5} align="stretch">
           <Skeleton height="40px" width="200px" />
           <VStack gap={5} align="stretch">
@@ -120,7 +121,7 @@ function DecisionsPageContent() {
   }
 
   return (
-    <Box p={{ base: 5, md: 8 }} maxW="7xl" mx="auto">
+    <Box p={{ base: 5, md: 8 }} maxW="7xl" mx="auto" minH="100vh">
       <Stack
         direction={{ base: 'column', sm: 'row' }}
         justify="space-between"
@@ -129,6 +130,7 @@ function DecisionsPageContent() {
         gap={4}
       >
         <Stack direction="row" align="center" gap={3} flexWrap="wrap">
+          <Logo size="2xl" />
           <Heading size="2xl">Your Decisions</Heading>
           {/* Connection status indicator */}
           <Badge
