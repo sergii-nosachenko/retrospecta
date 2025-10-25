@@ -5,7 +5,7 @@
 **Retrospecta** is an AI-Powered Decision Journal application that helps users record complex life or work decisions and receive deep insights through LLM analysis. The system analyzes decisions to identify decision types, cognitive biases, and overlooked alternatives.
 
 **Timeline:** 2 days
-**Status:** Phase 2 Complete, Phase 3 In Progress (UX Polish Complete)
+**Status:** Phase 2 Complete, Phase 3.1 Complete (Dark Theme + User Menu)
 **Deployment:** Vercel
 **Demo URL:** TBD
 
@@ -60,9 +60,10 @@
 
 ### MVP Bonus Features (Included)
 
-- ✅ Dark theme
-- ✅ Sorting (by time, status, etc.)
-- ✅ Re-analysis capability
+- ✅ Dark theme with user menu integration
+- ✅ User profile dropdown with avatar
+- ⏳ Sorting (by time, status, etc.) - In Progress
+- ⏳ Re-analysis capability - Planned
 
 ### Future Enhancements (Architecture Ready)
 
@@ -368,11 +369,18 @@ model Decision {
 
 ### Phase 3: MVP Enhancements (Day 2, Morning - 3-4 hours)
 
-#### 3.1 Dark Theme (30 min)
+#### 3.1 Dark Theme (30 min) ✅ COMPLETED
 
-- [ ] Configure Chakra UI ColorModeProvider
-- [ ] Add theme toggle component
-- [ ] Test all components in dark mode
+- [x] Configure Chakra UI ColorModeProvider
+- [x] Add theme toggle component (moved to user menu dropdown)
+- [x] Test all components in dark mode
+- [x] Create user menu component with avatar
+- [x] Add user profile dropdown with avatar/initials fallback
+- [x] Move theme toggle into user menu
+- [x] Add logout functionality to user menu
+- [x] Implement getCurrentUser() server action
+- [x] Match button and avatar sizes for visual consistency
+- [x] Keep menu open on theme switch (closeOnSelect: false)
 
 #### 3.2 Sorting & Filtering (1 hour)
 
@@ -492,7 +500,7 @@ retrospecta/
 │   │   │   ├── Header.tsx
 │   │   │   ├── Sidebar.tsx
 │   │   │   ├── Footer.tsx
-│   │   │   └── ThemeToggle.tsx
+│   │   │   └── UserMenu.tsx     # User profile dropdown with avatar, theme toggle, logout
 │   │   │
 │   │   ├── auth/                # Auth components
 │   │   │   ├── LoginForm.tsx
@@ -826,7 +834,121 @@ export async function reanalyzeDecision(decisionId: string) {
 }
 ```
 
-### 4. Sorting & Filtering Architecture (Future-Ready)
+### 4. User Menu with Avatar & Theme Toggle
+
+```typescript
+// Step 1: Server Action retrieves current user data
+// actions/auth.ts
+export async function getCurrentUser() {
+  const supabase = await createClient();
+
+  const {
+    data: { user },
+    error,
+  } = await supabase.auth.getUser();
+
+  if (error || !user) {
+    return null;
+  }
+
+  // Get additional user data from database
+  const dbUser = await prisma.user.findUnique({
+    where: { id: user.id },
+    select: {
+      id: true,
+      email: true,
+      name: true,
+      avatarUrl: true,
+    },
+  });
+
+  return {
+    id: user.id,
+    email: user.email || dbUser?.email || '',
+    name: dbUser?.name || user.user_metadata?.name || user.email?.split('@')[0] || 'User',
+    avatarUrl: dbUser?.avatarUrl || user.user_metadata?.avatar_url || null,
+  };
+}
+
+// Step 2: UserMenu component displays avatar and dropdown
+// components/layout/UserMenu.tsx
+'use client';
+
+export function UserMenu({ user, onSignOut }: UserMenuProps) {
+  const { colorMode, toggleColorMode } = useColorMode();
+
+  return (
+    <MenuRoot positioning={{ placement: 'bottom-end' }}>
+      <MenuTrigger asChild>
+        <IconButton variant="ghost" size="sm" aria-label="User menu">
+          <Avatar.Root size="sm">
+            <Avatar.Fallback name={user.name} />
+            {user.avatarUrl && <Avatar.Image src={user.avatarUrl} />}
+          </Avatar.Root>
+        </IconButton>
+      </MenuTrigger>
+
+      <MenuContent>
+        {/* User Info */}
+        <MenuItem closeOnSelect={false}>
+          <Avatar.Root size="md">
+            <Avatar.Fallback name={user.name} />
+            {user.avatarUrl && <Avatar.Image src={user.avatarUrl} />}
+          </Avatar.Root>
+          <Text>{user.name}</Text>
+          <Text>{user.email}</Text>
+        </MenuItem>
+
+        {/* Theme Toggle (stays open on click) */}
+        <MenuItem onClick={toggleColorMode} closeOnSelect={false}>
+          {colorMode === 'dark' ? <LuSun /> : <LuMoon />}
+          <Text>{colorMode === 'dark' ? 'Light Mode' : 'Dark Mode'}</Text>
+        </MenuItem>
+
+        {/* Sign Out */}
+        <MenuItem onClick={onSignOut}>
+          <LuLogOut />
+          <Text>Sign Out</Text>
+        </MenuItem>
+      </MenuContent>
+    </MenuRoot>
+  );
+}
+
+// Step 3: DecisionsPage fetches user and renders menu
+// app/(dashboard)/decisions/page.tsx
+'use client';
+
+export default function DecisionsPage() {
+  const [user, setUser] = useState(null);
+
+  useEffect(() => {
+    getCurrentUser().then((userData) => {
+      if (userData) {
+        setUser(userData);
+      }
+    });
+  }, []);
+
+  const handleSignOut = async () => {
+    await signOut();
+  };
+
+  return (
+    <Box>
+      <Stack direction="row" justify="space-between">
+        <Heading>Your Decisions</Heading>
+        <Stack direction="row" gap={2}>
+          <DecisionFormModal />
+          {user && <UserMenu user={user} onSignOut={handleSignOut} />}
+        </Stack>
+      </Stack>
+    </Box>
+  );
+}
+```
+
+### 5. Sorting & Filtering Architecture (Future-Ready)
 
 ```typescript
 // actions/decisions.ts
@@ -1123,13 +1245,15 @@ export const analysisPrompt = (decision, locale = 'en') => {
 - ✅ User can create decisions with situation/decision/reasoning
 - ✅ LLM analyzes decisions and returns structured insights
 - ✅ User sees decision history with analysis results
-- ✅ Status indicators show processing state
-- ✅ Dark theme works correctly
-- ✅ Sorting by date/status works
-- ✅ Re-analysis feature functional
-- ✅ Deployed to Vercel with working demo
-- ✅ Clean, professional UI
-- ✅ Comprehensive README with setup instructions
+- ✅ Status indicators show processing state (with SSE real-time updates)
+- ✅ Dark theme works correctly (integrated in user menu)
+- ✅ User profile dropdown with avatar display
+- ✅ Theme toggle and logout in user menu
+- ⏳ Sorting by date/status works - In Progress
+- ⏳ Re-analysis feature functional - Planned
+- ⏳ Deployed to Vercel with working demo - Planned
+- ✅ Clean, professional UI with skeleton loading states
+- ⏳ Comprehensive README with setup instructions - Planned
 
 ### Bonus Points:
 
