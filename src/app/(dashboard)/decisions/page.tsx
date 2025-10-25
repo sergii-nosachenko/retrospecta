@@ -27,26 +27,19 @@ import {
   SortingControls,
 } from '@/components/decisions/SortingControls';
 import { UserMenu } from '@/components/layout/UserMenu';
-import { useDecisionStream } from '@/hooks/useDecisionStream';
+import { DecisionsProvider, useDecisions } from '@/contexts/DecisionsContext';
 
-export default function DecisionsPage() {
-  const [sortBy, setSortBy] = useState<SortField>('createdAt');
-  const [sortOrder, setSortOrder] = useState<SortOrder>('desc');
-  const [selectedCategories, setSelectedCategories] = useState<
-    DecisionCategory[]
-  >([]);
-  const [selectedBiases, setSelectedBiases] = useState<string[]>([]);
-  const [dateFrom, setDateFrom] = useState<string | null>(null);
-  const [dateTo, setDateTo] = useState<string | null>(null);
-  const { decisions, isConnected, isLoading, error, pendingCount, refresh } =
-    useDecisionStream({
-      sortBy,
-      sortOrder,
-      categories: selectedCategories,
-      biases: selectedBiases,
-      dateFrom,
-      dateTo,
-    });
+function DecisionsPageContent() {
+  const {
+    decisions,
+    isConnected,
+    isLoading,
+    error,
+    pendingCount,
+    filters,
+    setFilters,
+    refresh,
+  } = useDecisions();
   const [user, setUser] = useState<{
     id: string;
     email: string;
@@ -67,31 +60,32 @@ export default function DecisionsPage() {
   };
 
   const handleSortChange = (newSortBy: SortField, newSortOrder: SortOrder) => {
-    setSortBy(newSortBy);
-    setSortOrder(newSortOrder);
+    setFilters({ sortBy: newSortBy, sortOrder: newSortOrder });
   };
 
   const handleCategoriesChange = (categories: DecisionCategory[]) => {
-    setSelectedCategories(categories);
+    setFilters({ categories });
   };
 
   const handleBiasesChange = (biases: string[]) => {
-    setSelectedBiases(biases);
+    setFilters({ biases });
   };
 
   const handleDateFromChange = (date: string | null) => {
-    setDateFrom(date);
+    setFilters({ dateFrom: date });
   };
 
   const handleDateToChange = (date: string | null) => {
-    setDateTo(date);
+    setFilters({ dateTo: date });
   };
 
   const handleClearFilters = () => {
-    setSelectedCategories([]);
-    setSelectedBiases([]);
-    setDateFrom(null);
-    setDateTo(null);
+    setFilters({
+      categories: [],
+      biases: [],
+      dateFrom: null,
+      dateTo: null,
+    });
   };
 
   return (
@@ -124,15 +118,19 @@ export default function DecisionsPage() {
         </Stack>
         <Stack direction="row" align="center" gap={2}>
           <DecisionFormModal />
-          {user && <UserMenu user={user} onSignOut={handleSignOut} />}
+          {user ? (
+            <UserMenu user={user} onSignOut={handleSignOut} />
+          ) : (
+            <Skeleton width="32px" height="32px" borderRadius="full" />
+          )}
         </Stack>
       </Stack>
 
       {/* Sorting Controls */}
       <Box mb={4}>
         <SortingControls
-          sortBy={sortBy}
-          sortOrder={sortOrder}
+          sortBy={filters.sortBy}
+          sortOrder={filters.sortOrder}
           onSortChange={handleSortChange}
         />
       </Box>
@@ -140,10 +138,10 @@ export default function DecisionsPage() {
       {/* Filter Controls */}
       <Box mb={6}>
         <FilterControls
-          selectedCategories={selectedCategories}
-          selectedBiases={selectedBiases}
-          dateFrom={dateFrom}
-          dateTo={dateTo}
+          selectedCategories={filters.categories as DecisionCategory[]}
+          selectedBiases={filters.biases}
+          dateFrom={filters.dateFrom}
+          dateTo={filters.dateTo}
           onCategoriesChange={handleCategoriesChange}
           onBiasesChange={handleBiasesChange}
           onDateFromChange={handleDateFromChange}
@@ -201,5 +199,13 @@ export default function DecisionsPage() {
         <DecisionList decisions={decisions} />
       )}
     </Box>
+  );
+}
+
+export default function DecisionsPage() {
+  return (
+    <DecisionsProvider>
+      <DecisionsPageContent />
+    </DecisionsProvider>
   );
 }
