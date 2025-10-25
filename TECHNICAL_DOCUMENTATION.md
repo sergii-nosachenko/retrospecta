@@ -5,7 +5,7 @@
 **Retrospecta** is an AI-Powered Decision Journal application that helps users record complex life or work decisions and receive deep insights through LLM analysis. The system analyzes decisions to identify decision types, cognitive biases, and overlooked alternatives.
 
 **Timeline:** 2 days
-**Status:** Phase 2 Complete, Phase 3.1 Complete (Dark Theme + User Menu), Phase 3.2 Complete (Sorting & Filtering)
+**Status:** Phase 2 Complete, Phase 3 Complete (Dark Theme, User Menu, Sorting, Filtering, Re-analysis, Context Architecture)
 **Deployment:** Vercel
 **Demo URL:** TBD
 
@@ -64,7 +64,11 @@
 - ✅ User profile dropdown with avatar
 - ✅ Sorting (by time, status, etc.)
 - ✅ Filtering by categories, biases, and date range
-- ⏳ Re-analysis capability - Planned
+- ✅ Re-analysis capability with menu actions
+- ✅ Delete decision functionality
+- ✅ React Context architecture for centralized state management
+- ✅ Optimistic UI updates for better UX
+- ✅ Performance optimizations (memoization, smart re-rendering)
 
 ### Future Enhancements (Architecture Ready)
 
@@ -396,12 +400,16 @@ model Decision {
 - [x] Responsive layout with flex-wrap
 - [x] Real-time filtering via SSE streaming
 
-#### 3.3 Re-analysis Feature (1.5 hours)
+#### 3.3 Re-analysis & Delete Features (1.5 hours) ✅ COMPLETED
 
-- [ ] Add "Re-analyze" button to decision cards
-- [ ] Implement re-analysis Server Action
-- [ ] Update UI with new analysis
-- [ ] Track analysis attempts
+- [x] Add menu button (three dots) to decision cards
+- [x] Add "Re-analyze" menu option
+- [x] Add "Delete" menu option with confirmation
+- [x] Implement delete Server Action with ownership validation
+- [x] Update UI with optimistic updates
+- [x] Track analysis attempts
+- [x] Toast notifications for user feedback
+- [x] Proper event handling to prevent card clicks
 
 #### 3.4 Error Handling & UX Polish (1 hour) ✅ PARTIALLY COMPLETED
 
@@ -413,6 +421,19 @@ model Decision {
 - [x] Comprehensive padding improvements across all components
 - [x] Proper button padding for better UX
 - [x] Modal inner and outer padding optimization
+
+#### 3.5 Context Architecture & Performance Optimizations (2 hours) ✅ COMPLETED
+
+- [x] Create DecisionsContext for centralized state management
+- [x] Replace useDecisionStream hook with context provider
+- [x] Implement smart change detection to prevent unnecessary re-renders
+- [x] Add optimistic updates for delete and re-analyze actions
+- [x] Memoize DecisionCard component for performance
+- [x] Use context data in DecisionDetailModal for instant loading
+- [x] Implement comprehensive SSE event handling in context
+- [x] Add automatic reconnection with exponential backoff
+- [x] Track optimistic updates separately from server state
+- [x] Add real-time toast notifications for status changes
 
 ### Phase 4: Polish & Deploy (Day 2, Afternoon - 3-4 hours)
 
@@ -556,12 +577,15 @@ retrospecta/
 │   │
 │   ├── actions/                 # Server Actions
 │   │   ├── auth.ts              # Auth actions
-│   │   ├── decisions.ts         # Decision CRUD actions
-│   │   └── analysis.ts          # LLM analysis actions
+│   │   ├── decisions.ts         # Decision CRUD actions (includes deleteDecision)
+│   │   └── analysis.ts          # LLM analysis actions (includes reanalyzeDecision)
+│   │
+│   ├── contexts/                # React Context providers
+│   │   └── DecisionsContext.tsx # Centralized decisions state with SSE
 │   │
 │   ├── hooks/                   # Custom React hooks
 │   │   ├── useAuth.ts
-│   │   ├── useDecisions.ts
+│   │   ├── useDecisions.ts      # Re-exported from DecisionsContext
 │   │   ├── usePolling.ts
 │   │   └── useToast.ts
 │   │
@@ -652,16 +676,19 @@ retrospecta/
 - UI updates instantly when analysis completes
 - Status badges show current state (Pending, Processing, Completed, Failed)
 
-### 4. Re-analysis Flow (Planned)
+### 4. Re-analysis Flow ✅ IMPLEMENTED
 
-**Implementation:** Server Action + Status Reset + Background Re-processing
+**Implementation:** Menu Actions + Server Action + Optimistic Updates + Background Re-processing
 
 **Flow:**
 
-- User clicks "Re-analyze" button on decision card
+- User clicks three-dot menu on decision card
+- User selects "Re-analyze" from menu
+- Optimistic update immediately shows "PROCESSING" status
 - Server action resets status to `PENDING` and increments attempt counter
 - Triggers same analysis flow as initial creation
-- SSE stream notifies client of status changes
+- SSE stream notifies client of status changes via DecisionsContext
+- Toast notification shows when analysis completes
 - UI updates with new analysis results
 
 ### 5. User Menu with Avatar & Theme Toggle
@@ -682,7 +709,79 @@ retrospecta/
 - Bottom-end positioning for dropdown
 - Fetched via `getCurrentUser()` server action on page load
 
-### 6. Sorting & Filtering Architecture (Implemented)
+### 6. Delete Decision Flow ✅ IMPLEMENTED
+
+**Implementation:** Menu Actions + Server Action + Optimistic Updates + Ownership Validation
+
+**Flow:**
+
+- User clicks three-dot menu on decision card
+- User selects "Delete" from menu
+- Optimistic update immediately removes decision from UI
+- Server action validates user owns the decision
+- Database deletion via Prisma
+- SSE stream confirms deletion to all connected clients
+- Pending count updates if decision was pending/processing
+- Toast notification shows success/failure
+
+**Security:**
+
+- Server validates user authentication via Supabase
+- Checks decision ownership before deletion
+- Returns 403 error if user doesn't own decision
+
+### 7. DecisionsContext Architecture ✅ IMPLEMENTED
+
+**Implementation:** React Context + SSE + Optimistic Updates + Smart Re-rendering
+
+**Key Features:**
+
+1. **Centralized State Management:**
+   - Single source of truth for all decisions
+   - Manages SSE connection, filters, sorting
+   - Provides `useDecisions()` hook for components
+
+2. **Smart Change Detection:**
+   - Compares decisions by key fields (status, category, biases, etc.)
+   - Only triggers re-renders when data actually changes
+   - Preserves object references for unchanged decisions
+
+3. **Optimistic Updates:**
+   - Immediate UI feedback for user actions
+   - Tracks pending optimistic updates separately
+   - Reconciles with server state when confirmed
+
+4. **Real-time Notifications:**
+   - Toast notifications when analysis completes
+   - Toast notifications for failed analyses
+   - Prevents duplicate notifications for optimistic updates
+
+5. **Connection Management:**
+   - Automatic reconnection with exponential backoff
+   - Max 5 reconnection attempts
+   - Clear error messages when connection fails
+   - Tracks connection status for UI feedback
+
+6. **Performance Optimizations:**
+   - Memoized DecisionCard components
+   - Smart re-rendering (same array reference if no changes)
+   - Context-based data access (no redundant API calls)
+   - Efficient event handling
+
+**Component Architecture:**
+
+```
+DecisionsProvider (Context Provider)
+  └─ DecisionsPageContent
+      ├─ SortingControls
+      ├─ FilterControls
+      ├─ DecisionList
+      │   └─ DecisionCard (memoized)
+      │       └─ Menu (re-analyze, delete)
+      └─ DecisionDetailModal (uses context data)
+```
+
+### 8. Sorting & Filtering Architecture (Implemented)
 
 **Component Structure:**
 
@@ -995,7 +1094,12 @@ export const analysisPrompt = (decision, locale = 'en') => {
 - ✅ Theme toggle and logout in user menu
 - ✅ Sorting by date/status/category works
 - ✅ Filtering by categories, biases, and date range
-- ⏳ Re-analysis feature functional - Planned
+- ✅ Re-analysis feature functional (menu-based)
+- ✅ Delete decision functionality with ownership validation
+- ✅ React Context architecture for centralized state
+- ✅ Optimistic UI updates for better UX
+- ✅ Performance optimizations (memoization, smart re-rendering)
+- ✅ Toast notifications for status changes
 - ⏳ Deployed to Vercel with working demo - Planned
 - ✅ Clean, professional UI with skeleton loading states
 - ⏳ Comprehensive README with setup instructions - Planned
@@ -1076,7 +1180,63 @@ The tech stack choices prioritize developer experience and rapid development whi
 
 ---
 
-**Document Version:** 1.0
-**Last Updated:** 2025-10-25
-**Author:** Technical Planning Session
-**Status:** Ready for Implementation
+## Recent Changes (Phase 3.5 - Context Architecture)
+
+### Date: 2025-10-25
+
+### Changes: 11 files, 654 insertions(+), 223 deletions(-)
+
+#### Major Additions:
+
+1. **DecisionsContext.tsx (NEW FILE - 397 lines)**
+   - Centralized state management with React Context
+   - Server-Sent Events connection with smart reconnection
+   - Optimistic updates for delete and re-analyze
+   - Real-time toast notifications
+   - Smart change detection to prevent unnecessary re-renders
+
+2. **Delete Functionality**
+   - New `deleteDecision` server action with ownership validation (src/actions/decisions.ts)
+   - Menu option in DecisionList
+   - Optimistic UI updates
+   - Toast notifications
+
+3. **Re-analysis Feature (Phase 3.3 Complete)**
+   - Menu-based UI with three-dot icon
+   - Optimistic updates
+   - Toast notifications
+   - Proper event handling
+
+4. **Performance Optimizations**
+   - Memoized DecisionCard component
+   - Smart re-rendering (only updates when data changes)
+   - Context-based data fetching (eliminates redundant API calls)
+   - DecisionDetailModal uses context for instant loading
+
+5. **Architecture Improvements**
+   - Replaced `useDecisionStream` hook with DecisionsContext
+   - Single source of truth for all decisions state
+   - Better separation of concerns
+   - Enhanced error handling and reconnection logic
+
+#### Modified Files:
+
+- src/contexts/DecisionsContext.tsx (NEW)
+- src/actions/decisions.ts (+71 lines)
+- src/app/(dashboard)/decisions/page.tsx (refactored to use context)
+- src/app/api/decisions/stream/route.ts (minor updates)
+- src/app/layout.tsx (suppressHydrationWarning)
+- src/components/auth/LoginForm.tsx
+- src/components/auth/RegisterForm.tsx
+- src/components/decisions/DateRangeFilter.tsx
+- src/components/decisions/DecisionDetailModal.tsx (uses context)
+- src/components/decisions/DecisionList.tsx (memoized, menu actions)
+- src/components/layout/UserMenu.tsx
+- src/components/ui/toaster.tsx
+
+---
+
+**Document Version:** 1.1
+**Last Updated:** 2025-10-25 (Phase 3.5 Complete)
+**Author:** Technical Planning & Implementation
+**Status:** Phase 3 Complete - Ready for Phase 4 (Polish & Deploy)
