@@ -84,3 +84,38 @@ export async function signInWithGoogle() {
     redirect(data.url);
   }
 }
+
+export async function getCurrentUser() {
+  const supabase = await createClient();
+
+  const {
+    data: { user },
+    error,
+  } = await supabase.auth.getUser();
+
+  if (error || !user) {
+    return null;
+  }
+
+  // Get additional user data from our database
+  const dbUser = await prisma.user.findUnique({
+    where: { id: user.id },
+    select: {
+      id: true,
+      email: true,
+      name: true,
+      avatarUrl: true,
+    },
+  });
+
+  return {
+    id: user.id,
+    email: user.email || dbUser?.email || '',
+    name:
+      dbUser?.name ||
+      user.user_metadata?.name ||
+      user.email?.split('@')[0] ||
+      'User',
+    avatarUrl: dbUser?.avatarUrl || user.user_metadata?.avatar_url || null,
+  };
+}
