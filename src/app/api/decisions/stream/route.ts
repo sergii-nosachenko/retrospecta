@@ -6,6 +6,9 @@ import { DecisionCategory } from '@/components/decisions/CategoryFilter';
 import { prisma } from '@/lib/prisma';
 import { createClient } from '@/lib/supabase/server';
 
+// Force Node.js runtime for Prisma compatibility
+export const runtime = 'nodejs';
+
 /**
  * Server-Sent Events endpoint for real-time decision updates
  * Polls database every 3 seconds for pending decisions
