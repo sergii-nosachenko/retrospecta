@@ -16,6 +16,7 @@ import {
 
 import { reanalyzeDecision } from '@/actions/analysis';
 import { deleteDecision, getDecision } from '@/actions/decisions';
+import { MarkdownRenderer } from '@/components/ui/MarkdownRenderer';
 import {
   DialogBody,
   DialogCloseTrigger,
@@ -524,9 +525,7 @@ export function DecisionDetailModal({
                         >
                           Overlooked Alternatives
                         </Text>
-                        <Text whiteSpace="pre-wrap" lineHeight="1.7">
-                          {decision.alternatives}
-                        </Text>
+                        <MarkdownRenderer content={decision.alternatives} />
                       </Box>
                     )}
 
@@ -543,9 +542,7 @@ export function DecisionDetailModal({
                         >
                           Additional Insights
                         </Text>
-                        <Text whiteSpace="pre-wrap" lineHeight="1.7">
-                          {decision.insights}
-                        </Text>
+                        <MarkdownRenderer content={decision.insights} />
                       </Box>
                     )}
 
