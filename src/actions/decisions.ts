@@ -255,3 +255,74 @@ export async function getDecision(decisionId: string): Promise<
     };
   }
 }
+
+/**
+ * Deletes a decision by ID
+ * Ensures the decision belongs to the authenticated user
+ *
+ * @param decisionId - ID of the decision to delete
+ * @returns Action result indicating success or error
+ */
+export async function deleteDecision(
+  decisionId: string
+): Promise<ActionResult<{ id: string }>> {
+  try {
+    // Get authenticated user
+    const supabase = await createClient();
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
+
+    if (authError || !user) {
+      return {
+        success: false,
+        error: 'You must be logged in to delete a decision',
+      };
+    }
+
+    // Fetch decision to verify ownership
+    const decision = await prisma.decision.findUnique({
+      where: {
+        id: decisionId,
+      },
+    });
+
+    // Check if decision exists
+    if (!decision) {
+      return {
+        success: false,
+        error: 'Decision not found',
+      };
+    }
+
+    // Check if decision belongs to user
+    if (decision.userId !== user.id) {
+      return {
+        success: false,
+        error: 'You do not have permission to delete this decision',
+      };
+    }
+
+    // Delete the decision
+    await prisma.decision.delete({
+      where: {
+        id: decisionId,
+      },
+    });
+
+    // Revalidate decisions page
+    revalidatePath('/decisions');
+
+    return {
+      success: true,
+      data: { id: decisionId },
+    };
+  } catch (error) {
+    console.error('Error deleting decision:', error);
+    return {
+      success: false,
+      error: 'Failed to delete decision. Please try again.',
+    };
+  }
+}
