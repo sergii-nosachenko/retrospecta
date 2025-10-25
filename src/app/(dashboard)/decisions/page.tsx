@@ -1,5 +1,9 @@
 'use client';
 
+import { useEffect, useState } from 'react';
+
+import { useRouter } from 'next/navigation';
+
 import {
   Badge,
   Box,
@@ -11,13 +15,34 @@ import {
   VStack,
 } from '@chakra-ui/react';
 
+import { getCurrentUser, signOut } from '@/actions/auth';
 import { DecisionFormModal } from '@/components/decisions/DecisionFormModal';
 import { DecisionList } from '@/components/decisions/DecisionList';
+import { UserMenu } from '@/components/layout/UserMenu';
 import { useDecisionStream } from '@/hooks/useDecisionStream';
 
 export default function DecisionsPage() {
+  const router = useRouter();
   const { decisions, isConnected, isLoading, error, pendingCount } =
     useDecisionStream();
+  const [user, setUser] = useState<{
+    id: string;
+    email: string;
+    name: string;
+    avatarUrl: string | null;
+  } | null>(null);
+
+  useEffect(() => {
+    getCurrentUser().then((userData) => {
+      if (userData) {
+        setUser(userData);
+      }
+    });
+  }, []);
+
+  const handleSignOut = async () => {
+    await signOut();
+  };
 
   return (
     <Box p={{ base: 5, md: 8 }} maxW="7xl" mx="auto">
@@ -47,7 +72,10 @@ export default function DecisionsPage() {
             </Badge>
           )}
         </Stack>
-        <DecisionFormModal />
+        <Stack direction="row" align="center" gap={2}>
+          <DecisionFormModal />
+          {user && <UserMenu user={user} onSignOut={handleSignOut} />}
+        </Stack>
       </Stack>
 
       {error ? (

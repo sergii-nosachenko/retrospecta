@@ -137,7 +137,7 @@ export function DecisionFormModal({
     >
       <DialogTrigger asChild>
         {trigger || (
-          <Button colorPalette="blue" size="lg" px={6} py={3}>
+          <Button colorPalette="blue" size="sm" px={4} py={2}>
             New Decision
           </Button>
         )}
