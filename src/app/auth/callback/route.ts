@@ -9,26 +9,42 @@ export async function GET(request: Request) {
   const origin = requestUrl.origin;
 
   if (code) {
-    const supabase = await createClient();
-    const { data, error } = await supabase.auth.exchangeCodeForSession(code);
+    try {
+      const supabase = await createClient();
+      const { data, error } = await supabase.auth.exchangeCodeForSession(code);
 
-    if (!error && data.user) {
-      // Create user in our database if they don't exist
-      const existingUser = await prisma.user.findUnique({
-        where: { id: data.user.id },
-      });
-
-      if (!existingUser) {
-        await prisma.user.create({
-          data: {
-            id: data.user.id,
-            email: data.user.email!,
-            name:
-              data.user.user_metadata.name || data.user.user_metadata.full_name,
-            avatarUrl: data.user.user_metadata.avatar_url,
-          },
-        });
+      if (error) {
+        console.error('Supabase auth error:', error);
+        return NextResponse.redirect(`${origin}/login?error=auth_failed`);
       }
+
+      if (data.user) {
+        // Create user in our database if they don't exist
+        try {
+          const existingUser = await prisma.user.findUnique({
+            where: { id: data.user.id },
+          });
+
+          if (!existingUser) {
+            await prisma.user.create({
+              data: {
+                id: data.user.id,
+                email: data.user.email!,
+                name:
+                  data.user.user_metadata.name ||
+                  data.user.user_metadata.full_name,
+                avatarUrl: data.user.user_metadata.avatar_url,
+              },
+            });
+          }
+        } catch (dbError) {
+          console.error('Database error:', dbError);
+          // Continue even if user creation fails - they're authenticated
+        }
+      }
+    } catch (error) {
+      console.error('Auth callback error:', error);
+      return NextResponse.redirect(`${origin}/login?error=callback_failed`);
     }
   }
 
