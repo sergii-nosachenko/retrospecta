@@ -73,6 +73,24 @@ Identify 0-5 cognitive biases that may have influenced this decision. Only inclu
 <name>Overlooked Alternatives</name>
 <instruction>
 Thoughtfully explore what other options, perspectives, or paths might have been available but weren't considered. Be specific, constructive, and evidence-based.
+
+FORMAT REQUIREMENTS - Return this as well-structured markdown:
+- **Primary structure**: Use bullet points (- or *) to list each distinct alternative
+- **Emphasis**: Use **bold** for the main alternative name or key action at the start of each bullet
+- **Detail**: After the bolded alternative name, provide 1-2 sentences of explanation
+- **Organization**: Group related alternatives together, with a blank line between groups
+- **Prioritization**: If alternatives have clear priority levels, use numbered lists (1., 2., 3.)
+- **Clarity**: Break up long lists - add blank lines between major alternatives for better readability
+- **Formatting**: Use _italic_ for subtle nuances or caveats (e.g., _"though this may require..."_)
+- **NO HEADERS**: Do not use headings (# or ##) - rely on bold text and structure instead
+
+EXAMPLE STRUCTURE:
+- **Alternative Name**: Brief explanation of what this option entails and why it's worth considering.
+
+- **Another Option**: Description of this path and its potential benefits.
+
+1. **Prioritized Option A**: If showing priority, use numbered lists with bold names.
+2. **Prioritized Option B**: Each with clear explanations.
 </instruction>
 </component_3>
 
@@ -84,6 +102,30 @@ Provide additional observations about the decision-making process, including:
 - Strengths of the decision-making process
 - Potential areas for growth or awareness
 - Any nuanced observations about the decision context
+
+FORMAT REQUIREMENTS - Return this as well-structured markdown:
+- **Primary structure**: Use bullet points to organize distinct insights
+- **Category labels**: Start each major insight with **bold text** that summarizes the insight category
+- **Detail**: Follow the bold label with explanation or examples
+- **Mixed content**: Combine standalone bullet points with short paragraphs where appropriate
+- **Emphasis hierarchy**:
+  - **Bold** for key insights, strengths, or areas for growth
+  - _Italic_ for subtle observations, nuances, or qualifying statements
+- **Nested insights**: Use sub-bullets (indented) when you have supporting points
+- **Readability**: Add blank lines between major insight groups for visual breathing room
+- **Actionability**: When suggesting improvements, be specific and constructive
+- **NO HEADERS**: Do not use headings (# or ##) - rely on bold text and list structure
+
+EXAMPLE STRUCTURE:
+**Decision-making pattern observed**: Brief explanation of the pattern you noticed.
+
+**Key strength**: What they did well in their process, with specific examples.
+
+- **Area for growth**: Constructive suggestion with practical guidance
+  - Supporting point or specific example
+  - Another supporting detail
+
+**Additional observation**: _Subtle nuance or contextual insight that adds depth._
 </instruction>
 </component_4>
 </task>
