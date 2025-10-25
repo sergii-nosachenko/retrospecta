@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from 'react';
 
+import { useRouter } from 'next/navigation';
+
 import {
   Badge,
   Box,
@@ -46,14 +48,20 @@ function DecisionsPageContent() {
     name: string;
     avatarUrl: string | null;
   } | null>(null);
+  const [isCheckingAuth, setIsCheckingAuth] = useState(true);
+  const router = useRouter();
 
   useEffect(() => {
     getCurrentUser().then((userData) => {
       if (userData) {
         setUser(userData);
+      } else {
+        // User is not authenticated, redirect to login
+        router.push('/login');
       }
+      setIsCheckingAuth(false);
     });
-  }, []);
+  }, [router]);
 
   const handleSignOut = async () => {
     await signOut();
@@ -87,6 +95,29 @@ function DecisionsPageContent() {
       dateTo: null,
     });
   };
+
+  // Show loading state while checking authentication
+  if (isCheckingAuth) {
+    return (
+      <Box p={{ base: 5, md: 8 }} maxW="7xl" mx="auto">
+        <Stack gap={5} align="stretch">
+          <Skeleton height="40px" width="200px" />
+          <VStack gap={5} align="stretch">
+            {[1, 2, 3].map((i) => (
+              <Card.Root key={i}>
+                <Card.Body p={6}>
+                  <Stack gap={4}>
+                    <Skeleton height="24px" width="100px" />
+                    <SkeletonText noOfLines={3} gap={2} />
+                  </Stack>
+                </Card.Body>
+              </Card.Root>
+            ))}
+          </VStack>
+        </Stack>
+      </Box>
+    );
+  }
 
   return (
     <Box p={{ base: 5, md: 8 }} maxW="7xl" mx="auto">
