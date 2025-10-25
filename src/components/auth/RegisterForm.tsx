@@ -70,6 +70,8 @@ export function RegisterForm() {
           colorPalette="blue"
           loading={loading}
           width="full"
+          size="lg"
+          py={3}
         >
           Sign Up
         </Button>

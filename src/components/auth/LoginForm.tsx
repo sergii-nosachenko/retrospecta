@@ -65,6 +65,8 @@ export function LoginForm() {
           colorPalette="blue"
           loading={loading}
           width="full"
+          size="lg"
+          py={3}
         >
           Sign In
         </Button>

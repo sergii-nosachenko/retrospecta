@@ -36,12 +36,12 @@ export default function Home() {
 
           <Stack direction="row" gap={4}>
             <Link href="/register">
-              <Button size="lg" colorPalette="blue">
+              <Button size="lg" colorPalette="blue" px={8} py={3}>
                 Get Started
               </Button>
             </Link>
             <Link href="/login">
-              <Button size="lg" variant="outline">
+              <Button size="lg" variant="outline" px={8} py={3}>
                 Sign In
               </Button>
             </Link>

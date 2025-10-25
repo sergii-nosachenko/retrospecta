@@ -9,7 +9,13 @@ import { signInWithGoogle } from '@/actions/auth';
 export function OAuthButtons() {
   return (
     <Stack gap={3}>
-      <Button variant="outline" onClick={() => signInWithGoogle()} width="full">
+      <Button
+        variant="outline"
+        onClick={() => signInWithGoogle()}
+        width="full"
+        size="lg"
+        py={3}
+      >
         <FaGoogle />
         Continue with Google
       </Button>
