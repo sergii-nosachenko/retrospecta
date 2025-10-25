@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 import {
   Badge,
@@ -15,7 +15,7 @@ import {
 } from '@chakra-ui/react';
 
 import { reanalyzeDecision } from '@/actions/analysis';
-import { getDecision } from '@/actions/decisions';
+import { deleteDecision, getDecision } from '@/actions/decisions';
 import {
   DialogBody,
   DialogCloseTrigger,
@@ -26,6 +26,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { toaster } from '@/components/ui/toaster';
+import { useDecisions } from '@/contexts/DecisionsContext';
 
 interface DecisionData {
   id: string;
@@ -55,66 +56,131 @@ export function DecisionDetailModal({
   open,
   onOpenChange,
 }: DecisionDetailModalProps) {
+  const {
+    optimisticUpdateStatus,
+    optimisticDelete,
+    getDecision: getDecisionFromContext,
+  } = useDecisions();
   const [decision, setDecision] = useState<DecisionData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isPolling, setIsPolling] = useState(false);
   const [isReanalyzing, setIsReanalyzing] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [fetchAttempts, setFetchAttempts] = useState(0);
 
-  // Fetch decision data when modal opens
-  useEffect(() => {
-    if (open && decisionId) {
-      fetchDecision();
-    }
-  }, [open, decisionId]);
+  const fetchDecision = useCallback(async () => {
+    setIsLoading(true);
 
-  // Poll for updates when status is PENDING or PROCESSING
-  useEffect(() => {
-    if (!isPolling || !decision) return;
+    // Get decision from context (instant, no API call needed!)
+    const contextDecision = getDecisionFromContext(decisionId);
 
-    const interval = setInterval(async () => {
-      const result = await getDecision(decision.id);
+    if (contextDecision) {
+      // Context has all the fields we need
+      const decisionData: DecisionData = {
+        ...contextDecision,
+        analysisAttempts: contextDecision.analysisAttempts || 0,
+        lastAnalyzedAt: contextDecision.lastAnalyzedAt || null,
+        errorMessage: contextDecision.errorMessage || null,
+      };
+
+      setDecision(decisionData);
+
+      // Start polling if status is PENDING or PROCESSING
+      if (
+        contextDecision.status === 'PENDING' ||
+        contextDecision.status === 'PROCESSING'
+      ) {
+        setIsPolling(true);
+      }
+
+      setIsLoading(false);
+    } else {
+      // Fallback: decision not in context yet (shouldn't happen normally)
+      const result = await getDecision(decisionId);
 
       if (result.success && result.data) {
         setDecision(result.data);
 
+        // Start polling if status is PENDING or PROCESSING
+        if (
+          result.data.status === 'PENDING' ||
+          result.data.status === 'PROCESSING'
+        ) {
+          setIsPolling(true);
+        }
+      } else {
+        toaster.create({
+          title: 'Error',
+          description: result.error || 'Failed to load decision',
+          type: 'error',
+          duration: 5000,
+        });
+        onOpenChange(false);
+      }
+      setIsLoading(false);
+    }
+  }, [decisionId, onOpenChange, getDecisionFromContext]);
+
+  // Reset state when modal closes or decisionId changes
+  useEffect(() => {
+    if (!open) {
+      // Reset all state when modal closes
+      setDecision(null);
+      setIsLoading(true);
+      setIsPolling(false);
+      setIsReanalyzing(false);
+      setFetchAttempts(0);
+    }
+  }, [open]);
+
+  // Fetch decision data when modal opens
+  useEffect(() => {
+    if (open && decisionId) {
+      // Reset state when opening a new decision
+      setIsReanalyzing(false);
+      setIsPolling(false);
+      setFetchAttempts(0);
+      fetchDecision();
+    }
+  }, [open, decisionId, fetchDecision]);
+
+  // Poll for updates when status is PENDING or PROCESSING
+  // Uses context data (updated by SSE) instead of making API calls
+  useEffect(() => {
+    if (!isPolling || !decision) return;
+
+    const interval = setInterval(() => {
+      // Get updated decision from context (no API call)
+      const updatedDecision = getDecisionFromContext(decision.id);
+
+      if (updatedDecision) {
+        // Update local state with context data
+        setDecision((prev) => ({
+          ...prev!,
+          ...updatedDecision,
+        }));
+
         // Stop polling if analysis is complete or failed
         if (
-          result.data.status === 'COMPLETED' ||
-          result.data.status === 'FAILED'
+          updatedDecision.status === 'COMPLETED' ||
+          updatedDecision.status === 'FAILED'
         ) {
           setIsPolling(false);
+
+          // Fetch full details one last time to get error message if failed
+          if (updatedDecision.status === 'FAILED') {
+            getDecision(decision.id).then((result) => {
+              if (result.success && result.data) {
+                setDecision(result.data);
+              }
+            });
+          }
         }
       }
-    }, 3000); // Poll every 3 seconds
+    }, 1000); // Check context every second (no API call, very cheap)
 
     return () => clearInterval(interval);
-  }, [decision, isPolling]);
-
-  const fetchDecision = async () => {
-    setIsLoading(true);
-    const result = await getDecision(decisionId);
-
-    if (result.success && result.data) {
-      setDecision(result.data);
-
-      // Start polling if status is PENDING or PROCESSING
-      if (
-        result.data.status === 'PENDING' ||
-        result.data.status === 'PROCESSING'
-      ) {
-        setIsPolling(true);
-      }
-    } else {
-      toaster.create({
-        title: 'Error',
-        description: result.error || 'Failed to load decision',
-        type: 'error',
-        duration: 5000,
-      });
-      onOpenChange(false);
-    }
-    setIsLoading(false);
-  };
+  }, [decision, isPolling, getDecisionFromContext]);
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -146,19 +212,32 @@ export function DecisionDetailModal({
     setIsReanalyzing(true);
 
     try {
+      // Optimistically update status immediately for instant UI feedback
+      optimisticUpdateStatus(decision.id, 'PROCESSING');
+
+      // Update local modal state immediately
+      setDecision((prev) => (prev ? { ...prev, status: 'PROCESSING' } : null));
+      setIsPolling(true);
+
       const result = await reanalyzeDecision(decision.id);
 
       if (result.success) {
+        // Show brief success notification
         toaster.create({
           title: 'Re-analysis Started',
           description: 'Your decision is being re-analyzed...',
-          type: 'success',
-          duration: 3000,
+          type: 'info',
+          duration: 2000,
         });
 
-        // Start polling again
-        setIsPolling(true);
+        // No need to refresh - SSE will automatically pick up changes within 3 seconds
+        // Optimistic update already provides instant UI feedback
       } else {
+        // Revert optimistic update on error
+        optimisticUpdateStatus(decision.id, 'COMPLETED');
+        setDecision((prev) => (prev ? { ...prev, status: 'COMPLETED' } : null));
+        setIsPolling(false);
+
         toaster.create({
           title: 'Error',
           description: result.error || 'Failed to re-analyze decision',
@@ -168,6 +247,12 @@ export function DecisionDetailModal({
       }
     } catch (error) {
       console.error('Error re-analyzing:', error);
+
+      // Revert optimistic update on error
+      optimisticUpdateStatus(decision.id, 'COMPLETED');
+      setDecision((prev) => (prev ? { ...prev, status: 'COMPLETED' } : null));
+      setIsPolling(false);
+
       toaster.create({
         title: 'Error',
         description: 'An unexpected error occurred',
@@ -176,6 +261,51 @@ export function DecisionDetailModal({
       });
     } finally {
       setIsReanalyzing(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!decision) return;
+
+    setIsDeleting(true);
+
+    try {
+      // Close modal first
+      onOpenChange(false);
+
+      // Optimistically remove decision immediately for instant UI feedback
+      optimisticDelete(decision.id);
+
+      const result = await deleteDecision(decision.id);
+
+      if (result.success) {
+        toaster.create({
+          title: 'Decision Deleted',
+          description: 'Your decision has been deleted successfully',
+          type: 'success',
+          duration: 3000,
+        });
+      } else {
+        toaster.create({
+          title: 'Error',
+          description: result.error || 'Failed to delete decision',
+          type: 'error',
+          duration: 5000,
+        });
+
+        // Note: SSE will restore the decision if deletion failed
+      }
+    } catch (error) {
+      console.error('Error deleting:', error);
+
+      toaster.create({
+        title: 'Error',
+        description: 'An unexpected error occurred',
+        type: 'error',
+        duration: 5000,
+      });
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -188,7 +318,7 @@ export function DecisionDetailModal({
       placement="center"
     >
       <DialogContent maxH="90vh">
-        <DialogHeader py={6} px={6}>
+        <DialogHeader py={4} px={6}>
           <DialogTitle>
             <Stack
               direction="row"
@@ -214,9 +344,9 @@ export function DecisionDetailModal({
           <DialogCloseTrigger />
         </DialogHeader>
 
-        <DialogBody py={6} px={6}>
+        <DialogBody py={4} px={6}>
           {isLoading ? (
-            <VStack gap={6} align="stretch">
+            <VStack gap={4} align="stretch">
               {/* Situation skeleton */}
               <Box>
                 <Skeleton height="16px" width="80px" mb={3} />
@@ -242,7 +372,7 @@ export function DecisionDetailModal({
               </Box>
             </VStack>
           ) : decision ? (
-            <VStack gap={6} align="stretch">
+            <VStack gap={4} align="stretch">
               {/* Decision Information */}
               <Box>
                 <Text
@@ -324,16 +454,16 @@ export function DecisionDetailModal({
               {decision.status === 'COMPLETED' && (
                 <Box
                   borderTopWidth="1px"
-                  pt={6}
+                  pt={4}
                   mt={2}
                   borderColor="gray.200"
                   _dark={{ borderColor: 'gray.700' }}
                 >
-                  <Heading size="lg" mb={6}>
+                  <Heading size="lg" mb={4}>
                     AI Analysis
                   </Heading>
 
-                  <VStack gap={5} align="stretch">
+                  <VStack gap={4} align="stretch">
                     {decision.category && (
                       <Box>
                         <Text
@@ -418,6 +548,28 @@ export function DecisionDetailModal({
                         </Text>
                       </Box>
                     )}
+
+                    {/* Analysis metadata */}
+                    {decision.analysisAttempts > 1 && (
+                      <Box pt={4} borderTopWidth="1px">
+                        <Text fontSize="sm" color="gray.500">
+                          Analyzed {decision.analysisAttempts} times
+                          {decision.lastAnalyzedAt && (
+                            <>
+                              {' · Last analyzed '}
+                              {new Date(
+                                decision.lastAnalyzedAt
+                              ).toLocaleDateString('en-US', {
+                                month: 'short',
+                                day: 'numeric',
+                                hour: '2-digit',
+                                minute: '2-digit',
+                              })}
+                            </>
+                          )}
+                        </Text>
+                      </Box>
+                    )}
                   </VStack>
                 </Box>
               )}
@@ -426,14 +578,15 @@ export function DecisionDetailModal({
               {(decision.status === 'PENDING' ||
                 decision.status === 'PROCESSING') && (
                 <Box
-                  p={8}
+                  px={6}
+                  py={5}
                   borderWidth="1px"
                   borderRadius="lg"
                   bg="blue.50"
                   _dark={{ bg: 'blue.900/20' }}
                   textAlign="center"
                 >
-                  <VStack gap={4}>
+                  <VStack gap={3}>
                     <Text fontWeight="bold" fontSize="lg">
                       Analysis in Progress
                     </Text>
@@ -441,6 +594,7 @@ export function DecisionDetailModal({
                       color="gray.600"
                       _dark={{ color: 'gray.400' }}
                       lineHeight="1.6"
+                      px={2}
                     >
                       Your decision is being analyzed by AI. This usually takes
                       a few seconds...
@@ -452,7 +606,8 @@ export function DecisionDetailModal({
               {/* Error State */}
               {decision.status === 'FAILED' && (
                 <Box
-                  p={8}
+                  px={6}
+                  py={5}
                   borderWidth="1px"
                   borderRadius="lg"
                   bg="red.50"
@@ -473,6 +628,7 @@ export function DecisionDetailModal({
                       _dark={{ color: 'gray.400' }}
                       textAlign="center"
                       lineHeight="1.6"
+                      px={2}
                     >
                       {decision.errorMessage ||
                         'An error occurred while analyzing your decision.'}
@@ -484,7 +640,6 @@ export function DecisionDetailModal({
                       loading={isReanalyzing}
                       loadingText="Retrying..."
                       size="lg"
-                      mt={2}
                     >
                       Retry Analysis
                     </Button>
@@ -495,15 +650,38 @@ export function DecisionDetailModal({
           ) : null}
         </DialogBody>
 
-        <DialogFooter py={6} px={6}>
-          <Button
-            variant="outline"
-            onClick={() => onOpenChange(false)}
-            size="lg"
-            px={6}
+        <DialogFooter py={4} px={6}>
+          <Stack
+            direction="row"
+            justify="space-between"
+            align="center"
+            width="100%"
           >
-            Close
-          </Button>
+            <Button
+              colorPalette="red"
+              variant="ghost"
+              onClick={handleDelete}
+              loading={isDeleting}
+              loadingText="Deleting..."
+              size="lg"
+              px={6}
+            >
+              Delete
+            </Button>
+            {decision?.status === 'COMPLETED' && (
+              <Button
+                colorPalette="blue"
+                variant="outline"
+                onClick={handleReanalyze}
+                loading={isReanalyzing}
+                loadingText="Re-analyzing..."
+                size="lg"
+                px={6}
+              >
+                Re-analyze
+              </Button>
+            )}
+          </Stack>
         </DialogFooter>
       </DialogContent>
     </DialogRoot>
