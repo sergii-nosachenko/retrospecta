@@ -314,12 +314,16 @@ export function DecisionDetailModal({
     <DialogRoot
       open={open}
       onOpenChange={(e) => onOpenChange(e.open)}
-      size="xl"
+      size={{ base: 'full', sm: 'lg', md: 'xl' }}
       scrollBehavior="inside"
       placement="center"
     >
-      <DialogContent maxH="90vh">
-        <DialogHeader py={4} px={6}>
+      <DialogContent
+        h={{ base: 'auto', smDown: 'fit-content' }}
+        maxH={{ base: '90dvh', smDown: '100dvh' }}
+        minH={{ base: 'auto', smDown: '100dvh' }}
+      >
+        <DialogHeader py={{ base: 3, md: 4 }} px={{ base: 4, md: 6 }}>
           <DialogTitle>
             <Stack
               direction="row"
@@ -345,7 +349,7 @@ export function DecisionDetailModal({
           <DialogCloseTrigger />
         </DialogHeader>
 
-        <DialogBody py={4} px={6}>
+        <DialogBody py={{ base: 3, md: 4 }} px={{ base: 4, md: 6 }}>
           {isLoading ? (
             <VStack gap={4} align="stretch">
               {/* Situation skeleton */}
@@ -647,7 +651,11 @@ export function DecisionDetailModal({
           ) : null}
         </DialogBody>
 
-        <DialogFooter py={4} px={6}>
+        <DialogFooter
+          py={{ base: 3, md: 4 }}
+          px={{ base: 4, md: 6 }}
+          pb={{ base: 'max(1rem, env(safe-area-inset-bottom))', md: 4 }}
+        >
           <Stack
             direction="row"
             justify="space-between"

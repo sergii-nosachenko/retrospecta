@@ -2,16 +2,7 @@
 
 import { useState } from 'react';
 
-import { useRouter } from 'next/navigation';
-
-import {
-  Button,
-  Heading,
-  Stack,
-  Text,
-  Textarea,
-  VStack,
-} from '@chakra-ui/react';
+import { Button, Stack, Text, Textarea, VStack } from '@chakra-ui/react';
 
 import { analyzeDecision } from '@/actions/analysis';
 import { createDecision } from '@/actions/decisions';
@@ -26,6 +17,12 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 import { Field } from '@/components/ui/field';
+import {
+  StepsContent,
+  StepsItem,
+  StepsList,
+  StepsRoot,
+} from '@/components/ui/steps';
 import { toaster } from '@/components/ui/toaster';
 
 interface DecisionFormModalProps {
@@ -37,14 +34,20 @@ export function DecisionFormModal({
   trigger,
   onSuccess,
 }: DecisionFormModalProps) {
-  const router = useRouter();
   const [open, setOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [currentStep, setCurrentStep] = useState(0);
   const [formData, setFormData] = useState({
     situation: '',
     decision: '',
     reasoning: '',
   });
+
+  const steps = [
+    { title: 'Situation', description: 'Describe the context' },
+    { title: 'Decision', description: 'What did you decide?' },
+    { title: 'Reasoning', description: 'Why this choice?' },
+  ];
 
   const resetForm = () => {
     setFormData({
@@ -52,16 +55,79 @@ export function DecisionFormModal({
       decision: '',
       reasoning: '',
     });
+    setCurrentStep(0);
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const validateCurrentStep = () => {
+    switch (currentStep) {
+      case 0: // Situation
+        if (!formData.situation.trim()) {
+          toaster.create({
+            title: 'Validation Error',
+            description: 'Please describe the situation',
+            type: 'error',
+            duration: 3000,
+          });
+          return false;
+        }
+        if (formData.situation.trim().length < 10) {
+          toaster.create({
+            title: 'Validation Error',
+            description: 'Situation must be at least 10 characters',
+            type: 'error',
+            duration: 3000,
+          });
+          return false;
+        }
+        return true;
+      case 1: // Decision
+        if (!formData.decision.trim()) {
+          toaster.create({
+            title: 'Validation Error',
+            description: 'Please describe your decision',
+            type: 'error',
+            duration: 3000,
+          });
+          return false;
+        }
+        if (formData.decision.trim().length < 5) {
+          toaster.create({
+            title: 'Validation Error',
+            description: 'Decision must be at least 5 characters',
+            type: 'error',
+            duration: 3000,
+          });
+          return false;
+        }
+        return true;
+      case 2: // Reasoning (optional)
+        return true;
+      default:
+        return true;
+    }
+  };
 
-    // Basic validation
+  const handleNext = () => {
+    if (validateCurrentStep()) {
+      setCurrentStep((prev) => Math.min(prev + 1, steps.length - 1));
+    }
+  };
+
+  const handlePrevious = () => {
+    setCurrentStep((prev) => Math.max(prev - 1, 0));
+  };
+
+  const handleFormSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    // Prevent auto-submit, only allow manual button click
+  };
+
+  const handleSubmit = async () => {
+    // Validate all steps before submission
     if (!formData.situation.trim() || !formData.decision.trim()) {
       toaster.create({
         title: 'Validation Error',
-        description: 'Please fill in both situation and decision fields',
+        description: 'Please complete all required fields',
         type: 'error',
         duration: 4000,
       });
@@ -132,7 +198,8 @@ export function DecisionFormModal({
           resetForm();
         }
       }}
-      size="xl"
+      size={{ base: 'full', sm: 'lg', md: 'xl' }}
+      scrollBehavior="inside"
       placement="center"
     >
       <DialogTrigger asChild>
@@ -143,16 +210,20 @@ export function DecisionFormModal({
         )}
       </DialogTrigger>
 
-      <DialogContent>
-        <form onSubmit={handleSubmit}>
-          <DialogHeader py={6} px={6}>
-            <DialogTitle fontSize="2xl" fontWeight="bold">
-              Record a Decision
-            </DialogTitle>
-            <DialogCloseTrigger />
-          </DialogHeader>
+      <DialogContent
+        h={{ base: 'auto', smDown: 'fit-content' }}
+        maxH={{ base: '90dvh', smDown: '100dvh' }}
+        minH={{ base: 'auto', smDown: '100dvh' }}
+      >
+        <DialogHeader py={{ base: 4, md: 6 }} px={{ base: 4, md: 6 }}>
+          <DialogTitle fontSize="2xl" fontWeight="bold">
+            Record a Decision
+          </DialogTitle>
+          <DialogCloseTrigger />
+        </DialogHeader>
 
-          <DialogBody py={6} px={6}>
+        <form onSubmit={handleFormSubmit} style={{ display: 'contents' }}>
+          <DialogBody py={{ base: 4, md: 6 }} px={{ base: 4, md: 6 }}>
             <VStack gap={6} align="stretch">
               <Text
                 color="gray.600"
@@ -164,85 +235,167 @@ export function DecisionFormModal({
                 your decision-making process
               </Text>
 
-              <Field
-                label="Situation"
-                required
-                helperText="Describe the situation that led to your decision (min 10 characters)"
+              <StepsRoot
+                step={currentStep}
+                count={steps.length}
+                orientation="horizontal"
+                size="sm"
               >
-                <Textarea
-                  placeholder="Example: I was choosing between two job offers - one with a higher salary but longer commute, and another with better work-life balance..."
-                  value={formData.situation}
-                  onChange={(e) =>
-                    setFormData({ ...formData, situation: e.target.value })
-                  }
-                  rows={3}
-                  minH="60px"
-                  disabled={isSubmitting}
-                  maxLength={5000}
-                  p={3}
-                />
-              </Field>
+                <StepsList mb={6}>
+                  {steps.map((step, index) => (
+                    <StepsItem
+                      key={index}
+                      index={index}
+                      title={step.title}
+                      description={step.description}
+                    />
+                  ))}
+                </StepsList>
 
-              <Field
-                label="Decision"
-                required
-                helperText="What did you decide to do? (min 5 characters)"
-              >
-                <Textarea
-                  placeholder="Example: I chose the job with better work-life balance despite the lower salary..."
-                  value={formData.decision}
-                  onChange={(e) =>
-                    setFormData({ ...formData, decision: e.target.value })
-                  }
-                  rows={2}
-                  minH="60px"
-                  disabled={isSubmitting}
-                  maxLength={2000}
-                  p={3}
-                />
-              </Field>
+                {/* Step 0: Situation */}
+                <StepsContent index={0}>
+                  <VStack gap={4} align="stretch">
+                    <Field
+                      label="Situation"
+                      required
+                      helperText="Describe the situation that led to your decision (min 10 characters)"
+                    >
+                      <Textarea
+                        placeholder="Example: I was choosing between two job offers - one with a higher salary but longer commute, and another with better work-life balance..."
+                        value={formData.situation}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            situation: e.target.value,
+                          })
+                        }
+                        rows={6}
+                        minH="150px"
+                        maxH="150px"
+                        disabled={isSubmitting}
+                        maxLength={5000}
+                        p={3}
+                        autoFocus
+                      />
+                    </Field>
+                  </VStack>
+                </StepsContent>
 
-              <Field
-                label="Reasoning (Optional)"
-                helperText="Why did you make this decision? What factors influenced you?"
-              >
-                <Textarea
-                  placeholder="Example: I realized that my mental health and time with family were more important than a higher salary..."
-                  value={formData.reasoning}
-                  onChange={(e) =>
-                    setFormData({ ...formData, reasoning: e.target.value })
-                  }
-                  rows={2}
-                  minH="60px"
-                  disabled={isSubmitting}
-                  maxLength={3000}
-                  p={3}
-                />
-              </Field>
+                {/* Step 1: Decision */}
+                <StepsContent index={1}>
+                  <VStack gap={4} align="stretch">
+                    <Field
+                      label="Decision"
+                      required
+                      helperText="What did you decide to do? (min 5 characters)"
+                    >
+                      <Textarea
+                        placeholder="Example: I chose the job with better work-life balance despite the lower salary..."
+                        value={formData.decision}
+                        onChange={(e) =>
+                          setFormData({ ...formData, decision: e.target.value })
+                        }
+                        rows={6}
+                        minH="150px"
+                        maxH="150px"
+                        disabled={isSubmitting}
+                        maxLength={2000}
+                        p={3}
+                        autoFocus
+                      />
+                    </Field>
+                  </VStack>
+                </StepsContent>
+
+                {/* Step 2: Reasoning */}
+                <StepsContent index={2}>
+                  <VStack gap={4} align="stretch">
+                    <Field
+                      label="Reasoning (Optional)"
+                      helperText="Why did you make this decision? What factors influenced you?"
+                    >
+                      <Textarea
+                        placeholder="Example: I realized that my mental health and time with family were more important than a higher salary..."
+                        value={formData.reasoning}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            reasoning: e.target.value,
+                          })
+                        }
+                        rows={6}
+                        minH="150px"
+                        maxH="150px"
+                        disabled={isSubmitting}
+                        maxLength={3000}
+                        p={3}
+                        autoFocus
+                      />
+                    </Field>
+                  </VStack>
+                </StepsContent>
+              </StepsRoot>
             </VStack>
           </DialogBody>
 
-          <DialogFooter py={6} px={6}>
-            <Stack direction="row" gap={3} width="full">
-              <Button
-                variant="outline"
-                onClick={() => setOpen(false)}
-                disabled={isSubmitting}
-                flex={1}
-                size="lg"
-              >
-                Cancel
-              </Button>
-              <Button
-                type="submit"
-                colorPalette="blue"
-                loading={isSubmitting}
-                loadingText="Creating..."
-                flex={1}
-                size="lg"
-              >
-                Create Decision
-              </Button>
+          <DialogFooter
+            py={{ base: 4, md: 6 }}
+            px={{ base: 4, md: 6 }}
+            pb={{ base: 'max(1rem, env(safe-area-inset-bottom))', md: 6 }}
+          >
+            <Stack
+              direction="row"
+              gap={3}
+              width="full"
+              justifyContent="space-between"
+            >
+              <Stack direction="row" gap={3}>
+                {currentStep > 0 && (
+                  <Button
+                    variant="outline"
+                    onClick={handlePrevious}
+                    disabled={isSubmitting}
+                    size="lg"
+                    px={6}
+                  >
+                    Previous
+                  </Button>
+                )}
+              </Stack>
+
+              <Stack direction="row" gap={3}>
+                <Button
+                  variant="outline"
+                  onClick={() => setOpen(false)}
+                  disabled={isSubmitting}
+                  size="lg"
+                  px={6}
+                >
+                  Cancel
+                </Button>
+                {currentStep < steps.length - 1 ? (
+                  <Button
+                    onClick={handleNext}
+                    colorPalette="blue"
+                    disabled={isSubmitting}
+                    size="lg"
+                    px={6}
+                  >
+                    Next
+                  </Button>
+                ) : (
+                  <Button
+                    onClick={handleSubmit}
+                    colorPalette="blue"
+                    loading={isSubmitting}
+                    loadingText="Creating..."
+                    size="lg"
+                    px={6}
+                  >
+                    Create Decision
+                  </Button>
+                )}
+              </Stack>
             </Stack>
           </DialogFooter>
         </form>
