@@ -5,7 +5,7 @@
 **Retrospecta** is an AI-Powered Decision Journal application that helps users record complex life or work decisions and receive deep insights through LLM analysis. The system analyzes decisions to identify decision types, cognitive biases, and overlooked alternatives.
 
 **Timeline:** 2 days
-**Status:** Phase 2 Complete, Phase 3.1 Complete (Dark Theme + User Menu)
+**Status:** Phase 2 Complete, Phase 3.1 Complete (Dark Theme + User Menu), Phase 3.2 Complete (Sorting & Filtering)
 **Deployment:** Vercel
 **Demo URL:** TBD
 
@@ -62,14 +62,15 @@
 
 - ✅ Dark theme with user menu integration
 - ✅ User profile dropdown with avatar
-- ⏳ Sorting (by time, status, etc.) - In Progress
+- ✅ Sorting (by time, status, etc.)
+- ✅ Filtering by categories, biases, and date range
 - ⏳ Re-analysis capability - Planned
 
 ### Future Enhancements (Architecture Ready)
 
 - Dashboard with visualization of decision types/biases
-- Filter by categories, types, biases
 - Advanced sorting options
+- Export decisions to various formats
 
 ---
 
@@ -382,11 +383,18 @@ model Decision {
 - [x] Match button and avatar sizes for visual consistency
 - [x] Keep menu open on theme switch (closeOnSelect: false)
 
-#### 3.2 Sorting & Filtering (1 hour)
+#### 3.2 Sorting & Filtering (3 hours) ✅ COMPLETED
 
-- [ ] Add sorting UI (by date, status, category)
-- [ ] Implement server-side sorting in queries
-- [ ] Add sorting state management
+- [x] Add sorting UI (by date, status, category)
+- [x] Implement server-side sorting in queries
+- [x] Add sorting state management
+- [x] Create modular filter components (CategoryFilter, BiasFilter, DateRangeFilter)
+- [x] Add FilterControls composition component
+- [x] Implement multi-select for categories and biases
+- [x] Add date range picker with Ark UI
+- [x] Clear filters functionality
+- [x] Responsive layout with flex-wrap
+- [x] Real-time filtering via SSE streaming
 
 #### 3.3 Re-analysis Feature (1.5 hours)
 
@@ -515,6 +523,10 @@ retrospecta/
 │   │   │   ├── AnalysisDisplay.tsx
 │   │   │   ├── StatusBadge.tsx
 │   │   │   ├── SortingControls.tsx
+│   │   │   ├── FilterControls.tsx  # Composition component for all filters
+│   │   │   ├── CategoryFilter.tsx  # Decision type filter
+│   │   │   ├── BiasFilter.tsx      # Cognitive bias filter
+│   │   │   ├── DateRangeFilter.tsx # Date range filter
 │   │   │   └── ReAnalyzeButton.tsx
 │   │   │
 │   │   └── common/              # Common components
@@ -572,409 +584,128 @@ retrospecta/
 
 ### 1. User Authentication Flow
 
-```typescript
-// Step 1: User clicks "Sign in with Google"
-// components/auth/OAuthButtons.tsx
-import { createClientComponentClient } from '@supabase/ssr';
+**Implementation:** Supabase Auth with OAuth (Google) + Email/Password
 
-const supabase = createClientComponentClient();
+**Flow:**
 
-async function signInWithGoogle() {
-  const { error } = await supabase.auth.signInWithOAuth({
-    provider: 'google',
-    options: {
-      redirectTo: `${window.location.origin}/auth/callback`,
-    },
-  });
-}
+1. User initiates sign-in via `OAuthButtons` component
+2. Supabase handles OAuth redirect to provider
+3. Callback route exchanges auth code for session
+4. Middleware protects dashboard routes
+5. Session stored in secure HTTP-only cookies
 
-// Step 2: Callback route handles OAuth redirect
-// app/auth/callback/route.ts
-export async function GET(request: NextRequest) {
-  const supabase = createRouteHandlerClient({ cookies });
-  const { searchParams } = new URL(request.url);
-  const code = searchParams.get('code');
+**Components:**
 
-  if (code) {
-    await supabase.auth.exchangeCodeForSession(code);
-  }
-
-  return NextResponse.redirect(new URL('/decisions', request.url));
-}
-
-// Step 3: Middleware protects routes
-// middleware.ts
-export async function middleware(request: NextRequest) {
-  const supabase = createMiddlewareClient({ req: request, res: response });
-  const {
-    data: { session },
-  } = await supabase.auth.getSession();
-
-  if (!session && request.nextUrl.pathname.startsWith('/decisions')) {
-    return NextResponse.redirect(new URL('/login', request.url));
-  }
-
-  return response;
-}
-```
+- `components/auth/OAuthButtons.tsx` - OAuth provider buttons
+- `app/auth/callback/route.ts` - OAuth callback handler
+- `middleware.ts` - Route protection with session verification
 
 ### 2. Real-Time Updates with Server-Sent Events (SSE)
 
-```typescript
-// Server-Side Polling (every 10 seconds)
-// app/api/decisions/stream/route.ts
-export async function GET(request: NextRequest) {
-  // Authenticate user
-  const supabase = await createClient();
-  const { user } = await supabase.auth.getUser();
+**Implementation:** Server-Sent Events with 10-second polling interval
 
-  // Create SSE stream
-  const stream = new ReadableStream({
-    async start(controller) {
-      const checkPendingDecisions = async () => {
-        // Query database for pending decisions
-        const pendingDecisions = await prisma.decision.findMany({
-          where: { userId: user.id, status: { in: ['PENDING', 'PROCESSING'] } },
-        });
+**Server-Side (API Route):**
 
-        // Send all decisions to client
-        const allDecisions = await prisma.decision.findMany({
-          where: { userId: user.id },
-          orderBy: { createdAt: 'desc' },
-        });
+- `app/api/decisions/stream/route.ts` - SSE endpoint
+- Authenticates user via Supabase
+- Creates persistent HTTP connection
+- Polls database every 10 seconds for updates
+- Applies sorting and filtering parameters
+- Sends decision updates via SSE stream
+- Handles client disconnection cleanup
 
-        // Push update via SSE
-        controller.enqueue(
-          `data: ${JSON.stringify({
-            type: 'update',
-            decisions: allDecisions,
-          })}\n\n`
-        );
-      };
+**Client-Side (Custom Hook):**
 
-      // Poll every 10 seconds
-      await checkPendingDecisions();
-      const intervalId = setInterval(checkPendingDecisions, 10000);
-
-      // Cleanup on disconnect
-      request.signal.addEventListener('abort', () => {
-        clearInterval(intervalId);
-        controller.close();
-      });
-    },
-  });
-
-  return new Response(stream, {
-    headers: {
-      'Content-Type': 'text/event-stream',
-      'Cache-Control': 'no-cache',
-      Connection: 'keep-alive',
-    },
-  });
-}
-
-// Client-Side Hook
-// hooks/useDecisionStream.ts
-export function useDecisionStream() {
-  const [decisions, setDecisions] = useState([]);
-  const [isConnected, setIsConnected] = useState(false);
-
-  useEffect(() => {
-    const eventSource = new EventSource('/api/decisions/stream');
-
-    eventSource.onopen = () => setIsConnected(true);
-
-    eventSource.onmessage = (event) => {
-      const data = JSON.parse(event.data);
-      if (data.type === 'update') {
-        setDecisions(data.decisions);
-      }
-    };
-
-    eventSource.onerror = () => {
-      setIsConnected(false);
-      eventSource.close();
-      // Reconnect with exponential backoff
-    };
-
-    return () => eventSource.close();
-  }, []);
-
-  return { decisions, isConnected };
-}
-```
+- `hooks/useDecisionStream.ts` - React hook for SSE connection
+- Establishes EventSource connection
+- Maintains connection state (connected/disconnected)
+- Handles automatic reconnection with exponential backoff
+- Updates local state on message receipt
+- Tracks pending analysis count
+- Provides error handling and retry mechanisms
 
 ### 3. Decision Creation & Analysis Flow
 
-```typescript
-// Step 1: User submits decision form
-// components/decisions/DecisionForm.tsx
-'use client'
+**Implementation:** Server Actions + Background LLM Processing + Real-time SSE Updates
 
-import { createDecision, analyzeDecision } from '@/actions/decisions'
+**Step 1: Decision Creation**
 
-async function handleSubmit(data: FormData) {
-  // Create decision (status: PENDING)
-  const decision = await createDecision({
-    situation: data.get('situation'),
-    decision: data.get('decision'),
-    reasoning: data.get('reasoning')
-  })
+- User submits form via `DecisionFormModal` component
+- Server action creates decision with `PENDING` status
+- Triggers background analysis (non-blocking)
+- Returns immediately to user with processing indicator
 
-  // Redirect to decision detail page (shows "processing" status)
-  router.push(`/decisions/${decision.id}`)
+**Step 2: LLM Analysis (Server Action)**
 
-  // Trigger analysis in background (non-blocking)
-  analyzeDecision(decision.id).catch(console.error)
-}
+- `actions/analysis.ts` handles async analysis
+- Updates status to `PROCESSING`
+- Calls Gemini 2.5 Flash with structured output schema
+- Prompt analyzes situation/decision/reasoning
+- Returns: category, cognitive biases, alternatives, insights
+- On success: updates status to `COMPLETED` + saves analysis
+- On failure: updates status to `FAILED` + increments retry count
 
-// Step 2: Server Action handles analysis
-// actions/analysis.ts
-'use server'
+**Step 3: Real-Time Updates**
 
-import { generateObject } from 'ai'
-import { google } from '@ai-sdk/google'
-import { prisma } from '@/lib/prisma'
-import { analysisPrompt } from '@/lib/ai/prompts'
+- SSE stream automatically sends updates to connected clients
+- Client receives updated decision via `useDecisionStream` hook
+- UI updates instantly when analysis completes
+- Status badges show current state (Pending, Processing, Completed, Failed)
 
-export async function analyzeDecision(decisionId: string) {
-  // Update status to PROCESSING
-  await prisma.decision.update({
-    where: { id: decisionId },
-    data: { status: 'PROCESSING' }
-  })
+### 4. Re-analysis Flow (Planned)
 
-  try {
-    // Get decision data
-    const decision = await prisma.decision.findUnique({
-      where: { id: decisionId }
-    })
+**Implementation:** Server Action + Status Reset + Background Re-processing
 
-    // Call LLM with structured output
-    const { object } = await generateObject({
-      model: google('gemini-2.5-flash'),
-      schema: analysisSchema,
-      prompt: analysisPrompt(decision)
-    })
+**Flow:**
 
-    // Update decision with analysis
-    await prisma.decision.update({
-      where: { id: decisionId },
-      data: {
-        status: 'COMPLETED',
-        category: object.category,
-        biases: object.biases,
-        alternatives: object.alternatives,
-        insights: object.insights,
-        lastAnalyzedAt: new Date()
-      }
-    })
-  } catch (error) {
-    // Handle failure
-    await prisma.decision.update({
-      where: { id: decisionId },
-      data: {
-        status: 'FAILED',
-        errorMessage: error.message,
-        analysisAttempts: { increment: 1 }
-      }
-    })
-  }
-}
+- User clicks "Re-analyze" button on decision card
+- Server action resets status to `PENDING` and increments attempt counter
+- Triggers same analysis flow as initial creation
+- SSE stream notifies client of status changes
+- UI updates with new analysis results
 
-// Step 3: Client polls for updates
-// components/decisions/DecisionDetail.tsx
-'use client'
+### 5. User Menu with Avatar & Theme Toggle
 
-import { usePolling } from '@/hooks/usePolling'
+**Implementation:** Server Action + Chakra UI Menu + Avatar Component
 
-function DecisionDetail({ initialDecision }) {
-  const { data: decision } = usePolling(
-    `/api/decisions/${initialDecision.id}`,
-    {
-      enabled: initialDecision.status === 'PENDING' || initialDecision.status === 'PROCESSING',
-      interval: 3000 // Poll every 3 seconds
-    }
-  )
+**Components:**
 
-  if (decision.status === 'COMPLETED') {
-    return <AnalysisDisplay analysis={decision} />
-  }
+- `components/layout/UserMenu.tsx` - Dropdown menu with avatar
+- `actions/auth.ts` - Server actions for user data + sign out
 
-  return <LoadingSkeleton />
-}
-```
+**Features:**
 
-### 3. Re-analysis Flow
+- Avatar with fallback to initials
+- User info display (name + email)
+- Theme toggle (light/dark mode) - menu stays open on toggle
+- Sign out functionality
+- Bottom-end positioning for dropdown
+- Fetched via `getCurrentUser()` server action on page load
 
-```typescript
-// components/decisions/ReAnalyzeButton.tsx
-'use client'
+### 6. Sorting & Filtering Architecture (Implemented)
 
-import { reanalyzeDecision } from '@/actions/analysis'
+**Component Structure:**
 
-async function handleReAnalyze(decisionId: string) {
-  await reanalyzeDecision(decisionId)
-  // Polling hook will pick up status change
-}
+- `FilterControls.tsx` - Composition component that orchestrates all filters
+- `CategoryFilter.tsx` - Multi-select dropdown for decision types (9 categories)
+- `BiasFilter.tsx` - Multi-select dropdown for cognitive biases (16 common biases)
+- `DateRangeFilter.tsx` - Date range picker with "From" and "To" date inputs
+- `SortingControls.tsx` - Sorting controls for field and order
 
-// actions/analysis.ts
-export async function reanalyzeDecision(decisionId: string) {
-  // Reset status and increment attempts
-  await prisma.decision.update({
-    where: { id: decisionId },
-    data: {
-      status: 'PENDING',
-      analysisAttempts: { increment: 1 }
-    }
-  })
+**Features:**
 
-  // Trigger new analysis
-  return analyzeDecision(decisionId)
-}
-```
+- Real-time filtering via Server-Sent Events (SSE) streaming
+- Multiple filter combinations (categories, biases, date range)
+- Responsive design with flex-wrap for mobile screens
+- Clear filters button when filters are active
+- Sorted results (by createdAt, status, category)
+- Modular architecture with separation of concerns
 
-### 4. User Menu with Avatar & Theme Toggle
+**Implementation:**
 
-```typescript
-// Step 1: Server Action retrieves current user data
-// actions/auth.ts
-export async function getCurrentUser() {
-  const supabase = await createClient();
-
-  const {
-    data: { user },
-    error,
-  } = await supabase.auth.getUser();
-
-  if (error || !user) {
-    return null;
-  }
-
-  // Get additional user data from database
-  const dbUser = await prisma.user.findUnique({
-    where: { id: user.id },
-    select: {
-      id: true,
-      email: true,
-      name: true,
-      avatarUrl: true,
-    },
-  });
-
-  return {
-    id: user.id,
-    email: user.email || dbUser?.email || '',
-    name: dbUser?.name || user.user_metadata?.name || user.email?.split('@')[0] || 'User',
-    avatarUrl: dbUser?.avatarUrl || user.user_metadata?.avatar_url || null,
-  };
-}
-
-// Step 2: UserMenu component displays avatar and dropdown
-// components/layout/UserMenu.tsx
-'use client';
-
-export function UserMenu({ user, onSignOut }: UserMenuProps) {
-  const { colorMode, toggleColorMode } = useColorMode();
-
-  return (
-    <MenuRoot positioning={{ placement: 'bottom-end' }}>
-      <MenuTrigger asChild>
-        <IconButton variant="ghost" size="sm" aria-label="User menu">
-          <Avatar.Root size="sm">
-            <Avatar.Fallback name={user.name} />
-            {user.avatarUrl && <Avatar.Image src={user.avatarUrl} />}
-          </Avatar.Root>
-        </IconButton>
-      </MenuTrigger>
-
-      <MenuContent>
-        {/* User Info */}
-        <MenuItem closeOnSelect={false}>
-          <Avatar.Root size="md">
-            <Avatar.Fallback name={user.name} />
-            {user.avatarUrl && <Avatar.Image src={user.avatarUrl} />}
-          </Avatar.Root>
-          <Text>{user.name}</Text>
-          <Text>{user.email}</Text>
-        </MenuItem>
-
-        {/* Theme Toggle (stays open on click) */}
-        <MenuItem onClick={toggleColorMode} closeOnSelect={false}>
-          {colorMode === 'dark' ? <LuSun /> : <LuMoon />}
-          <Text>{colorMode === 'dark' ? 'Light Mode' : 'Dark Mode'}</Text>
-        </MenuItem>
-
-        {/* Sign Out */}
-        <MenuItem onClick={onSignOut}>
-          <LuLogOut />
-          <Text>Sign Out</Text>
-        </MenuItem>
-      </MenuContent>
-    </MenuRoot>
-  );
-}
-
-// Step 3: DecisionsPage fetches user and renders menu
-// app/(dashboard)/decisions/page.tsx
-'use client';
-
-export default function DecisionsPage() {
-  const [user, setUser] = useState(null);
-
-  useEffect(() => {
-    getCurrentUser().then((userData) => {
-      if (userData) {
-        setUser(userData);
-      }
-    });
-  }, []);
-
-  const handleSignOut = async () => {
-    await signOut();
-  };
-
-  return (
-    <Box>
-      <Stack direction="row" justify="space-between">
-        <Heading>Your Decisions</Heading>
-        <Stack direction="row" gap={2}>
-          <DecisionFormModal />
-          {user && <UserMenu user={user} onSignOut={handleSignOut} />}
-        </Stack>
-      </Stack>
-    </Box>
-  );
-}
-```
-
-### 5. Sorting & Filtering Architecture (Future-Ready)
-
-```typescript
-// actions/decisions.ts
-export async function getDecisions({
-  userId,
-  sortBy = 'createdAt',
-  sortOrder = 'desc',
-  filterBy = {},
-  page = 1,
-  limit = 20,
-}: GetDecisionsParams) {
-  return prisma.decision.findMany({
-    where: {
-      userId,
-      // Future: add filter conditions
-      ...(filterBy.status && { status: filterBy.status }),
-      ...(filterBy.category && { category: filterBy.category }),
-    },
-    orderBy: {
-      [sortBy]: sortOrder,
-    },
-    skip: (page - 1) * limit,
-    take: limit,
-  });
-}
-```
+- Client: `useDecisionStream` hook accepts sorting/filtering parameters
+- Server: SSE endpoint applies Prisma where clauses + orderBy
+- UI: Chakra UI Select components with Ark UI DatePicker
 
 ---
 
@@ -1162,24 +893,37 @@ const stats = await prisma.decision.groupBy({
 });
 ```
 
-### Phase 6: Advanced Filtering (Post-MVP)
+### Phase 6: Advanced Filtering ✅ COMPLETE
 
-**Estimated Time:** 2-3 hours
+**Actual Time:** ~3 hours
 
-#### Features:
+#### Completed Features:
 
-- Filter by decision category
-- Filter by specific biases
-- Date range filtering
-- Multi-select filters
+- ✅ Filter by decision category (9 categories with multi-select)
+- ✅ Filter by specific biases (16 common biases with multi-select)
+- ✅ Date range filtering (From/To date pickers with Ark UI)
+- ✅ Multi-select filters with visual feedback
+- ✅ Clear filters button
+- ✅ Responsive layout (filters wrap on mobile)
+- ✅ Real-time SSE streaming with filters
 
-#### Implementation:
+#### Implementation Details:
 
-```typescript
-// Extend existing getDecisions action
-// Add filter UI components
-// Use Chakra UI Select/MultiSelect components
-```
+**Component Architecture:**
+
+- Modular design: separate components for each filter type
+- `FilterControls.tsx` - orchestration/composition component
+- `CategoryFilter.tsx` - decision type selection
+- `BiasFilter.tsx` - cognitive bias selection
+- `DateRangeFilter.tsx` - date range selection with calendar UI
+
+**Technical Highlights:**
+
+- Chakra UI v3 Select components with `createListCollection`
+- Ark UI DatePicker with custom styling
+- Flexbox layout with proper alignment and spacing
+- Key-based remounting for proper date picker clearing
+- Type-safe filter parameters with TypeScript
 
 ### Phase 7: Enhanced LLM Features
 
@@ -1249,7 +993,8 @@ export const analysisPrompt = (decision, locale = 'en') => {
 - ✅ Dark theme works correctly (integrated in user menu)
 - ✅ User profile dropdown with avatar display
 - ✅ Theme toggle and logout in user menu
-- ⏳ Sorting by date/status works - In Progress
+- ✅ Sorting by date/status/category works
+- ✅ Filtering by categories, biases, and date range
 - ⏳ Re-analysis feature functional - Planned
 - ⏳ Deployed to Vercel with working demo - Planned
 - ✅ Clean, professional UI with skeleton loading states
