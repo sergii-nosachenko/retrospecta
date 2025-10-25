@@ -315,14 +315,14 @@ model Decision {
 - [x] Setup Git with conventional commits
 - [x] Setup pre-commit hooks with Husky and lint-staged
 
-#### 1.2 Database & Auth Setup (2 hours)
+#### 1.2 Database & Auth Setup (2 hours) ✅ COMPLETED
 
-- [ ] Create Supabase project
-- [ ] Configure Prisma with Supabase PostgreSQL
-- [ ] Create database schema and run migrations
-- [ ] Setup Supabase Auth (email/password + Google OAuth)
-- [ ] Create auth middleware for protected routes
-- [ ] Build auth UI components (login/register/logout)
+- [x] Create Supabase project
+- [x] Configure Prisma with Supabase PostgreSQL
+- [x] Create database schema and run migrations
+- [x] Setup Supabase Auth (email/password + Google OAuth)
+- [x] Create auth middleware for protected routes
+- [x] Build auth UI components (login/register/logout)
 
 #### 1.3 AI Integration Setup (1 hour)
 
