@@ -1,0 +1,86 @@
+// Prisma schema for Retrospecta
+// Database: Supabase PostgreSQL
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// User model (synced with Supabase Auth)
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  name      String?
+  avatarUrl String?  @map("avatar_url")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  decisions Decision[]
+
+  @@map("users")
+}
+
+// Decision categories enum
+enum DecisionCategory {
+  EMOTIONAL
+  STRATEGIC
+  IMPULSIVE
+  ANALYTICAL
+  INTUITIVE
+  COLLABORATIVE
+  RISK_AVERSE
+  RISK_TAKING
+  OTHER
+
+  @@map("decision_category")
+}
+
+// Processing status enum
+enum ProcessingStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+
+  @@map("processing_status")
+}
+
+// Main decision model
+model Decision {
+  id     String @id @default(uuid())
+  userId String @map("user_id")
+
+  // User input
+  situation String  @db.Text
+  decision  String  @db.Text
+  reasoning String? @db.Text
+
+  // LLM analysis results
+  status       ProcessingStatus  @default(PENDING)
+  category     DecisionCategory?
+  biases       String[] // Array of cognitive bias names
+  alternatives String?           @db.Text // Overlooked alternatives
+  insights     String?           @db.Text // Additional insights
+
+  // Metadata
+  analysisAttempts Int       @default(0) @map("analysis_attempts")
+  lastAnalyzedAt   DateTime? @map("last_analyzed_at")
+  errorMessage     String?   @db.Text @map("error_message")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Indexes for performance
+  @@index([userId])
+  @@index([status])
+  @@index([category])
+  @@index([createdAt])
+  @@map("decisions")
+}
