@@ -8,7 +8,7 @@ import { createClient } from '@/lib/supabase/server';
 
 /**
  * Server-Sent Events endpoint for real-time decision updates
- * Polls database every 10 seconds for pending decisions
+ * Polls database every 3 seconds for pending decisions
  * Supports sorting via query parameters: sortBy and sortOrder
  */
 export async function GET(request: NextRequest) {
@@ -70,14 +70,12 @@ export async function GET(request: NextRequest) {
             },
           });
 
-          // If there are pending decisions, send update to client
-          if (pendingDecisions.length > 0) {
-            sendEvent({
-              type: 'pending',
-              count: pendingDecisions.length,
-              decisions: pendingDecisions,
-            });
-          }
+          // Always send pending count to keep client in sync
+          sendEvent({
+            type: 'pending',
+            count: pendingDecisions.length,
+            decisions: pendingDecisions,
+          });
 
           // Build where clause with filters
           const whereClause: Prisma.DecisionWhereInput = {
@@ -128,6 +126,9 @@ export async function GET(request: NextRequest) {
               biases: true,
               alternatives: true,
               insights: true,
+              analysisAttempts: true,
+              lastAnalyzedAt: true,
+              errorMessage: true,
               createdAt: true,
               updatedAt: true,
             },
@@ -150,8 +151,8 @@ export async function GET(request: NextRequest) {
       // Initial check
       await checkPendingDecisions();
 
-      // Set up interval for polling every 10 seconds
-      const intervalId = setInterval(checkPendingDecisions, 10000);
+      // Set up interval for polling every 3 seconds for faster real-time updates
+      const intervalId = setInterval(checkPendingDecisions, 3000);
 
       // Send keepalive every 30 seconds to prevent connection timeout
       const keepaliveId = setInterval(() => {

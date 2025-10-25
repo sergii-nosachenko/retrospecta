@@ -107,6 +107,7 @@ export function UserMenu({ user, onSignOut }: UserMenuProps) {
           css={{
             py: 2,
             px: 3,
+            cursor: 'pointer',
           }}
         >
           <Group gap={3} alignItems="center">
@@ -126,6 +127,7 @@ export function UserMenu({ user, onSignOut }: UserMenuProps) {
           css={{
             py: 2,
             px: 3,
+            cursor: 'pointer',
             color: 'red.600',
             _dark: { color: 'red.400' },
             _hover: {

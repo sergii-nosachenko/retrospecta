@@ -48,6 +48,7 @@ export function LoginForm() {
             type="email"
             placeholder="you@example.com"
             required
+            px={4}
           />
         </Field>
 
@@ -57,6 +58,7 @@ export function LoginForm() {
             type="password"
             placeholder="Your password"
             required
+            px={4}
           />
         </Field>
 

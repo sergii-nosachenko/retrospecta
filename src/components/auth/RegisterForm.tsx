@@ -43,7 +43,13 @@ export function RegisterForm() {
         )}
 
         <Field label="Name" required>
-          <Input name="name" type="text" placeholder="Your name" required />
+          <Input
+            name="name"
+            type="text"
+            placeholder="Your name"
+            required
+            px={4}
+          />
         </Field>
 
         <Field label="Email" required>
@@ -52,6 +58,7 @@ export function RegisterForm() {
             type="email"
             placeholder="you@example.com"
             required
+            px={4}
           />
         </Field>
 
@@ -62,6 +69,7 @@ export function RegisterForm() {
             placeholder="Choose a password"
             required
             minLength={6}
+            px={4}
           />
         </Field>
 

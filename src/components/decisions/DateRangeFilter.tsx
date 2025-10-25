@@ -47,12 +47,14 @@ export function DateRangeFilter({
           onDateFromChange(dateValue ? dateValue.toString() : null);
         }}
         size="sm"
+        style={{ alignSelf: 'center' }}
       >
         <DatePickerControl
           style={{
             display: 'flex',
             alignItems: 'center',
             gap: '0.5rem',
+            marginTop: '1px',
           }}
         >
           <DatePickerInput
@@ -61,7 +63,7 @@ export function DateRangeFilter({
               width: '140px',
               paddingLeft: '0.75rem',
               paddingRight: '0.75rem',
-              height: '2.5rem',
+              height: '36px',
               fontSize: '0.875rem',
             }}
           />
@@ -135,12 +137,14 @@ export function DateRangeFilter({
           onDateToChange(dateValue ? dateValue.toString() : null);
         }}
         size="sm"
+        style={{ alignSelf: 'center' }}
       >
         <DatePickerControl
           style={{
             display: 'flex',
             alignItems: 'center',
             gap: '0.5rem',
+            marginTop: '1px',
           }}
         >
           <DatePickerInput
@@ -149,7 +153,7 @@ export function DateRangeFilter({
               width: '140px',
               paddingLeft: '0.75rem',
               paddingRight: '0.75rem',
-              height: '2.5rem',
+              height: '36px',
               fontSize: '0.875rem',
             }}
           />
