@@ -17,14 +17,21 @@ export default function Home() {
       overflow="hidden"
     >
       <AnimatedBackground />
-      <Container maxW="4xl" p={8}>
+      <Container maxW="4xl" p={{ base: 4, sm: 6, md: 8 }}>
         <Stack gap={8} alignItems="center" textAlign="center">
           <Stack gap={4}>
             <IconReveal />
-            <Heading size="4xl" fontWeight="bold">
+            <Heading
+              size={{ base: '2xl', sm: '3xl', md: '4xl' }}
+              fontWeight="bold"
+            >
               Retrospecta
             </Heading>
-            <Text fontSize="2xl" color="gray.600" _dark={{ color: 'gray.400' }}>
+            <Text
+              fontSize={{ base: 'lg', sm: 'xl', md: '2xl' }}
+              color="gray.600"
+              _dark={{ color: 'gray.400' }}
+            >
               AI-Powered Decision Journal
             </Text>
           </Stack>
@@ -40,7 +47,11 @@ export default function Home() {
             biases, and overlooked alternatives to make better choices.
           </Text>
 
-          <Stack direction="row" gap={4}>
+          <Stack
+            direction={{ base: 'column', sm: 'row' }}
+            gap={4}
+            width={{ base: 'full', sm: 'auto' }}
+          >
             <Link href="/register">
               <Button size="lg" colorPalette="blue" px={8} py={3}>
                 Get Started

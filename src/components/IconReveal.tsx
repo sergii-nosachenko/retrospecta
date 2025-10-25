@@ -21,10 +21,25 @@ const pulseKeyframes = `
 
 const iconStyles = `
   .icon-reveal {
-    font-size: 8rem;
+    font-size: 4rem;
     cursor: pointer;
     opacity: 0.6;
     transition: filter 0.3s ease-in-out, opacity 0.3s ease-in-out;
+  }
+  @media (min-width: 480px) {
+    .icon-reveal {
+      font-size: 5rem;
+    }
+  }
+  @media (min-width: 768px) {
+    .icon-reveal {
+      font-size: 6rem;
+    }
+  }
+  @media (min-width: 1024px) {
+    .icon-reveal {
+      font-size: 8rem;
+    }
   }
   .icon-reveal:hover {
     filter: blur(0px) !important;
@@ -38,7 +53,11 @@ export function IconReveal() {
     <>
       <style>{pulseKeyframes}</style>
       <style>{iconStyles}</style>
-      <Group gap={8} justifyContent="center" mb={6}>
+      <Group
+        gap={{ base: 4, sm: 6, md: 8 }}
+        justifyContent="center"
+        mb={{ base: 4, md: 6 }}
+      >
         <Box
           className="icon-reveal"
           css={{
