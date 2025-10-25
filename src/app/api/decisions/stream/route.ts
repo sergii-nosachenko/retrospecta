@@ -1,11 +1,15 @@
+import { Prisma } from '@prisma/client';
+
 import { NextRequest } from 'next/server';
 
+import { DecisionCategory } from '@/components/decisions/CategoryFilter';
 import { prisma } from '@/lib/prisma';
 import { createClient } from '@/lib/supabase/server';
 
 /**
  * Server-Sent Events endpoint for real-time decision updates
  * Polls database every 10 seconds for pending decisions
+ * Supports sorting via query parameters: sortBy and sortOrder
  */
 export async function GET(request: NextRequest) {
   // Verify authentication
@@ -20,6 +24,23 @@ export async function GET(request: NextRequest) {
   }
 
   const userId = user.id;
+
+  // Get sorting and filtering parameters from query string
+  const { searchParams } = new URL(request.url);
+  const sortBy = searchParams.get('sortBy') || 'createdAt';
+  const sortOrder = searchParams.get('sortOrder') || 'desc';
+  const categories = searchParams.getAll('categories');
+  const biases = searchParams.getAll('biases');
+  const dateFrom = searchParams.get('dateFrom');
+  const dateTo = searchParams.get('dateTo');
+
+  // Validate sortBy parameter
+  const validSortFields = ['createdAt', 'updatedAt', 'status', 'category'];
+  const sortField = validSortFields.includes(sortBy) ? sortBy : 'createdAt';
+
+  // Validate sortOrder parameter
+  const validSortOrders = ['asc', 'desc'];
+  const order = validSortOrders.includes(sortOrder) ? sortOrder : 'desc';
 
   // Create a readable stream for SSE
   const encoder = new TextEncoder();
@@ -58,13 +79,44 @@ export async function GET(request: NextRequest) {
             });
           }
 
+          // Build where clause with filters
+          const whereClause: Prisma.DecisionWhereInput = {
+            userId,
+          };
+
+          // Add category filter
+          if (categories.length > 0) {
+            whereClause.category = {
+              in: categories as DecisionCategory[],
+            };
+          }
+
+          // Add bias filter - check if decision has any of the selected biases
+          if (biases.length > 0) {
+            whereClause.biases = {
+              hasSome: biases,
+            };
+          }
+
+          // Add date filters
+          if (dateFrom || dateTo) {
+            whereClause.createdAt = {};
+            if (dateFrom) {
+              whereClause.createdAt.gte = new Date(dateFrom);
+            }
+            if (dateTo) {
+              // Add one day to include the entire end date
+              const endDate = new Date(dateTo);
+              endDate.setDate(endDate.getDate() + 1);
+              whereClause.createdAt.lt = endDate;
+            }
+          }
+
           // Get all user decisions to send complete list
           const allDecisions = await prisma.decision.findMany({
-            where: {
-              userId,
-            },
+            where: whereClause,
             orderBy: {
-              createdAt: 'desc',
+              [sortField]: order,
             },
             select: {
               id: true,

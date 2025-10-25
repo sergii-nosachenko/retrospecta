@@ -30,24 +30,54 @@ interface UseDecisionStreamReturn {
   isLoading: boolean;
   error: string | null;
   pendingCount: number;
+  refresh: () => void;
+}
+
+interface UseDecisionStreamOptions {
+  sortBy?: 'createdAt' | 'updatedAt' | 'status' | 'category';
+  sortOrder?: 'asc' | 'desc';
+  categories?: string[];
+  biases?: string[];
+  dateFrom?: string | null;
+  dateTo?: string | null;
 }
 
 /**
  * Custom hook to connect to server-sent events for real-time decision updates
  * Server polls database every 10 seconds and pushes updates to client
  * Shows toast notifications when decision status changes
+ *
+ * @param options - Sorting options for decisions
  */
-export function useDecisionStream(): UseDecisionStreamReturn {
+export function useDecisionStream(
+  options: UseDecisionStreamOptions = {}
+): UseDecisionStreamReturn {
+  const {
+    sortBy = 'createdAt',
+    sortOrder = 'desc',
+    categories = [],
+    biases = [],
+    dateFrom = null,
+    dateTo = null,
+  } = options;
   const [decisions, setDecisions] = useState<Decision[]>([]);
   const [isConnected, setIsConnected] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [pendingCount, setPendingCount] = useState(0);
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
   const eventSourceRef = useRef<EventSource | null>(null);
   const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const reconnectAttempts = useRef(0);
   const maxReconnectAttempts = 5;
   const previousDecisionsRef = useRef<Map<string, string>>(new Map());
+
+  const refresh = () => {
+    setIsLoading(true);
+    setError(null);
+    reconnectAttempts.current = 0;
+    setRefreshTrigger((prev) => prev + 1);
+  };
 
   useEffect(() => {
     const connect = () => {
@@ -57,8 +87,32 @@ export function useDecisionStream(): UseDecisionStreamReturn {
           eventSourceRef.current.close();
         }
 
-        // Create new EventSource connection
-        const eventSource = new EventSource('/api/decisions/stream');
+        // Create new EventSource connection with sorting and filtering parameters
+        const params = new URLSearchParams({
+          sortBy,
+          sortOrder,
+        });
+
+        // Add category filters
+        if (categories.length > 0) {
+          categories.forEach((cat) => params.append('categories', cat));
+        }
+
+        // Add bias filters
+        if (biases.length > 0) {
+          biases.forEach((bias) => params.append('biases', bias));
+        }
+
+        // Add date filters
+        if (dateFrom) {
+          params.append('dateFrom', dateFrom);
+        }
+        if (dateTo) {
+          params.append('dateTo', dateTo);
+        }
+
+        const url = `/api/decisions/stream?${params.toString()}`;
+        const eventSource = new EventSource(url);
         eventSourceRef.current = eventSource;
 
         eventSource.onopen = () => {
@@ -159,7 +213,7 @@ export function useDecisionStream(): UseDecisionStreamReturn {
     // Initial connection
     connect();
 
-    // Cleanup on unmount
+    // Cleanup on unmount or when sorting/filtering changes
     return () => {
       if (eventSourceRef.current) {
         eventSourceRef.current.close();
@@ -168,7 +222,7 @@ export function useDecisionStream(): UseDecisionStreamReturn {
         clearTimeout(reconnectTimeoutRef.current);
       }
     };
-  }, []);
+  }, [sortBy, sortOrder, categories, biases, dateFrom, dateTo, refreshTrigger]);
 
   return {
     decisions,
@@ -176,5 +230,6 @@ export function useDecisionStream(): UseDecisionStreamReturn {
     isLoading,
     error,
     pendingCount,
+    refresh,
   };
 }
