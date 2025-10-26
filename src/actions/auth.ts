@@ -45,14 +45,26 @@ export async function signup(formData: FormData) {
   }
 
   if (authData.user) {
-    // Create user in our database
-    await prisma.user.create({
-      data: {
+    // Create or update user in our database
+    // Using upsert to handle cases where user signs up multiple times before confirming
+    await prisma.user.upsert({
+      where: { id: authData.user.id },
+      create: {
         id: authData.user.id,
         email: authData.user.email!,
         name: data.options.data.name,
       },
+      update: {
+        name: data.options.data.name,
+      },
     });
+  }
+
+  // Check if email confirmation is required
+  // If session is null, user needs to confirm their email
+  if (!authData.session) {
+    revalidatePath('/', 'layout');
+    redirect(ROUTES.CONFIRM_EMAIL);
   }
 
   revalidatePath('/', 'layout');
@@ -73,7 +85,7 @@ export async function signInWithGoogle() {
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: 'google',
     options: {
-      redirectTo: `${origin}/auth/callback`,
+      redirectTo: `${origin}${ROUTES.AUTH_CALLBACK}`,
     },
   });
 

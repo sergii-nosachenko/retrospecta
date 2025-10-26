@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 
+import { ROUTES } from '@/constants/routes';
 import { prisma } from '@/lib/prisma';
 import { createClient } from '@/lib/supabase/server';
 
@@ -18,30 +19,35 @@ export async function GET(request: Request) {
 
       if (error) {
         console.error('Supabase auth error:', error);
-        return NextResponse.redirect(`${origin}/login?error=auth_failed`);
+        return NextResponse.redirect(
+          `${origin}${ROUTES.LOGIN}?error=auth_failed`
+        );
       }
 
       if (data.user) {
-        // Create user in our database if they don't exist
+        // Create or update user in our database
         try {
-          const existingUser = await prisma.user.findUnique({
+          await prisma.user.upsert({
             where: { id: data.user.id },
+            create: {
+              id: data.user.id,
+              email: data.user.email!,
+              name:
+                (data.user.user_metadata.name as string | undefined) ??
+                (data.user.user_metadata.full_name as string | undefined),
+              avatarUrl: data.user.user_metadata.avatar_url as
+                | string
+                | undefined,
+            },
+            update: {
+              name:
+                (data.user.user_metadata.name as string | undefined) ??
+                (data.user.user_metadata.full_name as string | undefined),
+              avatarUrl: data.user.user_metadata.avatar_url as
+                | string
+                | undefined,
+            },
           });
-
-          if (!existingUser) {
-            await prisma.user.create({
-              data: {
-                id: data.user.id,
-                email: data.user.email!,
-                name:
-                  (data.user.user_metadata.name as string | undefined) ??
-                  (data.user.user_metadata.full_name as string | undefined),
-                avatarUrl: data.user.user_metadata.avatar_url as
-                  | string
-                  | undefined,
-              },
-            });
-          }
         } catch (dbError) {
           console.error('Database error:', dbError);
           // Continue even if user creation fails - they're authenticated
@@ -49,10 +55,12 @@ export async function GET(request: Request) {
       }
     } catch (error) {
       console.error('Auth callback error:', error);
-      return NextResponse.redirect(`${origin}/login?error=callback_failed`);
+      return NextResponse.redirect(
+        `${origin}${ROUTES.LOGIN}?error=callback_failed`
+      );
     }
   }
 
   // URL to redirect to after sign in process completes
-  return NextResponse.redirect(`${origin}/decisions`);
+  return NextResponse.redirect(`${origin}${ROUTES.DECISIONS}`);
 }

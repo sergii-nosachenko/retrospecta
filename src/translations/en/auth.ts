@@ -42,4 +42,12 @@ export const auth = {
   oauth: {
     google: 'Continue with Google',
   },
+  confirmEmail: {
+    title: 'Check Your Email',
+    subtitle: 'We sent you a confirmation link',
+    message:
+      'Please check your email and click the confirmation link to activate your account. Once confirmed, you can sign in.',
+    checkSpam: "Don't see the email? Check your spam folder.",
+    backToLogin: 'Back to Sign In',
+  },
 } as const;

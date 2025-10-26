@@ -1,11 +1,11 @@
 'use client';
 
-import { Avatar, Group, IconButton, Separator, Text } from '@chakra-ui/react';
-import Link from 'next/link';
 import { memo, useCallback } from 'react';
 import { LuChartBar, LuLogOut, LuMoon, LuSun } from 'react-icons/lu';
 
+import Link from 'next/link';
 
+import { Avatar, Group, IconButton, Separator, Text } from '@chakra-ui/react';
 
 import {
   MenuContent,
@@ -125,7 +125,7 @@ const DashboardMenuItem = memo(() => {
         cursor: 'pointer',
       }}
     >
-      <Link href={ROUTES.DASHBOARD}>
+      <Link href={ROUTES.DECISIONS_DASHBOARD}>
         <Group gap={3} alignItems="center">
           <LuChartBar />
           <Text fontSize="sm">{t('common.navigation.dashboard')}</Text>

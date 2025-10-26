@@ -1,4 +1,5 @@
 import { createServerClient } from '@supabase/ssr';
+
 import { type NextRequest, NextResponse } from 'next/server';
 
 import { ROUTES } from '@/constants/routes';
@@ -40,7 +41,13 @@ export async function updateSession(request: NextRequest) {
   } = await supabase.auth.getUser();
 
   // List of public paths that don't require authentication
-  const publicPaths = [ROUTES.HOME, ROUTES.LOGIN, ROUTES.REGISTER, '/auth'];
+  const publicPaths = [
+    ROUTES.HOME,
+    ROUTES.LOGIN,
+    ROUTES.REGISTER,
+    ROUTES.CONFIRM_EMAIL,
+    ROUTES.AUTH,
+  ];
   const isPublicPath = publicPaths.some((path) =>
     request.nextUrl.pathname.startsWith(path)
   );
