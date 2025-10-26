@@ -1,7 +1,6 @@
 'use client';
 
 import {
-  Badge,
   Box,
   Button,
   Card,
@@ -14,6 +13,11 @@ import { memo, useCallback, useState } from 'react';
 import { HiOutlineDotsVertical } from 'react-icons/hi';
 import { LuBrainCircuit, LuRefreshCw, LuTrash2 } from 'react-icons/lu';
 
+import {
+  BiasesBadgeList,
+  DecisionTypeBadge,
+  StatusBadge,
+} from '@/components/decisions/shared';
 import { EmptyState } from '@/components/ui/empty-state';
 import {
   MenuContent,
@@ -21,17 +25,12 @@ import {
   MenuRoot,
   MenuTrigger,
 } from '@/components/ui/menu';
-import {
-  getBiasLabel,
-  getDecisionTypeIcon,
-  getDecisionTypeLabel,
-} from '@/constants/decisions';
 import { useDecisions } from '@/contexts/DecisionsContext';
 import {
   deleteDecisionAction,
   reanalyzeDecisionAction,
 } from '@/lib/utils/decision-actions';
-import { type TFunction, useTranslations } from '@/translations';
+import { useTranslations } from '@/translations';
 import { DecisionActionType, ProcessingStatus } from '@/types/enums';
 
 import { DecisionDetailModal } from './modals/DecisionDetailModal';
@@ -62,37 +61,7 @@ interface DecisionCardProps {
   onDelete: (id: string) => void;
 }
 
-// Utility functions for decision cards
-const getStatusColor = (status: string) => {
-  switch (status) {
-    case ProcessingStatus.COMPLETED:
-      return 'green';
-    case ProcessingStatus.PENDING:
-      return 'yellow';
-    case ProcessingStatus.PROCESSING:
-      return 'blue';
-    case ProcessingStatus.FAILED:
-      return 'red';
-    default:
-      return 'gray';
-  }
-};
-
-const getStatusLabel = (status: ProcessingStatus, t: TFunction) => {
-  switch (status) {
-    case ProcessingStatus.COMPLETED:
-      return t('decisions.list.status.completed');
-    case ProcessingStatus.PENDING:
-      return t('decisions.list.status.pending');
-    case ProcessingStatus.PROCESSING:
-      return t('decisions.list.status.processing');
-    case ProcessingStatus.FAILED:
-      return t('decisions.list.status.failed');
-    default:
-      return status;
-  }
-};
-
+// Utility function for truncating text
 const truncateText = (text: string, maxLength: number) => {
   if (text.length <= maxLength) return text;
   return `${text.slice(0, Math.max(0, maxLength))}...`;
@@ -135,13 +104,7 @@ const DecisionCard = memo(
               <Stack direction="row" justify="space-between" align="center">
                 {/* Status + Date on the left */}
                 <Stack direction="row" align="center" gap={2}>
-                  <Badge
-                    colorPalette={getStatusColor(decision.status)}
-                    px={3}
-                    py={1}
-                  >
-                    {getStatusLabel(decision.status, t)}
-                  </Badge>
+                  <StatusBadge status={decision.status} />
                   <Text
                     fontSize="sm"
                     color="gray.500"
@@ -202,14 +165,9 @@ const DecisionCard = memo(
 
               {/* Decision Type */}
               {decision.decisionType && (
-                <Badge colorPalette="blue" px={3} py={1} width="fit-content">
-                  <Stack direction="row" align="center" gap={1.5}>
-                    {getDecisionTypeIcon(decision.decisionType)}
-                    <span>
-                      {getDecisionTypeLabel(t, decision.decisionType)}
-                    </span>
-                  </Stack>
-                </Badge>
+                <Box width="fit-content">
+                  <DecisionTypeBadge decisionType={decision.decisionType} />
+                </Box>
               )}
             </Stack>
 
@@ -221,25 +179,12 @@ const DecisionCard = memo(
               align="center"
             >
               {decision.decisionType ? (
-                <Badge colorPalette="blue" px={3} py={1}>
-                  <Stack direction="row" align="center" gap={1.5}>
-                    {getDecisionTypeIcon(decision.decisionType)}
-                    <span>
-                      {getDecisionTypeLabel(t, decision.decisionType)}
-                    </span>
-                  </Stack>
-                </Badge>
+                <DecisionTypeBadge decisionType={decision.decisionType} />
               ) : (
                 <Box />
               )}
               <Stack direction="row" align="center" gap={2}>
-                <Badge
-                  colorPalette={getStatusColor(decision.status)}
-                  px={3}
-                  py={1}
-                >
-                  {getStatusLabel(decision.status, t)}
-                </Badge>
+                <StatusBadge status={decision.status} />
                 <Text
                   fontSize="sm"
                   color="gray.500"
@@ -342,26 +287,7 @@ const DecisionCard = memo(
                   >
                     {t('decisions.detail.sections.biases')}
                   </Text>
-                  <Stack direction="row" gap={2} flexWrap="wrap">
-                    {decision.biases.slice(0, 3).map((bias, index) => (
-                      <Badge
-                        key={index}
-                        colorPalette="orange"
-                        size="sm"
-                        px={3}
-                        py={1}
-                      >
-                        {getBiasLabel(t, bias)}
-                      </Badge>
-                    ))}
-                    {decision.biases.length > 3 && (
-                      <Badge colorPalette="gray" size="sm" px={3} py={1}>
-                        {t('decisions.list.actions.showMore', {
-                          count: decision.biases.length - 3,
-                        })}
-                      </Badge>
-                    )}
-                  </Stack>
+                  <BiasesBadgeList biases={decision.biases} maxDisplay={3} />
                 </Box>
               )}
           </Stack>

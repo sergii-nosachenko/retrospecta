@@ -1,15 +1,14 @@
 'use client';
 
-import { Badge, Box, Heading, Stack, Text, VStack } from '@chakra-ui/react';
+import { Box, Heading, Text, VStack } from '@chakra-ui/react';
 import { memo } from 'react';
 
 import { DecisionSection } from '@/components/decisions/common/DecisionSection';
-import { MarkdownRenderer } from '@/components/ui/MarkdownRenderer';
 import {
-  getBiasLabel,
-  getDecisionTypeIcon,
-  getDecisionTypeLabel,
-} from '@/constants/decisions';
+  BiasesBadgeList,
+  DecisionTypeBadge,
+} from '@/components/decisions/shared';
+import { MarkdownRenderer } from '@/components/ui/MarkdownRenderer';
 import { useTranslations } from '@/translations';
 
 import type { Decision } from '@/contexts/DecisionsContext';
@@ -44,24 +43,13 @@ const DecisionAnalysisResultsComponent = ({
       <VStack gap={4} align="stretch">
         {decision.decisionType && (
           <DecisionSection label={t('decisions.detail.sections.decisionType')}>
-            <Badge colorPalette="blue" size="lg" px={4} py={2}>
-              <Stack direction="row" align="center" gap={1.5}>
-                {getDecisionTypeIcon(decision.decisionType)}
-                <span>{getDecisionTypeLabel(t, decision.decisionType)}</span>
-              </Stack>
-            </Badge>
+            <DecisionTypeBadge decisionType={decision.decisionType} />
           </DecisionSection>
         )}
 
         {decision.biases && decision.biases.length > 0 && (
           <DecisionSection label={t('decisions.detail.sections.biases')}>
-            <Stack direction="row" wrap="wrap" gap={2}>
-              {decision.biases.map((bias, index) => (
-                <Badge key={index} colorPalette="orange" px={3} py={1}>
-                  {getBiasLabel(t, bias)}
-                </Badge>
-              ))}
-            </Stack>
+            <BiasesBadgeList biases={decision.biases} />
           </DecisionSection>
         )}
 
