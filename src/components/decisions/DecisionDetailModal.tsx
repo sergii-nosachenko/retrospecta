@@ -11,10 +11,10 @@ import {
   Text,
   VStack,
 } from '@chakra-ui/react';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useState } from 'react';
 
 import { reanalyzeDecision } from '@/actions/analysis';
-import { deleteDecision, getDecision } from '@/actions/decisions';
+import { deleteDecision } from '@/actions/decisions';
 import {
   DialogBody,
   DialogCloseTrigger,
@@ -27,30 +27,15 @@ import {
 import { MarkdownRenderer } from '@/components/ui/MarkdownRenderer';
 import { toaster } from '@/components/ui/toaster';
 import {
+  getBiasLabel,
   getDecisionTypeIcon,
   getDecisionTypeLabel,
   getStatusLabel,
 } from '@/constants/decisions';
 import { useDecisions } from '@/contexts/DecisionsContext';
+import { useDecisionPolling } from '@/hooks/useDecisionPolling';
 import { useTranslations } from '@/translations';
 import { ProcessingStatus } from '@/types/enums';
-
-interface DecisionData {
-  id: string;
-  situation: string;
-  decision: string;
-  reasoning: string | null;
-  status: string;
-  decisionType: string | null;
-  biases: string[];
-  alternatives: string | null;
-  insights: string | null;
-  analysisAttempts: number;
-  lastAnalyzedAt: Date | null;
-  errorMessage: string | null;
-  createdAt: Date;
-  updatedAt: Date;
-}
 
 interface DecisionDetailModalProps {
   decisionId: string;
@@ -79,128 +64,17 @@ export const DecisionDetailModal = ({
   onOpenChange,
 }: DecisionDetailModalProps) => {
   const { t } = useTranslations();
-  const {
-    optimisticUpdateStatus,
-    optimisticDelete,
-    getDecision: getDecisionFromContext,
-  } = useDecisions();
-  const [decision, setDecision] = useState<DecisionData | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isPolling, setIsPolling] = useState(false);
+  const { optimisticUpdateStatus, optimisticDelete } = useDecisions();
+
+  // Use the polling hook to manage decision state and updates
+  const { decision, isLoading } = useDecisionPolling({
+    decisionId,
+    enabled: open,
+    source: 'context', // Use context-based polling (more efficient)
+  });
+
   const [isReanalyzing, setIsReanalyzing] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
-
-  const fetchDecision = useCallback(async () => {
-    setIsLoading(true);
-
-    // Get decision from context (instant, no API call needed!)
-    const contextDecision = getDecisionFromContext(decisionId);
-
-    if (contextDecision) {
-      // Context has all the fields we need
-      const decisionData: DecisionData = {
-        ...contextDecision,
-        analysisAttempts: contextDecision.analysisAttempts ?? 0,
-        lastAnalyzedAt: contextDecision.lastAnalyzedAt ?? null,
-        errorMessage: contextDecision.errorMessage ?? null,
-      };
-
-      setDecision(decisionData);
-
-      // Start polling if status is PENDING or PROCESSING
-      if (
-        contextDecision.status === ProcessingStatus.PENDING ||
-        contextDecision.status === ProcessingStatus.PROCESSING
-      ) {
-        setIsPolling(true);
-      }
-
-      setIsLoading(false);
-    } else {
-      // Fallback: decision not in context yet (shouldn't happen normally)
-      const result = await getDecision(decisionId);
-
-      if (result.success && result.data) {
-        setDecision(result.data);
-
-        // Start polling if status is PENDING or PROCESSING
-        if (
-          result.data.status === ProcessingStatus.PENDING ||
-          result.data.status === ProcessingStatus.PROCESSING
-        ) {
-          setIsPolling(true);
-        }
-      } else {
-        toaster.create({
-          title: t('toasts.error.title'),
-          description: result.error ?? t('toasts.errors.loadDecision'),
-          type: 'error',
-          duration: 5000,
-        });
-        onOpenChange(false);
-      }
-      setIsLoading(false);
-    }
-  }, [decisionId, onOpenChange, getDecisionFromContext, t]);
-
-  // Reset state when modal closes or decisionId changes
-  useEffect(() => {
-    if (!open) {
-      // Reset all state when modal closes
-      setDecision(null);
-      setIsLoading(true);
-      setIsPolling(false);
-      setIsReanalyzing(false);
-    }
-  }, [open]);
-
-  // Fetch decision data when modal opens
-  useEffect(() => {
-    if (open && decisionId) {
-      // Reset state when opening a new decision
-      setIsReanalyzing(false);
-      setIsPolling(false);
-      void fetchDecision();
-    }
-  }, [open, decisionId, fetchDecision]);
-
-  // Poll for updates when status is PENDING or PROCESSING
-  // Uses context data (updated by SSE) instead of making API calls
-  useEffect(() => {
-    if (!isPolling || !decision) return;
-
-    const interval = setInterval(() => {
-      // Get updated decision from context (no API call)
-      const updatedDecision = getDecisionFromContext(decision.id);
-
-      if (updatedDecision) {
-        // Update local state with context data
-        setDecision((prev) => ({
-          ...prev!,
-          ...updatedDecision,
-        }));
-
-        // Stop polling if analysis is complete or failed
-        if (
-          updatedDecision.status === ProcessingStatus.COMPLETED ||
-          updatedDecision.status === ProcessingStatus.FAILED
-        ) {
-          setIsPolling(false);
-
-          // Fetch full details one last time to get error message if failed
-          if (updatedDecision.status === ProcessingStatus.FAILED) {
-            void getDecision(decision.id).then((result) => {
-              if (result.success && result.data) {
-                setDecision(result.data);
-              }
-            });
-          }
-        }
-      }
-    }, 1000); // Check context every second (no API call, very cheap)
-
-    return () => clearInterval(interval);
-  }, [decision, isPolling, getDecisionFromContext]);
 
   const handleReanalyze = useCallback(async () => {
     if (!decision) return;
@@ -210,12 +84,6 @@ export const DecisionDetailModal = ({
     try {
       // Optimistically update status immediately for instant UI feedback
       optimisticUpdateStatus(decision.id, ProcessingStatus.PROCESSING);
-
-      // Update local modal state immediately
-      setDecision((prev) =>
-        prev ? { ...prev, status: ProcessingStatus.PROCESSING } : null
-      );
-      setIsPolling(true);
 
       const result = await reanalyzeDecision(decision.id);
 
@@ -228,15 +96,11 @@ export const DecisionDetailModal = ({
           duration: 2000,
         });
 
-        // No need to refresh - SSE will automatically pick up changes within 3 seconds
-        // Optimistic update already provides instant UI feedback
+        // No need to manually update state - the polling hook will automatically
+        // pick up changes from context (updated by SSE) within 1 second
       } else {
         // Revert optimistic update on error
         optimisticUpdateStatus(decision.id, ProcessingStatus.COMPLETED);
-        setDecision((prev) =>
-          prev ? { ...prev, status: ProcessingStatus.COMPLETED } : null
-        );
-        setIsPolling(false);
 
         toaster.create({
           title: t('toasts.error.title'),
@@ -250,10 +114,6 @@ export const DecisionDetailModal = ({
 
       // Revert optimistic update on error
       optimisticUpdateStatus(decision.id, ProcessingStatus.COMPLETED);
-      setDecision((prev) =>
-        prev ? { ...prev, status: ProcessingStatus.COMPLETED } : null
-      );
-      setIsPolling(false);
 
       toaster.create({
         title: t('toasts.error.title'),
@@ -515,7 +375,7 @@ export const DecisionDetailModal = ({
                               px={3}
                               py={1}
                             >
-                              {bias}
+                              {getBiasLabel(t, bias)}
                             </Badge>
                           ))}
                         </Stack>

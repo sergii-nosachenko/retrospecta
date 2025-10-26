@@ -11,17 +11,18 @@ import {
   VStack,
 } from '@chakra-ui/react';
 import { useRouter } from 'next/navigation';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 
 import { reanalyzeDecision } from '@/actions/analysis';
-import { getDecision } from '@/actions/decisions';
 import { toaster } from '@/components/ui/toaster';
 import {
+  getBiasLabel,
   getDecisionTypeIcon,
   getDecisionTypeLabel,
   getStatusLabel,
 } from '@/constants/decisions';
 import { ROUTES } from '@/constants/routes';
+import { useDecisionPolling } from '@/hooks/useDecisionPolling';
 import { useTranslations } from '@/translations';
 import { ProcessingStatus } from '@/types/enums';
 
@@ -66,37 +67,20 @@ export const DecisionDetail = ({
 }: DecisionDetailProps) => {
   const { t } = useTranslations();
   const router = useRouter();
-  const [decision, setDecision] = useState(initialDecision);
-  const [isPolling, setIsPolling] = useState(
-    initialDecision.status === ProcessingStatus.PENDING ||
-      initialDecision.status === ProcessingStatus.PROCESSING
-  );
+
+  // Use the polling hook to manage decision updates
+  // Note: This component receives initial data from server, so we use API-based polling
+  const { decision: polledDecision } = useDecisionPolling({
+    decisionId: initialDecision.id,
+    enabled: true,
+    source: 'api', // Use API polling (this is a server-rendered page)
+    interval: 3000, // Poll every 3 seconds
+  });
+
+  // Use polled decision if available, otherwise fall back to initial decision
+  const decision = polledDecision ?? initialDecision;
+
   const [isReanalyzing, setIsReanalyzing] = useState(false);
-
-  // Poll for updates when status is PENDING or PROCESSING
-  useEffect(() => {
-    if (!isPolling) return;
-
-    const interval = setInterval(() => {
-      void (async () => {
-        const result = await getDecision(decision.id);
-
-        if (result.success && result.data) {
-          setDecision(result.data);
-
-          // Stop polling if analysis is complete or failed
-          if (
-            result.data.status === ProcessingStatus.COMPLETED ||
-            result.data.status === ProcessingStatus.FAILED
-          ) {
-            setIsPolling(false);
-          }
-        }
-      })();
-    }, 3000); // Poll every 3 seconds
-
-    return () => clearInterval(interval);
-  }, [decision.id, isPolling]);
 
   const statusColor = useMemo(
     () => getStatusColor(decision.status),
@@ -133,8 +117,8 @@ export const DecisionDetail = ({
           duration: 3000,
         });
 
-        // Start polling again
-        setIsPolling(true);
+        // No need to manually start polling - the hook will automatically
+        // pick up the status change and continue polling
       } else {
         toaster.create({
           title: t('toasts.error.title'),
@@ -275,7 +259,7 @@ export const DecisionDetail = ({
                     <Stack direction="row" wrap="wrap" gap={2}>
                       {decision.biases.map((bias, index) => (
                         <Badge key={index} colorPalette="orange">
-                          {bias}
+                          {getBiasLabel(t, bias)}
                         </Badge>
                       ))}
                     </Stack>

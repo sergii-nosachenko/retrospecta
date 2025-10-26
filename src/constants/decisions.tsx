@@ -43,7 +43,32 @@ export const getDecisionTypeLabel = (
 
   // Use translations for decision type labels
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  return t(`decisions.decisionTypes.${decisionType}` as any);
+  const translated = t(`decisions.decisionTypes.${decisionType}` as any);
+
+  // If translation not found, return original decision type
+  if (translated.startsWith('decisions.decisionTypes.')) {
+    return decisionType;
+  }
+
+  return translated;
+};
+
+/**
+ * Get translated label for cognitive bias
+ */
+export const getBiasLabel = (t: TFunction, bias: string | null): string => {
+  if (!bias) return '';
+
+  // Use translations for bias labels
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const translated = t(`decisions.biases.${bias}` as any);
+
+  // If translation not found (returns the key path), return the original bias
+  if (translated.startsWith('decisions.biases.')) {
+    return bias;
+  }
+
+  return translated;
 };
 
 /**

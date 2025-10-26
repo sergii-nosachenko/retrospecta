@@ -25,6 +25,7 @@ import {
 } from '@/components/ui/menu';
 import { toaster } from '@/components/ui/toaster';
 import {
+  getBiasLabel,
   getDecisionTypeIcon,
   getDecisionTypeLabel,
 } from '@/constants/decisions';
@@ -349,7 +350,7 @@ const DecisionCard = memo(
                         px={3}
                         py={1}
                       >
-                        {bias}
+                        {getBiasLabel(t, bias)}
                       </Badge>
                     ))}
                     {decision.biases.length > 3 && (
