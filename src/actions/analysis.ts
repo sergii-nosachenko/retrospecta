@@ -72,7 +72,7 @@ export async function analyzeDecision(
       where: { id: decisionId },
       data: {
         status: 'COMPLETED',
-        category: analysisResult.data.category,
+        decisionType: analysisResult.data.category,
         biases: analysisResult.data.biases,
         alternatives: analysisResult.data.alternatives,
         insights: analysisResult.data.insights,

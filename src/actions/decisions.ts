@@ -120,7 +120,7 @@ export async function getUserDecisions(
       decision: string;
       reasoning: string | null;
       status: string;
-      category: string | null;
+      decisionType: string | null;
       biases: string[];
       alternatives: string | null;
       insights: string | null;
@@ -158,7 +158,7 @@ export async function getUserDecisions(
         decision: true,
         reasoning: true,
         status: true,
-        category: true,
+        decisionType: true,
         biases: true,
         alternatives: true,
         insights: true,
@@ -194,7 +194,7 @@ export async function getDecision(decisionId: string): Promise<
     decision: string;
     reasoning: string | null;
     status: string;
-    category: string | null;
+    decisionType: string | null;
     biases: string[];
     alternatives: string | null;
     insights: string | null;
@@ -335,7 +335,7 @@ export interface DashboardAnalytics {
   completedAnalyses: number;
   pendingAnalyses: number;
   failedAnalyses: number;
-  categoryDistribution: Array<{ name: string; value: number }>;
+  decisionTypeDistribution: Array<{ name: string; value: number }>;
   biasDistribution: Array<{ name: string; count: number }>;
   statusDistribution: Array<{ name: string; value: number }>;
   recentDecisions: number; // Last 7 days
@@ -372,7 +372,7 @@ export async function getDashboardAnalytics(): Promise<
       },
       select: {
         status: true,
-        category: true,
+        decisionType: true,
         biases: true,
         createdAt: true,
       },
@@ -397,16 +397,16 @@ export async function getDashboardAnalytics(): Promise<
       (d) => d.createdAt >= sevenDaysAgo
     ).length;
 
-    // Category distribution (only completed analyses)
-    const categoryMap = new Map<string, number>();
+    // Decision type distribution (only completed analyses)
+    const decisionTypeMap = new Map<string, number>();
     decisions.forEach((d) => {
-      if (d.category && d.status === 'COMPLETED') {
-        const count = categoryMap.get(d.category) || 0;
-        categoryMap.set(d.category, count + 1);
+      if (d.decisionType && d.status === 'COMPLETED') {
+        const count = decisionTypeMap.get(d.decisionType) || 0;
+        decisionTypeMap.set(d.decisionType, count + 1);
       }
     });
 
-    const categoryDistribution = Array.from(categoryMap.entries()).map(
+    const decisionTypeDistribution = Array.from(decisionTypeMap.entries()).map(
       ([name, value]) => ({
         name: name
           .split('_')
@@ -452,7 +452,7 @@ export async function getDashboardAnalytics(): Promise<
       completedAnalyses,
       pendingAnalyses,
       failedAnalyses,
-      categoryDistribution,
+      decisionTypeDistribution,
       biasDistribution,
       statusDistribution,
       recentDecisions,

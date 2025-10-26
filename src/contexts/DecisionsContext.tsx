@@ -5,6 +5,7 @@ import {
   useCallback,
   useContext,
   useEffect,
+  useMemo,
   useRef,
   useState,
 } from 'react';
@@ -17,7 +18,7 @@ interface Decision {
   decision: string;
   reasoning: string | null;
   status: string;
-  category: string | null;
+  decisionType: string | null;
   biases: string[];
   alternatives: string | null;
   insights: string | null;
@@ -37,9 +38,9 @@ interface StreamEvent {
 }
 
 interface FilterOptions {
-  sortBy: 'createdAt' | 'updatedAt' | 'status' | 'category';
+  sortBy: 'createdAt' | 'updatedAt' | 'status' | 'decisionType';
   sortOrder: 'asc' | 'desc';
-  categories: string[];
+  decisionTypes: string[];
   biases: string[];
   dateFrom: string | null;
   dateTo: string | null;
@@ -65,14 +66,14 @@ const DecisionsContext = createContext<DecisionsContextValue | null>(null);
  * Helper function to check if a decision has changed
  * Compares key fields that matter for UI updates
  */
-function hasDecisionChanged(
+const hasDecisionChanged = (
   oldDecision: Decision,
   newDecision: Decision
-): boolean {
+): boolean => {
   // Compare key fields that affect UI
   return (
     oldDecision.status !== newDecision.status ||
-    oldDecision.category !== newDecision.category ||
+    oldDecision.decisionType !== newDecision.decisionType ||
     oldDecision.analysisAttempts !== newDecision.analysisAttempts ||
     oldDecision.errorMessage !== newDecision.errorMessage ||
     oldDecision.biases.length !== newDecision.biases.length ||
@@ -87,21 +88,106 @@ function hasDecisionChanged(
         new Date(newDecision.lastAnalyzedAt).getTime()
     )
   );
-}
+};
 
-export function useDecisions() {
+/**
+ * Helper function to show status change notifications
+ */
+const showStatusChangeNotification = (
+  previousStatus: string,
+  newStatus: string
+): void => {
+  // Status changed from PENDING/PROCESSING to COMPLETED
+  if (
+    (previousStatus === 'PENDING' || previousStatus === 'PROCESSING') &&
+    newStatus === 'COMPLETED'
+  ) {
+    toaster.create({
+      title: 'Analysis Complete',
+      description: 'Your decision has been analyzed successfully!',
+      type: 'success',
+      duration: 5000,
+    });
+  }
+
+  // Status changed to FAILED
+  if (previousStatus !== 'FAILED' && newStatus === 'FAILED') {
+    toaster.create({
+      title: 'Analysis Failed',
+      description: 'Unable to analyze your decision. Please try again.',
+      type: 'error',
+      duration: 5000,
+    });
+  }
+};
+
+/**
+ * Helper function to merge decision updates
+ * Returns the same array reference if nothing changed to prevent re-renders
+ */
+const mergeDecisionUpdates = (
+  prevDecisions: Decision[],
+  newDecisions: Decision[]
+): Decision[] => {
+  const newDecisionsMap = new Map(newDecisions.map((d) => [d.id, d]));
+  const prevDecisionsMap = new Map(prevDecisions.map((d) => [d.id, d]));
+
+  // Check if anything actually changed
+  let hasChanges = false;
+
+  // Check for new or removed decisions
+  if (newDecisionsMap.size !== prevDecisionsMap.size) {
+    hasChanges = true;
+  } else {
+    // Check if the order of decisions changed
+    const orderChanged = newDecisions.some(
+      (decision, index) => decision.id !== prevDecisions[index]?.id
+    );
+
+    if (orderChanged) {
+      hasChanges = true;
+    } else {
+      // Check if any decision data changed
+      for (const [id, newDecision] of newDecisionsMap) {
+        const oldDecision = prevDecisionsMap.get(id);
+        if (!oldDecision || hasDecisionChanged(oldDecision, newDecision)) {
+          hasChanges = true;
+          break;
+        }
+      }
+    }
+  }
+
+  // If nothing changed, return the same array reference (prevents re-render)
+  if (!hasChanges) {
+    return prevDecisions;
+  }
+
+  // Merge: keep old objects for unchanged decisions, use new objects for changed ones
+  return newDecisions.map((newDecision) => {
+    const oldDecision = prevDecisionsMap.get(newDecision.id);
+    if (oldDecision && !hasDecisionChanged(oldDecision, newDecision)) {
+      // Decision hasn't changed, return old reference (prevents re-render)
+      return oldDecision;
+    }
+    // Decision is new or changed, use new reference
+    return newDecision;
+  });
+};
+
+export const useDecisions = (): DecisionsContextValue => {
   const context = useContext(DecisionsContext);
   if (!context) {
     throw new Error('useDecisions must be used within DecisionsProvider');
   }
   return context;
-}
+};
 
 interface DecisionsProviderProps {
   children: React.ReactNode;
 }
 
-export function DecisionsProvider({ children }: DecisionsProviderProps) {
+export const DecisionsProvider = ({ children }: DecisionsProviderProps) => {
   const [decisions, setDecisions] = useState<Decision[]>([]);
   const [isConnected, setIsConnected] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -111,7 +197,7 @@ export function DecisionsProvider({ children }: DecisionsProviderProps) {
   const [filters, setFiltersState] = useState<FilterOptions>({
     sortBy: 'createdAt',
     sortOrder: 'desc',
-    categories: [],
+    decisionTypes: [],
     biases: [],
     dateFrom: null,
     dateTo: null,
@@ -179,6 +265,137 @@ export function DecisionsProvider({ children }: DecisionsProviderProps) {
     [decisions]
   );
 
+  // Handle status change notifications
+  const handleStatusNotifications = useCallback((newDecisions: Decision[]) => {
+    newDecisions.forEach((decision) => {
+      const previousStatus = previousDecisionsRef.current.get(decision.id);
+
+      // Only show notification if status actually changed (not optimistic update)
+      if (
+        previousStatus &&
+        previousStatus !== decision.status &&
+        !optimisticUpdatesRef.current.has(decision.id)
+      ) {
+        showStatusChangeNotification(previousStatus, decision.status);
+      }
+
+      // Update previous status map
+      previousDecisionsRef.current.set(decision.id, decision.status);
+    });
+  }, []);
+
+  // Clear optimistic updates that have been confirmed
+  const clearConfirmedOptimisticUpdates = useCallback(
+    (newDecisions: Decision[]) => {
+      newDecisions.forEach((decision) => {
+        const optimistic = optimisticUpdatesRef.current.get(decision.id);
+        if (optimistic && optimistic.status === decision.status) {
+          optimisticUpdatesRef.current.delete(decision.id);
+        }
+      });
+    },
+    []
+  );
+
+  // Handle SSE message event
+  const handleSSEMessage = useCallback(
+    (event: MessageEvent) => {
+      try {
+        const data: StreamEvent = JSON.parse(event.data);
+
+        if (data.type === 'update' && data.decisions) {
+          // Handle notifications
+          handleStatusNotifications(data.decisions);
+
+          // Clear confirmed optimistic updates
+          clearConfirmedOptimisticUpdates(data.decisions);
+
+          // Update decisions with smart merge
+          setDecisions((prevDecisions) =>
+            mergeDecisionUpdates(prevDecisions, data.decisions!)
+          );
+
+          setIsLoading(false);
+        } else if (data.type === 'pending' && data.count !== undefined) {
+          // Update pending count (unless we have optimistic updates)
+          if (optimisticUpdatesRef.current.size === 0) {
+            setPendingCount(data.count);
+          }
+        } else if (data.type === 'error') {
+          setError(data.message || 'An error occurred');
+        }
+      } catch (err) {
+        console.error('Error parsing SSE message:', err);
+      }
+    },
+    [handleStatusNotifications, clearConfirmedOptimisticUpdates]
+  );
+
+  // Build SSE connection URL with filters
+  const buildConnectionURL = useCallback((): string => {
+    const params = new URLSearchParams({
+      sortBy: filters.sortBy,
+      sortOrder: filters.sortOrder,
+    });
+
+    // Add decision type filters
+    if (filters.decisionTypes.length > 0) {
+      filters.decisionTypes.forEach((type) =>
+        params.append('decisionTypes', type)
+      );
+    }
+
+    // Add bias filters
+    if (filters.biases.length > 0) {
+      filters.biases.forEach((bias) => params.append('biases', bias));
+    }
+
+    // Add date filters
+    if (filters.dateFrom) {
+      params.append('dateFrom', filters.dateFrom);
+    }
+    if (filters.dateTo) {
+      params.append('dateTo', filters.dateTo);
+    }
+
+    return `/api/decisions/stream?${params.toString()}`;
+  }, [filters]);
+
+  // Handle SSE connection open
+  const handleSSEOpen = useCallback(() => {
+    console.log('SSE connection established');
+    setIsConnected(true);
+    setError(null);
+    reconnectAttempts.current = 0;
+  }, []);
+
+  // Handle SSE connection error with reconnection logic
+  const handleSSEError = useCallback((eventSource: EventSource) => {
+    console.error('SSE connection error');
+    setIsConnected(false);
+    eventSource.close();
+
+    // Attempt to reconnect with exponential backoff
+    if (reconnectAttempts.current < maxReconnectAttempts) {
+      const delay = Math.min(
+        1000 * Math.pow(2, reconnectAttempts.current),
+        30000
+      );
+      console.log(
+        `Reconnecting in ${delay}ms (attempt ${reconnectAttempts.current + 1}/${maxReconnectAttempts})`
+      );
+
+      reconnectTimeoutRef.current = setTimeout(() => {
+        reconnectAttempts.current++;
+        // Trigger reconnection by updating refresh trigger
+        setRefreshTrigger((prev) => prev + 1);
+      }, delay);
+    } else {
+      setError('Connection lost. Please refresh the page.');
+    }
+  }, []);
+
+  // Establish SSE connection
   useEffect(() => {
     const connect = () => {
       try {
@@ -187,188 +404,14 @@ export function DecisionsProvider({ children }: DecisionsProviderProps) {
           eventSourceRef.current.close();
         }
 
-        // Create new EventSource connection with filters
-        const params = new URLSearchParams({
-          sortBy: filters.sortBy,
-          sortOrder: filters.sortOrder,
-        });
-
-        // Add category filters
-        if (filters.categories.length > 0) {
-          filters.categories.forEach((cat) => params.append('categories', cat));
-        }
-
-        // Add bias filters
-        if (filters.biases.length > 0) {
-          filters.biases.forEach((bias) => params.append('biases', bias));
-        }
-
-        // Add date filters
-        if (filters.dateFrom) {
-          params.append('dateFrom', filters.dateFrom);
-        }
-        if (filters.dateTo) {
-          params.append('dateTo', filters.dateTo);
-        }
-
-        const url = `/api/decisions/stream?${params.toString()}`;
+        // Create new EventSource connection
+        const url = buildConnectionURL();
         const eventSource = new EventSource(url);
         eventSourceRef.current = eventSource;
 
-        eventSource.onopen = () => {
-          console.log('SSE connection established');
-          setIsConnected(true);
-          setError(null);
-          reconnectAttempts.current = 0;
-        };
-
-        eventSource.onmessage = (event) => {
-          try {
-            const data: StreamEvent = JSON.parse(event.data);
-
-            if (data.type === 'update' && data.decisions) {
-              // Check for status changes and show notifications
-              data.decisions.forEach((decision) => {
-                const previousStatus = previousDecisionsRef.current.get(
-                  decision.id
-                );
-
-                // Only show notification if status actually changed (not optimistic update)
-                if (
-                  previousStatus &&
-                  previousStatus !== decision.status &&
-                  !optimisticUpdatesRef.current.has(decision.id)
-                ) {
-                  // Status changed from PENDING/PROCESSING to COMPLETED
-                  if (
-                    (previousStatus === 'PENDING' ||
-                      previousStatus === 'PROCESSING') &&
-                    decision.status === 'COMPLETED'
-                  ) {
-                    toaster.create({
-                      title: 'Analysis Complete',
-                      description:
-                        'Your decision has been analyzed successfully!',
-                      type: 'success',
-                      duration: 5000,
-                    });
-                  }
-
-                  // Status changed to FAILED
-                  if (
-                    previousStatus !== 'FAILED' &&
-                    decision.status === 'FAILED'
-                  ) {
-                    toaster.create({
-                      title: 'Analysis Failed',
-                      description:
-                        'Unable to analyze your decision. Please try again.',
-                      type: 'error',
-                      duration: 5000,
-                    });
-                  }
-                }
-
-                // Update previous status map
-                previousDecisionsRef.current.set(decision.id, decision.status);
-              });
-
-              // Clear optimistic updates that have been confirmed
-              data.decisions.forEach((decision) => {
-                const optimistic = optimisticUpdatesRef.current.get(
-                  decision.id
-                );
-                if (optimistic && optimistic.status === decision.status) {
-                  optimisticUpdatesRef.current.delete(decision.id);
-                }
-              });
-
-              // Smart update: only update decisions that have actually changed
-              setDecisions((prevDecisions) => {
-                const newDecisionsMap = new Map(
-                  data.decisions!.map((d) => [d.id, d])
-                );
-                const prevDecisionsMap = new Map(
-                  prevDecisions.map((d) => [d.id, d])
-                );
-
-                // Check if anything actually changed
-                let hasChanges = false;
-
-                // Check for new or removed decisions
-                if (newDecisionsMap.size !== prevDecisionsMap.size) {
-                  hasChanges = true;
-                } else {
-                  // Check if any decision data changed
-                  for (const [id, newDecision] of newDecisionsMap) {
-                    const oldDecision = prevDecisionsMap.get(id);
-                    if (
-                      !oldDecision ||
-                      hasDecisionChanged(oldDecision, newDecision)
-                    ) {
-                      hasChanges = true;
-                      break;
-                    }
-                  }
-                }
-
-                // If nothing changed, return the same array reference (prevents re-render)
-                if (!hasChanges) {
-                  return prevDecisions;
-                }
-
-                // Merge: keep old objects for unchanged decisions, use new objects for changed ones
-                return data.decisions!.map((newDecision) => {
-                  const oldDecision = prevDecisionsMap.get(newDecision.id);
-                  if (
-                    oldDecision &&
-                    !hasDecisionChanged(oldDecision, newDecision)
-                  ) {
-                    // Decision hasn't changed, return old reference (prevents re-render)
-                    return oldDecision;
-                  }
-                  // Decision is new or changed, use new reference
-                  return newDecision;
-                });
-              });
-
-              setIsLoading(false);
-            } else if (data.type === 'pending' && data.count !== undefined) {
-              // Update pending count (unless we have optimistic updates)
-              if (optimisticUpdatesRef.current.size === 0) {
-                setPendingCount(data.count);
-              }
-            } else if (data.type === 'error') {
-              setError(data.message || 'An error occurred');
-            }
-          } catch (err) {
-            console.error('Error parsing SSE message:', err);
-          }
-        };
-
-        eventSource.onerror = (err) => {
-          console.error('SSE connection error:', err);
-          setIsConnected(false);
-          eventSource.close();
-
-          // Attempt to reconnect with exponential backoff
-          if (reconnectAttempts.current < maxReconnectAttempts) {
-            const delay = Math.min(
-              1000 * Math.pow(2, reconnectAttempts.current),
-              30000
-            );
-            console.log(
-              `Reconnecting in ${delay}ms (attempt ${reconnectAttempts.current + 1}/${maxReconnectAttempts})`
-            );
-
-            reconnectTimeoutRef.current = setTimeout(() => {
-              reconnectAttempts.current++;
-              connect();
-            }, delay);
-          } else {
-            setError('Connection lost. Please refresh the page.');
-          }
-        };
+        eventSource.onopen = handleSSEOpen;
+        eventSource.onmessage = handleSSEMessage;
+        eventSource.onerror = () => handleSSEError(eventSource);
       } catch (err) {
         console.error('Error connecting to SSE:', err);
         setError('Failed to establish connection');
@@ -388,32 +431,49 @@ export function DecisionsProvider({ children }: DecisionsProviderProps) {
       }
     };
   }, [
-    filters.sortBy,
-    filters.sortOrder,
-    filters.categories,
-    filters.biases,
-    filters.dateFrom,
-    filters.dateTo,
+    buildConnectionURL,
+    handleSSEOpen,
+    handleSSEMessage,
+    handleSSEError,
     refreshTrigger,
   ]);
 
-  const value: DecisionsContextValue = {
-    decisions,
-    isConnected,
-    isLoading,
-    error,
-    pendingCount,
-    filters,
-    setFilters,
-    refresh,
-    optimisticUpdateStatus,
-    optimisticDelete,
-    getDecision,
-  };
+  // Memoize context value to prevent unnecessary re-renders
+  const value = useMemo<DecisionsContextValue>(
+    () => ({
+      decisions,
+      isConnected,
+      isLoading,
+      error,
+      pendingCount,
+      filters,
+      setFilters,
+      refresh,
+      optimisticUpdateStatus,
+      optimisticDelete,
+      getDecision,
+    }),
+    [
+      decisions,
+      isConnected,
+      isLoading,
+      error,
+      pendingCount,
+      filters,
+      setFilters,
+      refresh,
+      optimisticUpdateStatus,
+      optimisticDelete,
+      getDecision,
+    ]
+  );
 
   return (
     <DecisionsContext.Provider value={value}>
       {children}
     </DecisionsContext.Provider>
   );
-}
+};
+
+// Add displayName for better debugging
+DecisionsProvider.displayName = 'DecisionsProvider';

@@ -64,7 +64,7 @@ model Decision {
 
   // LLM analysis results
   status       ProcessingStatus  @default(PENDING)
-  category     DecisionCategory?
+  decisionType DecisionCategory? @map("category")
   biases       String[] // Array of cognitive bias names
   alternatives String?           @db.Text // Overlooked alternatives
   insights     String?           @db.Text // Additional insights
@@ -82,7 +82,7 @@ model Decision {
   // Indexes for performance
   @@index([userId])
   @@index([status])
-  @@index([category])
+  @@index([decisionType])
   @@index([createdAt])
   @@map("decisions")
 }
