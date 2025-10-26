@@ -1,6 +1,6 @@
 'use client';
 
-import { Button, Stack, Text, Textarea, VStack } from '@chakra-ui/react';
+import { Button, Text, VStack } from '@chakra-ui/react';
 import { useCallback, useMemo, useState } from 'react';
 
 import {
@@ -13,22 +13,35 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
-import { Field } from '@/components/ui/field';
-import {
-  StepsContent,
-  StepsItem,
-  StepsList,
-  StepsRoot,
-} from '@/components/ui/steps';
+import { StepsItem, StepsList, StepsRoot } from '@/components/ui/steps';
 import { useDecisionForm } from '@/hooks/useDecisionForm';
 import { useMultiStepForm } from '@/hooks/useMultiStepForm';
 import { useTranslations } from '@/translations';
+
+import { DecisionFormStep1 } from './form/DecisionFormStep1';
+import { DecisionFormStep2 } from './form/DecisionFormStep2';
+import { DecisionFormStep3 } from './form/DecisionFormStep3';
+import { FormNavigation } from './form/FormNavigation';
 
 interface DecisionFormModalProps {
   trigger?: React.ReactNode;
   onSuccess?: () => void;
 }
 
+/**
+ * Multi-step modal for creating a new decision
+ *
+ * Guides users through a 3-step process to create a decision:
+ * 1. Situation - Context and background
+ * 2. Decision - The actual decision made
+ * 3. Reasoning - Optional additional context
+ *
+ * After submission, the decision is created and analysis is triggered
+ * automatically in the background via SSE.
+ *
+ * @param trigger - Optional custom trigger element (defaults to "New Decision" button)
+ * @param onSuccess - Optional callback invoked after successful submission
+ */
 export const DecisionFormModal = ({
   trigger,
   onSuccess,
@@ -123,6 +136,13 @@ export const DecisionFormModal = ({
   );
 
   /**
+   * Handle cancel button click
+   */
+  const handleCancel = useCallback(() => {
+    setOpen(false);
+  }, []);
+
+  /**
    * Prevent form auto-submit on Enter key
    */
   const handleFormSubmit = useCallback((e: React.FormEvent) => {
@@ -130,32 +150,15 @@ export const DecisionFormModal = ({
   }, []);
 
   /**
-   * Handle field change events
+   * Generic field change handler
    */
-  const handleSituationChange = useCallback(
-    (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-      updateField('situation', e.target.value);
-    },
+  const createChangeHandler = useCallback(
+    (field: 'situation' | 'decision' | 'reasoning') =>
+      (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+        updateField(field, e.target.value);
+      },
     [updateField]
   );
-
-  const handleDecisionChange = useCallback(
-    (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-      updateField('decision', e.target.value);
-    },
-    [updateField]
-  );
-
-  const handleReasoningChange = useCallback(
-    (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-      updateField('reasoning', e.target.value);
-    },
-    [updateField]
-  );
-
-  const handleCloseClick = useCallback(() => {
-    setOpen(false);
-  }, []);
 
   return (
     <DialogRoot
@@ -214,88 +217,23 @@ export const DecisionFormModal = ({
                   ))}
                 </StepsList>
 
-                {/* Step 0: Situation */}
-                <StepsContent index={0}>
-                  <VStack gap={4} align="stretch">
-                    <Field
-                      label={t('decisions.form.fields.situation.label')}
-                      required
-                      helperText={t(
-                        'decisions.form.fields.situation.placeholder'
-                      )}
-                    >
-                      <Textarea
-                        placeholder={t(
-                          'decisions.form.fields.situation.example'
-                        )}
-                        value={formData.situation}
-                        onChange={handleSituationChange}
-                        rows={6}
-                        minH="150px"
-                        maxH="150px"
-                        disabled={isSubmitting}
-                        maxLength={5000}
-                        p={3}
-                        autoFocus
-                      />
-                    </Field>
-                  </VStack>
-                </StepsContent>
+                <DecisionFormStep1
+                  value={formData.situation}
+                  onChange={createChangeHandler('situation')}
+                  disabled={isSubmitting}
+                />
 
-                {/* Step 1: Decision */}
-                <StepsContent index={1}>
-                  <VStack gap={4} align="stretch">
-                    <Field
-                      label={t('decisions.form.fields.decision.label')}
-                      required
-                      helperText={t(
-                        'decisions.form.fields.decision.placeholder'
-                      )}
-                    >
-                      <Textarea
-                        placeholder={t(
-                          'decisions.form.fields.decision.example'
-                        )}
-                        value={formData.decision}
-                        onChange={handleDecisionChange}
-                        rows={6}
-                        minH="150px"
-                        maxH="150px"
-                        disabled={isSubmitting}
-                        maxLength={2000}
-                        p={3}
-                        autoFocus
-                      />
-                    </Field>
-                  </VStack>
-                </StepsContent>
+                <DecisionFormStep2
+                  value={formData.decision}
+                  onChange={createChangeHandler('decision')}
+                  disabled={isSubmitting}
+                />
 
-                {/* Step 2: Reasoning */}
-                <StepsContent index={2}>
-                  <VStack gap={4} align="stretch">
-                    <Field
-                      label={t('decisions.form.fields.reasoning.label')}
-                      helperText={t(
-                        'decisions.form.fields.reasoning.placeholder'
-                      )}
-                    >
-                      <Textarea
-                        placeholder={t(
-                          'decisions.form.fields.reasoning.example'
-                        )}
-                        value={formData.reasoning}
-                        onChange={handleReasoningChange}
-                        rows={6}
-                        minH="150px"
-                        maxH="150px"
-                        disabled={isSubmitting}
-                        maxLength={3000}
-                        p={3}
-                        autoFocus
-                      />
-                    </Field>
-                  </VStack>
-                </StepsContent>
+                <DecisionFormStep3
+                  value={formData.reasoning}
+                  onChange={createChangeHandler('reasoning')}
+                  disabled={isSubmitting}
+                />
               </StepsRoot>
             </VStack>
           </DialogBody>
@@ -305,60 +243,15 @@ export const DecisionFormModal = ({
             px={{ base: 4, md: 6 }}
             pb={{ base: 'max(1rem, env(safe-area-inset-bottom))', md: 6 }}
           >
-            <Stack
-              direction="row"
-              gap={3}
-              width="full"
-              justifyContent="space-between"
-            >
-              <Stack direction="row" gap={3}>
-                {!isFirstStep && (
-                  <Button
-                    variant="outline"
-                    onClick={previous}
-                    disabled={isSubmitting}
-                    size="lg"
-                    px={6}
-                  >
-                    {t('common.actions.previous')}
-                  </Button>
-                )}
-              </Stack>
-
-              <Stack direction="row" gap={3}>
-                <Button
-                  variant="outline"
-                  onClick={handleCloseClick}
-                  disabled={isSubmitting}
-                  size="lg"
-                  px={6}
-                >
-                  {t('common.actions.cancel')}
-                </Button>
-                {isLastStep ? (
-                  <Button
-                    onClick={handleSubmit}
-                    colorPalette="blue"
-                    loading={isSubmitting}
-                    loadingText={t('common.actions.creating')}
-                    size="lg"
-                    px={6}
-                  >
-                    {t('decisions.form.actions.create')}
-                  </Button>
-                ) : (
-                  <Button
-                    onClick={handleNext}
-                    colorPalette="blue"
-                    disabled={isSubmitting}
-                    size="lg"
-                    px={6}
-                  >
-                    {t('common.actions.next')}
-                  </Button>
-                )}
-              </Stack>
-            </Stack>
+            <FormNavigation
+              isFirstStep={isFirstStep}
+              isLastStep={isLastStep}
+              isSubmitting={isSubmitting}
+              onPrevious={previous}
+              onNext={handleNext}
+              onCancel={handleCancel}
+              onSubmit={handleSubmit}
+            />
           </DialogFooter>
         </form>
       </DialogContent>
