@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { LuFilter } from 'react-icons/lu';
+import { LuFilter, LuX } from 'react-icons/lu';
 
 import { useRouter } from 'next/navigation';
 
@@ -179,76 +179,91 @@ export const DecisionsPageContent = () => {
       <Box>
         <ActionBarRoot open>
           <ActionBarContent p={3}>
-            <DrawerRoot
-              open={isFiltersOpen}
-              onOpenChange={(e) => setIsFiltersOpen(e.open)}
-              placement="bottom"
-            >
-              <DrawerBackdrop />
-              <DrawerTrigger asChild>
+            <Box display="flex" gap={2} width="full">
+              <DrawerRoot
+                open={isFiltersOpen}
+                onOpenChange={(e) => setIsFiltersOpen(e.open)}
+                placement="bottom"
+              >
+                <DrawerBackdrop />
+                <DrawerTrigger asChild>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    flex={1}
+                    justifyContent="flex-start"
+                    px={4}
+                    py={3}
+                  >
+                    <LuFilter />
+                    <span>{t('decisions.filters.toggleLabel')}</span>
+                    {activeFiltersCount > 0 && (
+                      <Badge
+                        colorPalette="blue"
+                        size="sm"
+                        variant="solid"
+                        borderRadius="full"
+                        ml={2}
+                        px={2}
+                        py={0.5}
+                      >
+                        {activeFiltersCount}
+                      </Badge>
+                    )}
+                  </Button>
+                </DrawerTrigger>
+                <DrawerContent>
+                  <DrawerHeader p={4} pb={2}>
+                    <DrawerTitle>
+                      {t('decisions.filters.toggleLabel')}
+                    </DrawerTitle>
+                    <DrawerCloseTrigger />
+                  </DrawerHeader>
+                  <DrawerBody p={4} pt={2}>
+                    <Box spaceY={6}>
+                      {/* Sorting Controls */}
+                      <Box>
+                        <SortingControls
+                          sortBy={filters.sortBy}
+                          sortOrder={filters.sortOrder}
+                          onSortChange={handleSortChange}
+                        />
+                      </Box>
+
+                      {/* Filter Controls */}
+                      <Box>
+                        <FilterControls
+                          selectedDecisionTypes={
+                            filters.decisionTypes as DecisionType[]
+                          }
+                          selectedBiases={filters.biases}
+                          dateFrom={filters.dateFrom}
+                          dateTo={filters.dateTo}
+                          onDecisionTypesChange={handleDecisionTypesChange}
+                          onBiasesChange={handleBiasesChange}
+                          onDateFromChange={handleDateFromChange}
+                          onDateToChange={handleDateToChange}
+                          onClearFilters={handleClearFilters}
+                        />
+                      </Box>
+                    </Box>
+                  </DrawerBody>
+                </DrawerContent>
+              </DrawerRoot>
+
+              {activeFiltersCount > 0 && (
                 <Button
                   variant="outline"
                   size="sm"
-                  width="full"
-                  justifyContent="flex-start"
+                  onClick={handleClearFilters}
                   px={4}
                   py={3}
                 >
-                  <LuFilter />
-                  <span>{t('decisions.filters.toggleLabel')}</span>
-                  {activeFiltersCount > 0 && (
-                    <Badge
-                      colorPalette="blue"
-                      size="sm"
-                      variant="solid"
-                      borderRadius="full"
-                      ml={2}
-                      px={2}
-                      py={0.5}
-                    >
-                      {activeFiltersCount}
-                    </Badge>
-                  )}
+                  <LuX />
+                  {t('decisions.filters.clear')}
                 </Button>
-              </DrawerTrigger>
-              <DrawerContent>
-                <DrawerHeader p={4} pb={2}>
-                  <DrawerTitle>
-                    {t('decisions.filters.toggleLabel')}
-                  </DrawerTitle>
-                  <DrawerCloseTrigger />
-                </DrawerHeader>
-                <DrawerBody p={4} pt={2}>
-                  <Box spaceY={6}>
-                    {/* Sorting Controls */}
-                    <Box>
-                      <SortingControls
-                        sortBy={filters.sortBy}
-                        sortOrder={filters.sortOrder}
-                        onSortChange={handleSortChange}
-                      />
-                    </Box>
-
-                    {/* Filter Controls */}
-                    <Box>
-                      <FilterControls
-                        selectedDecisionTypes={
-                          filters.decisionTypes as DecisionType[]
-                        }
-                        selectedBiases={filters.biases}
-                        dateFrom={filters.dateFrom}
-                        dateTo={filters.dateTo}
-                        onDecisionTypesChange={handleDecisionTypesChange}
-                        onBiasesChange={handleBiasesChange}
-                        onDateFromChange={handleDateFromChange}
-                        onDateToChange={handleDateToChange}
-                        onClearFilters={handleClearFilters}
-                      />
-                    </Box>
-                  </Box>
-                </DrawerBody>
-              </DrawerContent>
-            </DrawerRoot>
+              )}
+            </Box>
           </ActionBarContent>
         </ActionBarRoot>
       </Box>
