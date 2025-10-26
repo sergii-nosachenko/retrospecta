@@ -15,10 +15,16 @@ interface DecisionsHeaderProps {
     avatarUrl: string | null;
   } | null;
   onSignOut: () => void;
+  onDecisionCreated?: () => void;
 }
 
 export const DecisionsHeader = memo(
-  ({ pendingCount, user, onSignOut }: DecisionsHeaderProps) => {
+  ({
+    pendingCount,
+    user,
+    onSignOut,
+    onDecisionCreated,
+  }: DecisionsHeaderProps) => {
     const { t } = useTranslations();
 
     return (
@@ -42,7 +48,7 @@ export const DecisionsHeader = memo(
         </Stack>
 
         <Stack direction="row" align="center" gap={2}>
-          <DecisionFormModal />
+          <DecisionFormModal onSuccess={onDecisionCreated} />
           {user ? (
             <UserMenu user={user} onSignOut={onSignOut} />
           ) : (

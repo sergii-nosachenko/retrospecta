@@ -117,9 +117,10 @@ export const DecisionFormModal = ({
    * Handle modal open/close state changes
    */
   const handleOpenChange = useCallback(
-    (e: { open: boolean }) => {
-      setOpen(e.open);
-      if (!e.open) {
+    (isOpen: boolean) => {
+      setOpen(isOpen);
+
+      if (!isOpen) {
         resetAll();
       }
     },
@@ -154,7 +155,7 @@ export const DecisionFormModal = ({
   return (
     <BaseModal
       open={open}
-      onOpenChange={(isOpen) => handleOpenChange({ open: isOpen })}
+      onOpenChange={handleOpenChange}
       title={t('decisions.form.title')}
       paddingVariant="comfortable"
       trigger={

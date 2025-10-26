@@ -127,6 +127,14 @@ export const DecisionsPageContent = () => {
     []
   );
 
+  const handleDecisionCreated = useCallback(() => {
+    // Scroll to top of the page when a new decision is created
+    window.scrollTo({
+      top: 0,
+      behavior: 'smooth',
+    });
+  }, []);
+
   const activeFiltersCount = useMemo(() => {
     let count = 0;
     if (filters.decisionTypes.length > 0) count += filters.decisionTypes.length;
@@ -170,6 +178,7 @@ export const DecisionsPageContent = () => {
           pendingCount={pendingCount}
           user={user}
           onSignOut={handleSignOut}
+          onDecisionCreated={handleDecisionCreated}
         />
       </Box>
 

@@ -11,8 +11,11 @@ export const runtime = 'nodejs';
 
 /**
  * Server-Sent Events endpoint for real-time decision updates
- * Polls database every 3 seconds for pending decisions
- * Supports sorting via query parameters: sortBy and sortOrder
+ * Smart polling: Adjusts polling frequency based on pending decision count
+ * - Idle (0 pending): 10s interval
+ * - Normal (1-5 pending): 3s interval
+ * - Busy (>5 pending): 2s interval
+ * Supports sorting and filtering via query parameters
  */
 export async function GET(request: NextRequest) {
   // Verify authentication
@@ -76,6 +79,10 @@ export async function GET(request: NextRequest) {
         controller.enqueue(encoder.encode(message));
       };
 
+      // Smart polling: Track and adjust interval based on pending count
+      let pollInterval = 3000; // Start with 3s
+      let intervalId: NodeJS.Timeout | null = null;
+
       // Function to check for pending decisions and trigger analysis
       const checkPendingDecisions = async () => {
         try {
@@ -100,6 +107,27 @@ export async function GET(request: NextRequest) {
             count: pendingDecisions.length,
             decisions: pendingDecisions,
           });
+
+          // Adjust polling frequency based on pending count
+          let newPollInterval: number;
+          if (pendingDecisions.length === 0) {
+            newPollInterval = 10_000; // Slow down to 10s when idle
+          } else if (pendingDecisions.length > 5) {
+            newPollInterval = 2000; // Speed up to 2s when busy
+          } else {
+            newPollInterval = 3000; // Normal 3s
+          }
+
+          // If interval changed, restart with new frequency
+          if (newPollInterval !== pollInterval) {
+            pollInterval = newPollInterval;
+            if (intervalId) {
+              clearInterval(intervalId);
+            }
+            intervalId = setInterval(() => {
+              void checkPendingDecisions();
+            }, pollInterval);
+          }
 
           // Build where clause with filters
           const whereClause: Prisma.DecisionWhereInput = {
@@ -175,10 +203,10 @@ export async function GET(request: NextRequest) {
       // Initial check
       await checkPendingDecisions();
 
-      // Set up interval for polling every 3 seconds for faster real-time updates
-      const intervalId = setInterval(() => {
+      // Set up initial interval (will be dynamically adjusted based on load)
+      intervalId = setInterval(() => {
         void checkPendingDecisions();
-      }, 3000);
+      }, pollInterval);
 
       // Send keepalive every 30 seconds to prevent connection timeout
       const keepaliveId = setInterval(() => {
@@ -187,7 +215,9 @@ export async function GET(request: NextRequest) {
 
       // Handle client disconnect
       request.signal.addEventListener('abort', () => {
-        clearInterval(intervalId);
+        if (intervalId) {
+          clearInterval(intervalId);
+        }
         clearInterval(keepaliveId);
         controller.close();
       });

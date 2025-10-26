@@ -54,101 +54,66 @@ const truncateText = (text: string, maxLength: number) => {
 };
 
 // Memoized decision card component to prevent unnecessary re-renders
-const DecisionCard = memo(
-  ({ decision, onClick, onReanalyze, onDelete }: DecisionCardProps) => {
-    const { t } = useTranslations();
+const DecisionCardComponent = ({
+  decision,
+  onClick,
+  onReanalyze,
+  onDelete,
+}: DecisionCardProps) => {
+  const { t } = useTranslations();
 
-    const handleMenuAction = useCallback(
-      (action: DecisionActionType, event: React.MouseEvent) => {
-        // Stop event propagation to prevent card click
-        event.stopPropagation();
+  const handleMenuAction = useCallback(
+    (action: DecisionActionType, event: React.MouseEvent) => {
+      // Stop event propagation to prevent card click
+      event.stopPropagation();
 
-        if (action === DecisionActionType.REANALYZE) {
-          onReanalyze(decision.id);
+      if (action === DecisionActionType.REANALYZE) {
+        onReanalyze(decision.id);
 
-          return;
-        }
+        return;
+      }
 
-        if (action === DecisionActionType.DELETE) {
-          onDelete(decision.id);
-        }
+      if (action === DecisionActionType.DELETE) {
+        onDelete(decision.id);
+      }
+    },
+    [decision.id, onReanalyze, onDelete]
+  );
+
+  const menuItems = useMemo(
+    () => [
+      {
+        value: DecisionActionType.REANALYZE,
+        label: t('decisions.list.actions.reAnalyze'),
+        icon: <LuRefreshCw />,
+        onClick: (event: React.MouseEvent) =>
+          handleMenuAction(DecisionActionType.REANALYZE, event),
       },
-      [decision.id, onReanalyze, onDelete]
-    );
+      {
+        value: DecisionActionType.DELETE,
+        label: t('decisions.list.actions.delete'),
+        icon: <LuTrash2 />,
+        onClick: (event: React.MouseEvent) =>
+          handleMenuAction(DecisionActionType.DELETE, event),
+        destructive: true,
+      },
+    ],
+    [t, handleMenuAction]
+  );
 
-    const menuItems = useMemo(
-      () => [
-        {
-          value: DecisionActionType.REANALYZE,
-          label: t('decisions.list.actions.reAnalyze'),
-          icon: <LuRefreshCw />,
-          onClick: (event: React.MouseEvent) =>
-            handleMenuAction(DecisionActionType.REANALYZE, event),
-        },
-        {
-          value: DecisionActionType.DELETE,
-          label: t('decisions.list.actions.delete'),
-          icon: <LuTrash2 />,
-          onClick: (event: React.MouseEvent) =>
-            handleMenuAction(DecisionActionType.DELETE, event),
-          destructive: true,
-        },
-      ],
-      [t, handleMenuAction]
-    );
-
-    return (
-      <Card.Root
-        _hover={{ shadow: 'md', cursor: 'pointer' }}
-        transition="all 0.2s"
-        onClick={() => onClick(decision.id)}
-      >
-        <Card.Body p={6}>
-          <Stack gap={4}>
-            {/* Mobile layout: Status + Date + Menu first, then Decision Type */}
-            <Stack display={{ base: 'flex', sm: 'none' }} gap={3}>
-              {/* Status + Date + Menu block */}
-              <Stack direction="row" justify="space-between" align="center">
-                {/* Status + Date on the left */}
-                <Stack direction="row" align="center" gap={2}>
-                  <StatusBadge status={decision.status} />
-                  <Text
-                    fontSize="sm"
-                    color="gray.500"
-                    _dark={{ color: 'gray.400' }}
-                  >
-                    {new Date(decision.createdAt).toLocaleDateString('en-US', {
-                      year: 'numeric',
-                      month: 'short',
-                      day: 'numeric',
-                    })}
-                  </Text>
-                </Stack>
-
-                {/* Menu on the right */}
-                <ActionMenu items={menuItems} />
-              </Stack>
-
-              {/* Decision Type */}
-              {decision.decisionType && (
-                <Box width="fit-content">
-                  <DecisionTypeBadge decisionType={decision.decisionType} />
-                </Box>
-              )}
-            </Stack>
-
-            {/* Desktop layout: Original layout with Decision Type on left, Status + Date + Menu on right */}
-            <Stack
-              display={{ base: 'none', sm: 'flex' }}
-              direction="row"
-              justify="space-between"
-              align="center"
-            >
-              {decision.decisionType ? (
-                <DecisionTypeBadge decisionType={decision.decisionType} />
-              ) : (
-                <Box />
-              )}
+  return (
+    <Card.Root
+      _hover={{ shadow: 'md', cursor: 'pointer' }}
+      transition="all 0.2s"
+      onClick={() => onClick(decision.id)}
+    >
+      <Card.Body p={6}>
+        <Stack gap={4}>
+          {/* Mobile layout: Status + Date + Menu first, then Decision Type */}
+          <Stack display={{ base: 'flex', sm: 'none' }} gap={3}>
+            {/* Status + Date + Menu block */}
+            <Stack direction="row" justify="space-between" align="center">
+              {/* Status + Date on the left */}
               <Stack direction="row" align="center" gap={2}>
                 <StatusBadge status={decision.status} />
                 <Text
@@ -162,65 +127,106 @@ const DecisionCard = memo(
                     day: 'numeric',
                   })}
                 </Text>
-                <ActionMenu items={menuItems} />
               </Stack>
+
+              {/* Menu on the right */}
+              <ActionMenu items={menuItems} />
             </Stack>
 
-            <Box>
-              <Text
-                fontWeight="semibold"
-                mb={2}
-                fontSize="sm"
-                color="gray.600"
-                _dark={{ color: 'gray.400' }}
-              >
-                {t('decisions.list.columns.decision')}
-              </Text>
-              <Text fontSize="lg" fontWeight="medium" lineHeight="1.6">
-                {truncateText(decision.decision, 150)}
-              </Text>
-            </Box>
-
-            <Box>
-              <Text
-                fontWeight="semibold"
-                mb={2}
-                fontSize="sm"
-                color="gray.600"
-                _dark={{ color: 'gray.400' }}
-              >
-                {t('decisions.list.columns.situation')}
-              </Text>
-              <Text
-                color="gray.700"
-                _dark={{ color: 'gray.300' }}
-                lineHeight="1.6"
-              >
-                {truncateText(decision.situation, 200)}
-              </Text>
-            </Box>
-
-            {decision.status === ProcessingStatus.COMPLETED &&
-              decision.biases.length > 0 && (
-                <Box pt={2}>
-                  <Text
-                    fontWeight="semibold"
-                    mb={2}
-                    fontSize="sm"
-                    color="gray.600"
-                    _dark={{ color: 'gray.400' }}
-                  >
-                    {t('decisions.detail.sections.biases')}
-                  </Text>
-                  <BiasesBadgeList biases={decision.biases} maxDisplay={3} />
-                </Box>
-              )}
+            {/* Decision Type */}
+            {decision.decisionType && (
+              <Box width="fit-content">
+                <DecisionTypeBadge decisionType={decision.decisionType} />
+              </Box>
+            )}
           </Stack>
-        </Card.Body>
-      </Card.Root>
-    );
-  }
-);
+
+          {/* Desktop layout: Original layout with Decision Type on left, Status + Date + Menu on right */}
+          <Stack
+            display={{ base: 'none', sm: 'flex' }}
+            direction="row"
+            justify="space-between"
+            align="center"
+          >
+            {decision.decisionType ? (
+              <DecisionTypeBadge decisionType={decision.decisionType} />
+            ) : (
+              <Box />
+            )}
+            <Stack direction="row" align="center" gap={2}>
+              <StatusBadge status={decision.status} />
+              <Text
+                fontSize="sm"
+                color="gray.500"
+                _dark={{ color: 'gray.400' }}
+              >
+                {new Date(decision.createdAt).toLocaleDateString('en-US', {
+                  year: 'numeric',
+                  month: 'short',
+                  day: 'numeric',
+                })}
+              </Text>
+              <ActionMenu items={menuItems} />
+            </Stack>
+          </Stack>
+
+          <Box>
+            <Text
+              fontWeight="semibold"
+              mb={2}
+              fontSize="sm"
+              color="gray.600"
+              _dark={{ color: 'gray.400' }}
+            >
+              {t('decisions.list.columns.decision')}
+            </Text>
+            <Text fontSize="lg" fontWeight="medium" lineHeight="1.6">
+              {truncateText(decision.decision, 150)}
+            </Text>
+          </Box>
+
+          <Box>
+            <Text
+              fontWeight="semibold"
+              mb={2}
+              fontSize="sm"
+              color="gray.600"
+              _dark={{ color: 'gray.400' }}
+            >
+              {t('decisions.list.columns.situation')}
+            </Text>
+            <Text
+              color="gray.700"
+              _dark={{ color: 'gray.300' }}
+              lineHeight="1.6"
+            >
+              {truncateText(decision.situation, 200)}
+            </Text>
+          </Box>
+
+          {decision.status === ProcessingStatus.COMPLETED &&
+            decision.biases.length > 0 && (
+              <Box pt={2}>
+                <Text
+                  fontWeight="semibold"
+                  mb={2}
+                  fontSize="sm"
+                  color="gray.600"
+                  _dark={{ color: 'gray.400' }}
+                >
+                  {t('decisions.detail.sections.biases')}
+                </Text>
+                <BiasesBadgeList biases={decision.biases} maxDisplay={3} />
+              </Box>
+            )}
+        </Stack>
+      </Card.Body>
+    </Card.Root>
+  );
+};
+
+// Memoize to prevent unnecessary re-renders
+const DecisionCard = memo(DecisionCardComponent);
 
 export const DecisionList = ({ decisions }: DecisionListProps) => {
   const { t } = useTranslations();
