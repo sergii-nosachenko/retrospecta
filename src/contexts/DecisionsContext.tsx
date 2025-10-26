@@ -18,7 +18,7 @@ import {
   StreamEventType,
 } from '@/types/enums';
 
-interface Decision {
+export interface Decision {
   id: string;
   situation: string;
   decision: string;

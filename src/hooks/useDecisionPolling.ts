@@ -1,25 +1,8 @@
 import { useCallback, useEffect, useState } from 'react';
 
 import { getDecision } from '@/actions/decisions';
-import { useDecisions } from '@/contexts/DecisionsContext';
+import { type Decision, useDecisions } from '@/contexts/DecisionsContext';
 import { ProcessingStatus } from '@/types/enums';
-
-interface DecisionData {
-  id: string;
-  situation: string;
-  decision: string;
-  reasoning: string | null;
-  status: string;
-  decisionType: string | null;
-  biases: string[];
-  alternatives: string | null;
-  insights: string | null;
-  analysisAttempts: number;
-  lastAnalyzedAt: Date | null;
-  errorMessage: string | null;
-  createdAt: Date;
-  updatedAt: Date;
-}
 
 interface UseDecisionPollingOptions {
   decisionId: string;
@@ -37,7 +20,7 @@ interface UseDecisionPollingOptions {
 }
 
 interface UseDecisionPollingReturn {
-  decision: DecisionData | null;
+  decision: Decision | null;
   isLoading: boolean;
   isPolling: boolean;
   refetch: () => Promise<void>;
@@ -70,7 +53,7 @@ export const useDecisionPolling = ({
   source = 'context',
 }: UseDecisionPollingOptions): UseDecisionPollingReturn => {
   const { getDecision: getDecisionFromContext } = useDecisions();
-  const [decision, setDecision] = useState<DecisionData | null>(null);
+  const [decision, setDecision] = useState<Decision | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isPolling, setIsPolling] = useState(false);
 
@@ -97,15 +80,7 @@ export const useDecisionPolling = ({
       const contextDecision = getDecisionFromContext(decisionId);
 
       if (contextDecision) {
-        // Context has all the fields we need
-        const decisionData: DecisionData = {
-          ...contextDecision,
-          analysisAttempts: contextDecision.analysisAttempts ?? 0,
-          lastAnalyzedAt: contextDecision.lastAnalyzedAt ?? null,
-          errorMessage: contextDecision.errorMessage ?? null,
-        };
-
-        setDecision(decisionData);
+        setDecision(contextDecision);
 
         // Start polling if status is PENDING or PROCESSING
         if (!isTerminalStatus(contextDecision.status)) {
@@ -116,7 +91,7 @@ export const useDecisionPolling = ({
         const result = await getDecision(decisionId);
 
         if (result.success && result.data) {
-          setDecision(result.data);
+          setDecision(result.data as Decision);
 
           // Start polling if status is PENDING or PROCESSING
           if (!isTerminalStatus(result.data.status)) {
@@ -129,7 +104,7 @@ export const useDecisionPolling = ({
       const result = await getDecision(decisionId);
 
       if (result.success && result.data) {
-        setDecision(result.data);
+        setDecision(result.data as Decision);
 
         // Start polling if status is PENDING or PROCESSING
         if (!isTerminalStatus(result.data.status)) {
@@ -167,13 +142,7 @@ export const useDecisionPolling = ({
 
         if (updatedDecision) {
           // Update local state with context data
-          setDecision((prev) => ({
-            ...prev!,
-            ...updatedDecision,
-            analysisAttempts: updatedDecision.analysisAttempts ?? 0,
-            lastAnalyzedAt: updatedDecision.lastAnalyzedAt ?? null,
-            errorMessage: updatedDecision.errorMessage ?? null,
-          }));
+          setDecision(updatedDecision);
 
           // Stop polling if analysis is complete or failed
           if (isTerminalStatus(updatedDecision.status)) {
@@ -183,7 +152,7 @@ export const useDecisionPolling = ({
             if (updatedDecision.status === ProcessingStatus.FAILED) {
               void getDecision(decision.id).then((result) => {
                 if (result.success && result.data) {
-                  setDecision(result.data);
+                  setDecision(result.data as Decision);
                 }
               });
             }
@@ -193,7 +162,7 @@ export const useDecisionPolling = ({
         // API-based polling
         void getDecision(decision.id).then((result) => {
           if (result.success && result.data) {
-            setDecision(result.data);
+            setDecision(result.data as Decision);
 
             // Stop polling if analysis is complete or failed
             if (isTerminalStatus(result.data.status)) {
