@@ -18,6 +18,9 @@ import { useTranslations } from '@/translations';
 
 import { CustomBarTooltip } from '../ChartTooltips';
 
+/**
+ * Props for the BiasChart component
+ */
 interface BiasChartProps {
   data: { name: string; count: number }[];
 }
@@ -38,6 +41,25 @@ const BIAS_COLORS = [
   'violet.solid',
 ] as const;
 
+/**
+ * Cognitive bias distribution bar chart component.
+ *
+ * Displays a vertical bar chart showing the frequency of different cognitive biases
+ * detected in decisions. Each bias is represented with a distinct color and translated
+ * name. Features rotated X-axis labels for better readability.
+ *
+ * @param data - Array of bias data with name (enum key) and count
+ *
+ * @example
+ * ```tsx
+ * <BiasChart
+ *   data={[
+ *     { name: 'CONFIRMATION_BIAS', count: 15 },
+ *     { name: 'ANCHORING', count: 8 }
+ *   ]}
+ * />
+ * ```
+ */
 export const BiasChart = memo<BiasChartProps>(({ data }) => {
   const { t } = useTranslations();
 

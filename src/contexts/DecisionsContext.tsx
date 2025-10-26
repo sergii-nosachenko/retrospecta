@@ -108,10 +108,8 @@ export const DecisionsProvider = ({ children }: DecisionsProviderProps) => {
     getOptimisticUpdateCount
   );
 
-  // Status change notifications
   useDecisionNotifications(decisions, hasOptimisticUpdate);
 
-  // Wrap optimistic update functions to provide required state setters
   const optimisticUpdateStatus = useCallback(
     (decisionId: string, status: ProcessingStatus) => {
       optimisticUpdateStatusFn(
@@ -127,7 +125,6 @@ export const DecisionsProvider = ({ children }: DecisionsProviderProps) => {
 
   const optimisticDelete = useCallback(
     (decisionId: string) => {
-      // Perform optimistic delete
       optimisticDeleteFn(
         decisionId,
         decisions,
@@ -136,14 +133,12 @@ export const DecisionsProvider = ({ children }: DecisionsProviderProps) => {
         setTotalCount
       );
 
-      // Check if we need to adjust the page after deletion
       const newTotalCount = totalCount - 1;
       const lastValidPage = Math.max(
         1,
         Math.ceil(newTotalCount / filters.pageSize)
       );
 
-      // If current page becomes invalid, reset to last valid page
       if (filters.page > lastValidPage) {
         setFilters({ page: lastValidPage });
       }
@@ -169,16 +164,13 @@ export const DecisionsProvider = ({ children }: DecisionsProviderProps) => {
   );
 
   const optimisticCreate = useCallback(() => {
-    // Increment total count optimistically
     optimisticCreateFn(setTotalCount);
 
-    // Reset to page 1 to see the new decision
     if (filters.page !== 1) {
       setFilters({ page: 1 });
     }
   }, [optimisticCreateFn, setTotalCount, filters.page, setFilters]);
 
-  // Get a specific decision by ID
   const getDecision = useCallback(
     (decisionId: string) => {
       return decisions.find((d) => d.id === decisionId);
@@ -186,7 +178,6 @@ export const DecisionsProvider = ({ children }: DecisionsProviderProps) => {
     [decisions]
   );
 
-  // Memoize context value to prevent unnecessary re-renders
   const value = useMemo<DecisionsContextValue>(
     () => ({
       decisions,

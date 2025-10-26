@@ -8,6 +8,18 @@ import { RegisterForm } from '@/components/auth/forms/RegisterForm';
 import { ROUTES } from '@/constants/routes';
 import { useTranslations } from '@/translations';
 
+/**
+ * Registration page content component that renders the complete sign-up interface.
+ *
+ * Provides OAuth authentication options, email/password registration form, and a link
+ * to the login page for existing users. Uses the AuthPageLayout for consistent styling
+ * across auth pages.
+ *
+ * @example
+ * ```tsx
+ * <RegisterPageContent />
+ * ```
+ */
 export const RegisterPageContent = () => {
   const { t } = useTranslations();
   return (

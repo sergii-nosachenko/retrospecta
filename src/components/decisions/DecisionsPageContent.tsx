@@ -40,6 +40,26 @@ import { useDecisions } from '@/contexts/DecisionsContext';
 import { useTranslations } from '@/translations';
 import { type SortField, type SortOrder } from '@/types/enums';
 
+/**
+ * Main decisions page component
+ *
+ * Displays a paginated, filterable, and sortable list of user decisions.
+ * Integrates real-time updates via SSE, filtering controls, user menu,
+ * and handles authentication state.
+ *
+ * Features:
+ * - Paginated decision list with real-time updates
+ * - Filter controls (decision type, bias, date range)
+ * - Sorting controls (by created date, updated date, status)
+ * - Mobile-responsive filter drawer
+ * - User menu with authentication
+ * - Active filter count badge
+ * - Error handling and loading states
+ * - Empty states for no decisions
+ *
+ * @example
+ * <DecisionsPageContent />
+ */
 export const DecisionsPageContent = () => {
   const {
     decisions,

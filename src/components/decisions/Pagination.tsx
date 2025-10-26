@@ -18,6 +18,33 @@ interface PaginationProps {
   onPageChange: (page: number) => void;
 }
 
+/**
+ * Pagination component for navigating through paged decision lists
+ *
+ * Displays page controls with:
+ * - Current page indicator
+ * - Item count information (e.g., "1-10 of 45")
+ * - Page number buttons (smart truncation for many pages)
+ * - First/Previous/Next/Last navigation buttons
+ * - Responsive button sizing and layout
+ *
+ * Automatically handles edge cases (first/last page state).
+ *
+ * @param currentPage - Current page number (1-based)
+ * @param pageSize - Number of items per page
+ * @param totalCount - Total number of items across all pages
+ * @param onPageChange - Callback when page changes
+ *
+ * @example
+ * ```tsx
+ * <Pagination
+ *   currentPage={2}
+ *   pageSize={10}
+ *   totalCount={45}
+ *   onPageChange={(page) => setCurrentPage(page)}
+ * />
+ * ```
+ */
 const PaginationComponent = ({
   currentPage,
   pageSize,

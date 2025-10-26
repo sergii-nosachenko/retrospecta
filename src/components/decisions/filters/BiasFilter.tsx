@@ -16,11 +16,32 @@ import { CognitiveBias } from '@/types/enums';
 // Get all cognitive biases from the enum
 const COMMON_BIASES = Object.values(CognitiveBias);
 
+/**
+ * Props for the BiasFilter component
+ */
 interface BiasFilterProps {
   selectedBiases: string[];
   onBiasesChange: (biases: string[]) => void;
 }
 
+/**
+ * Multi-select dropdown filter for cognitive biases.
+ *
+ * Allows users to filter decisions by selecting one or more cognitive bias types
+ * from a predefined list. Displays the count of selected biases or individual
+ * bias name when only one is selected.
+ *
+ * @param selectedBiases - Array of currently selected cognitive bias enum values
+ * @param onBiasesChange - Callback fired when the bias selection changes
+ *
+ * @example
+ * ```tsx
+ * <BiasFilter
+ *   selectedBiases={['CONFIRMATION_BIAS', 'ANCHORING']}
+ *   onBiasesChange={(biases) => setSelectedBiases(biases)}
+ * />
+ * ```
+ */
 export const BiasFilter = ({
   selectedBiases,
   onBiasesChange,

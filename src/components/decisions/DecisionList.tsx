@@ -49,13 +49,35 @@ interface DecisionCardProps {
   onDelete: (id: string) => void;
 }
 
-// Utility function for truncating text
+/**
+ * Utility function for truncating text to a maximum length
+ * @param text - The text to truncate
+ * @param maxLength - Maximum length before truncation
+ * @returns Truncated text with ellipsis if needed
+ */
 const truncateText = (text: string, maxLength: number) => {
   if (text.length <= maxLength) return text;
   return `${text.slice(0, Math.max(0, maxLength))}...`;
 };
 
-// Memoized decision card component to prevent unnecessary re-renders
+/**
+ * Individual decision card component with actions
+ *
+ * Displays a single decision card with:
+ * - Status badge and new indicator
+ * - Decision type badge
+ * - Situation and decision text (truncated)
+ * - Identified biases
+ * - Action menu for reanalyze/delete
+ * - Responsive layout (mobile/desktop)
+ *
+ * Memoized to prevent unnecessary re-renders.
+ *
+ * @param decision - The decision to display
+ * @param onClick - Callback when card is clicked (opens detail modal)
+ * @param onReanalyze - Callback to trigger re-analysis
+ * @param onDelete - Callback to delete decision
+ */
 const DecisionCardComponent = ({
   decision,
   onClick,
@@ -66,7 +88,6 @@ const DecisionCardComponent = ({
 
   const handleMenuAction = useCallback(
     (action: DecisionActionType, event: React.MouseEvent) => {
-      // Stop event propagation to prevent card click
       event.stopPropagation();
 
       if (action === DecisionActionType.REANALYZE) {
@@ -111,11 +132,8 @@ const DecisionCardComponent = ({
     >
       <Card.Body p={6}>
         <Stack gap={4}>
-          {/* Mobile layout: Status + Date + Menu first, then Decision Type */}
           <Stack display={{ base: 'flex', sm: 'none' }} gap={3}>
-            {/* Status + Date + Menu block */}
             <Stack direction="row" justify="space-between" align="center">
-              {/* Status + Date on the left */}
               <Stack direction="row" align="center" gap={2}>
                 <StatusBadge status={decision.status} />
                 {decision.isNew && <NewBadge />}
@@ -132,11 +150,9 @@ const DecisionCardComponent = ({
                 </Text>
               </Stack>
 
-              {/* Menu on the right */}
               <ActionMenu items={menuItems} />
             </Stack>
 
-            {/* Decision Type */}
             {decision.decisionType && (
               <Box width="fit-content">
                 <DecisionTypeBadge decisionType={decision.decisionType} />
@@ -144,7 +160,6 @@ const DecisionCardComponent = ({
             )}
           </Stack>
 
-          {/* Desktop layout: Original layout with Decision Type on left, Status + Date + Menu on right */}
           <Stack
             display={{ base: 'none', sm: 'flex' }}
             direction="row"
@@ -229,9 +244,29 @@ const DecisionCardComponent = ({
   );
 };
 
-// Memoize to prevent unnecessary re-renders
 const DecisionCard = memo(DecisionCardComponent);
 
+/**
+ * Main decision list component
+ *
+ * Renders a list of decision cards with interactive actions.
+ * Handles decision selection, re-analysis, and deletion with optimistic updates.
+ * Shows empty state when no decisions exist with a prompt to create one.
+ *
+ * Features:
+ * - Renders decision cards with click-to-view detail modal
+ * - Re-analyze action for individual decisions
+ * - Delete action with optimistic UI updates
+ * - Empty state with create decision prompt
+ * - Context integration for optimistic updates
+ *
+ * @param decisions - Array of decisions to display
+ *
+ * @example
+ * ```tsx
+ * <DecisionList decisions={userDecisions} />
+ * ```
+ */
 export const DecisionList = ({ decisions }: DecisionListProps) => {
   const { t } = useTranslations();
   const { optimisticUpdateStatus, optimisticDelete } = useDecisions();
@@ -240,13 +275,11 @@ export const DecisionList = ({ decisions }: DecisionListProps) => {
   );
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  // Memoize the click handler to prevent recreating it on every render
   const handleDecisionClick = useCallback((decisionId: string) => {
     setSelectedDecisionId(decisionId);
     setIsModalOpen(true);
   }, []);
 
-  // Wrapper handlers that use the extracted utility functions
   const handleReanalyze = useCallback(
     async (decisionId: string) => {
       await reanalyzeDecisionAction(decisionId, {
@@ -306,7 +339,6 @@ export const DecisionList = ({ decisions }: DecisionListProps) => {
         ))}
       </VStack>
 
-      {/* Decision Detail Modal */}
       {selectedDecisionId && (
         <DecisionDetailModal
           decisionId={selectedDecisionId}

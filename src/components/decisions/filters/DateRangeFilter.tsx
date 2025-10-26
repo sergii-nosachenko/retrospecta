@@ -26,6 +26,9 @@ import {
 } from '@/components/ui/date-picker';
 import { useTranslations } from '@/translations';
 
+/**
+ * Props for the DateRangeFilter component
+ */
 interface DateRangeFilterProps {
   dateFrom: string | null;
   dateTo: string | null;
@@ -147,6 +150,27 @@ const SingleDatePicker = memo(
 
 SingleDatePicker.displayName = 'SingleDatePicker';
 
+/**
+ * Date range filter component with two date pickers for filtering decisions by date range.
+ *
+ * Provides separate "from" and "to" date pickers that allow users to select a start and end date
+ * for filtering decision records.
+ *
+ * @param dateFrom - The start date of the range (ISO string format) or null
+ * @param dateTo - The end date of the range (ISO string format) or null
+ * @param onDateFromChange - Callback fired when the start date changes
+ * @param onDateToChange - Callback fired when the end date changes
+ *
+ * @example
+ * ```tsx
+ * <DateRangeFilter
+ *   dateFrom="2024-01-01"
+ *   dateTo="2024-12-31"
+ *   onDateFromChange={(date) => setDateFrom(date)}
+ *   onDateToChange={(date) => setDateTo(date)}
+ * />
+ * ```
+ */
 export const DateRangeFilter = ({
   dateFrom,
   dateTo,

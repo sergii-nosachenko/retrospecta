@@ -31,48 +31,30 @@ interface DecisionDetailModalProps {
  * - Polls for decision updates while PENDING/PROCESSING
  * - Displays analysis results when COMPLETED
  * - Allows re-analysis and deletion
- *
- * @param decisionId - ID of the decision to display
- * @param open - Whether modal is visible
- * @param onOpenChange - Callback when modal visibility changes
- *
- * @example
- * <DecisionDetailModal
- *   decisionId="abc123"
- *   open={isOpen}
- *   onOpenChange={setIsOpen}
- * />
  */
 export const DecisionDetailModal = ({
   decisionId,
   open,
   onOpenChange,
 }: DecisionDetailModalProps) => {
-  // Get optimistic update function from context
   const { optimisticMarkAsRead } = useDecisions();
 
-  // Use the polling hook to manage decision state and updates
   const { decision, isLoading } = useDecisionPolling({
     decisionId,
     enabled: open,
-    source: 'context', // Use context-based polling (more efficient)
+    source: 'context',
   });
 
-  // Use the actions hook to manage reanalyze and delete actions
   const { handleReanalyze, handleDelete, isReanalyzing, isDeleting } =
     useDecisionActions(decision);
 
-  // Wrap handleDelete to close modal on completion
   const handleDeleteWithClose = () => {
     void handleDelete(() => onOpenChange(false));
   };
 
-  // Mark decision as read when modal opens and decision is new
   useEffect(() => {
     if (open && decision?.isNew) {
-      // Optimistically update UI immediately
       optimisticMarkAsRead(decisionId);
-      // Update database in background
       void markDecisionAsRead(decisionId);
     }
   }, [open, decision, decisionId, optimisticMarkAsRead]);

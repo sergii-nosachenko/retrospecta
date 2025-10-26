@@ -8,6 +8,17 @@ import { LoginForm } from '@/components/auth/forms/LoginForm';
 import { ROUTES } from '@/constants/routes';
 import { useTranslations } from '@/translations';
 
+/**
+ * Login page content component that renders the complete login interface.
+ *
+ * Provides OAuth authentication options, email/password login form, and a link to the
+ * registration page. Uses the AuthPageLayout for consistent styling across auth pages.
+ *
+ * @example
+ * ```tsx
+ * <LoginPageContent />
+ * ```
+ */
 export const LoginPageContent = () => {
   const { t } = useTranslations();
   return (

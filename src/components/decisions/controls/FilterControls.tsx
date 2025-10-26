@@ -14,6 +14,9 @@ import { DecisionTypeFilter } from '../filters/DecisionTypeFilter';
 // Re-export for backwards compatibility
 export type { DecisionType };
 
+/**
+ * Props for the FilterControls component
+ */
 interface FilterControlsProps {
   selectedDecisionTypes: DecisionType[];
   selectedBiases: string[];
@@ -26,6 +29,38 @@ interface FilterControlsProps {
   onClearFilters: () => void;
 }
 
+/**
+ * Composite filter controls component for decision list filtering.
+ *
+ * Combines multiple filter types (decision type, biases, date range) into a single
+ * horizontal control panel. Includes a "Clear Filters" button that appears when any
+ * filters are active.
+ *
+ * @param selectedDecisionTypes - Array of selected decision type values
+ * @param selectedBiases - Array of selected cognitive bias values
+ * @param dateFrom - Start date for date range filter (ISO string) or null
+ * @param dateTo - End date for date range filter (ISO string) or null
+ * @param onDecisionTypesChange - Callback for decision type filter changes
+ * @param onBiasesChange - Callback for bias filter changes
+ * @param onDateFromChange - Callback for start date changes
+ * @param onDateToChange - Callback for end date changes
+ * @param onClearFilters - Callback to clear all active filters
+ *
+ * @example
+ * ```tsx
+ * <FilterControls
+ *   selectedDecisionTypes={['EMOTIONAL']}
+ *   selectedBiases={['CONFIRMATION_BIAS']}
+ *   dateFrom="2024-01-01"
+ *   dateTo="2024-12-31"
+ *   onDecisionTypesChange={setDecisionTypes}
+ *   onBiasesChange={setBiases}
+ *   onDateFromChange={setDateFrom}
+ *   onDateToChange={setDateTo}
+ *   onClearFilters={handleClearAll}
+ * />
+ * ```
+ */
 export const FilterControls = ({
   selectedDecisionTypes,
   selectedBiases,

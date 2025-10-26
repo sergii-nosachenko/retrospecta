@@ -16,6 +16,9 @@ import { useTranslations } from '@/translations';
 
 import { CustomPieTooltip } from '../ChartTooltips';
 
+/**
+ * Props for the DecisionTypeChart component
+ */
 interface DecisionTypeChartProps {
   data: { name: string; value: number }[];
 }
@@ -34,6 +37,26 @@ const DECISION_TYPE_COLORS = [
 
 const LEGEND_STYLE = { fontSize: '12px' } as const;
 
+/**
+ * Decision type distribution pie chart component.
+ *
+ * Displays a donut chart showing the distribution of different decision types
+ * (EMOTIONAL, STRATEGIC, ANALYTICAL, etc.). Each type is color-coded and includes
+ * a legend for identification. Translates decision type names to localized labels.
+ *
+ * @param data - Array of decision type data with name (enum key) and value (count)
+ *
+ * @example
+ * ```tsx
+ * <DecisionTypeChart
+ *   data={[
+ *     { name: 'EMOTIONAL', value: 25 },
+ *     { name: 'STRATEGIC', value: 18 },
+ *     { name: 'ANALYTICAL', value: 12 }
+ *   ]}
+ * />
+ * ```
+ */
 export const DecisionTypeChart = memo<DecisionTypeChartProps>(({ data }) => {
   const { t } = useTranslations();
 

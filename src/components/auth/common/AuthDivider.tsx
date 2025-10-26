@@ -7,6 +7,23 @@ interface AuthDividerProps {
   text?: string;
 }
 
+/**
+ * Horizontal divider component with centered text for authentication pages.
+ *
+ * Creates a visual separation between different authentication methods (e.g., between
+ * OAuth buttons and email/password forms). Features a horizontal line with centered
+ * text overlay. Supports light/dark mode and uses i18n for default text.
+ * Optimized with React.memo for performance.
+ *
+ * @param text - Optional custom text to display in the divider. Falls back to translated "or continue with" text
+ *
+ * @example
+ * ```tsx
+ * <AuthDivider text="or" />
+ * // Uses default i18n text:
+ * <AuthDivider />
+ * ```
+ */
 export const AuthDivider = memo(({ text }: AuthDividerProps) => {
   const { t } = useTranslations();
   const displayText = text ?? t('auth.login.orContinueWith');

@@ -5,6 +5,18 @@ import { AuthPageLayout } from '@/components/auth/common/AuthPageLayout';
 import { ROUTES } from '@/constants/routes';
 import { useTranslations } from '@/translations';
 
+/**
+ * Email confirmation page content component displayed after user registration.
+ *
+ * Informs users that they need to verify their email address before accessing the
+ * application. Includes helpful reminders to check spam folders and provides a link
+ * back to the login page.
+ *
+ * @example
+ * ```tsx
+ * <ConfirmEmailPageContent />
+ * ```
+ */
 export const ConfirmEmailPageContent = () => {
   const { t } = useTranslations();
 

@@ -5,6 +5,19 @@ interface ErrorMessageProps {
   message: string;
 }
 
+/**
+ * Error message component for displaying authentication-related errors.
+ *
+ * Renders error messages in a visually distinct red-themed box with consistent styling
+ * across all authentication forms. Optimized with React.memo for performance.
+ *
+ * @param message - The error message text to display
+ *
+ * @example
+ * ```tsx
+ * <ErrorMessage message="Invalid email or password" />
+ * ```
+ */
 export const ErrorMessage = memo(({ message }: ErrorMessageProps) => {
   return (
     <Box

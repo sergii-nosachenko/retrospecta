@@ -6,6 +6,9 @@ import { memo, useMemo } from 'react';
 import { useColorMode } from '@/components/ui/color-mode';
 import { useTranslations } from '@/translations';
 
+/**
+ * Props for chart tooltip components
+ */
 interface TooltipProps {
   active?: boolean;
   payload?: {
@@ -15,6 +18,22 @@ interface TooltipProps {
   }[];
 }
 
+/**
+ * Custom tooltip component for pie charts.
+ *
+ * Displays a styled tooltip when hovering over pie chart segments, showing the
+ * segment name and count value. Adapts styling based on light/dark color mode.
+ *
+ * @param active - Whether the tooltip is currently active/visible
+ * @param payload - Chart data payload containing the segment name and value
+ *
+ * @example
+ * ```tsx
+ * <PieChart>
+ *   <Tooltip content={<CustomPieTooltip />} />
+ * </PieChart>
+ * ```
+ */
 export const CustomPieTooltip = memo<TooltipProps>(({ active, payload }) => {
   const { colorMode } = useColorMode();
   const { t } = useTranslations();
@@ -62,6 +81,22 @@ export const CustomPieTooltip = memo<TooltipProps>(({ active, payload }) => {
 
 CustomPieTooltip.displayName = 'CustomPieTooltip';
 
+/**
+ * Custom tooltip component for bar charts.
+ *
+ * Displays a styled tooltip when hovering over bar chart elements, showing the
+ * item name and occurrence count. Adapts styling based on light/dark color mode.
+ *
+ * @param active - Whether the tooltip is currently active/visible
+ * @param payload - Chart data payload containing the bar name and value
+ *
+ * @example
+ * ```tsx
+ * <BarChart>
+ *   <Tooltip content={<CustomBarTooltip />} />
+ * </BarChart>
+ * ```
+ */
 export const CustomBarTooltip = memo<TooltipProps>(({ active, payload }) => {
   const { colorMode } = useColorMode();
   const { t } = useTranslations();

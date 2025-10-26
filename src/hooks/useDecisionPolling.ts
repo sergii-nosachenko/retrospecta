@@ -57,9 +57,6 @@ export const useDecisionPolling = ({
   const [isLoading, setIsLoading] = useState(true);
   const [isPolling, setIsPolling] = useState(false);
 
-  /**
-   * Check if a status is terminal (no more updates expected)
-   */
   const isTerminalStatus = useCallback((status: string): boolean => {
     return (
       status === ProcessingStatus.COMPLETED ||
@@ -67,46 +64,37 @@ export const useDecisionPolling = ({
     );
   }, []);
 
-  /**
-   * Fetch decision from context or API
-   */
   const fetchDecision = useCallback(async () => {
     if (!decisionId) return;
 
     setIsLoading(true);
 
     if (source === 'context') {
-      // Get decision from context (instant, no API call needed!)
       const contextDecision = getDecisionFromContext(decisionId);
 
       if (contextDecision) {
         setDecision(contextDecision);
 
-        // Start polling if status is PENDING or PROCESSING
         if (!isTerminalStatus(contextDecision.status)) {
           setIsPolling(true);
         }
       } else {
-        // Fallback: decision not in context yet (shouldn't happen normally)
         const result = await getDecision(decisionId);
 
         if (result.success && result.data) {
           setDecision(result.data as Decision);
 
-          // Start polling if status is PENDING or PROCESSING
           if (!isTerminalStatus(result.data.status)) {
             setIsPolling(true);
           }
         }
       }
     } else {
-      // API-based polling (less efficient)
       const result = await getDecision(decisionId);
 
       if (result.success && result.data) {
         setDecision(result.data as Decision);
 
-        // Start polling if status is PENDING or PROCESSING
         if (!isTerminalStatus(result.data.status)) {
           setIsPolling(true);
         }
@@ -137,18 +125,14 @@ export const useDecisionPolling = ({
 
     const intervalId = setInterval(() => {
       if (source === 'context') {
-        // Get updated decision from context (no API call)
         const updatedDecision = getDecisionFromContext(decision.id);
 
         if (updatedDecision) {
-          // Update local state with context data
           setDecision(updatedDecision);
 
-          // Stop polling if analysis is complete or failed
           if (isTerminalStatus(updatedDecision.status)) {
             setIsPolling(false);
 
-            // Fetch full details one last time to get error message if failed
             if (updatedDecision.status === ProcessingStatus.FAILED) {
               void getDecision(decision.id).then((result) => {
                 if (result.success && result.data) {
@@ -159,12 +143,10 @@ export const useDecisionPolling = ({
           }
         }
       } else {
-        // API-based polling
         void getDecision(decision.id).then((result) => {
           if (result.success && result.data) {
             setDecision(result.data as Decision);
 
-            // Stop polling if analysis is complete or failed
             if (isTerminalStatus(result.data.status)) {
               setIsPolling(false);
             }
@@ -184,9 +166,6 @@ export const useDecisionPolling = ({
     isTerminalStatus,
   ]);
 
-  /**
-   * Manual refetch function
-   */
   const refetch = useCallback(async () => {
     await fetchDecision();
   }, [fetchDecision]);

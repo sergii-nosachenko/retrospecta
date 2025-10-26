@@ -14,12 +14,34 @@ import {
 import { useTranslations } from '@/translations';
 import { SortField, SortOrder } from '@/types/enums';
 
+/**
+ * Props for the SortingControls component
+ */
 interface SortingControlsProps {
   sortBy: SortField;
   sortOrder: SortOrder;
   onSortChange: (sortBy: SortField, sortOrder: SortOrder) => void;
 }
 
+/**
+ * Sorting controls component for decision list ordering.
+ *
+ * Provides a dropdown to select the sort field (createdAt, updatedAt, status, or
+ * decisionType) and a toggle button to switch between ascending and descending order.
+ *
+ * @param sortBy - Current sort field (e.g., CREATED_AT, UPDATED_AT, STATUS, DECISION_TYPE)
+ * @param sortOrder - Current sort order (ASC or DESC)
+ * @param onSortChange - Callback fired when sort field or order changes
+ *
+ * @example
+ * ```tsx
+ * <SortingControls
+ *   sortBy={SortField.CREATED_AT}
+ *   sortOrder={SortOrder.DESC}
+ *   onSortChange={(field, order) => updateSort(field, order)}
+ * />
+ * ```
+ */
 export const SortingControls = ({
   sortBy,
   sortOrder,

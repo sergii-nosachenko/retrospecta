@@ -18,6 +18,33 @@ interface DecisionsHeaderProps {
   onDecisionCreated?: () => void;
 }
 
+/**
+ * Header component for the decisions page
+ *
+ * Displays:
+ * - Application logo
+ * - "My Decisions" heading
+ * - Pending analysis count badge
+ * - "New Decision" button (opens form modal)
+ * - User menu (with sign out and theme controls)
+ *
+ * Memoized to prevent unnecessary re-renders.
+ *
+ * @param pendingCount - Number of decisions currently being analyzed
+ * @param user - Current user information (null if loading)
+ * @param onSignOut - Callback to handle user sign out
+ * @param onDecisionCreated - Optional callback after successful decision creation
+ *
+ * @example
+ * ```tsx
+ * <DecisionsHeader
+ *   pendingCount={2}
+ *   user={currentUser}
+ *   onSignOut={handleSignOut}
+ *   onDecisionCreated={refreshList}
+ * />
+ * ```
+ */
 export const DecisionsHeader = memo(
   ({
     pendingCount,

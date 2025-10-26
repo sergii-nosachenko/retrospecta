@@ -16,6 +16,26 @@ import { useTranslations } from '@/translations';
 
 import { useColorMode } from '../../ui/color-mode';
 
+/**
+ * User menu component with authentication and theme controls
+ *
+ * Displays a dropdown menu triggered by the user's avatar with:
+ * - User information (name, email)
+ * - Link to dashboard
+ * - Theme toggle (light/dark mode)
+ * - Sign out action
+ *
+ * @param user - Current user information
+ * @param onSignOut - Callback to handle sign out action
+ *
+ * @example
+ * ```tsx
+ * <UserMenu
+ *   user={{ id: '123', name: 'John', email: 'john@example.com', avatarUrl: null }}
+ *   onSignOut={handleSignOut}
+ * />
+ * ```
+ */
 interface UserMenuProps {
   user: {
     id: string;

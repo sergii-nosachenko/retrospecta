@@ -20,7 +20,6 @@ export async function analyzeDecision(
   decisionId: string
 ): Promise<ActionResult<void>> {
   try {
-    // Get decision data
     const decision = await prisma.decision.findUnique({
       where: { id: decisionId },
     });
@@ -32,17 +31,14 @@ export async function analyzeDecision(
       };
     }
 
-    // Update status to PROCESSING
     await prisma.decision.update({
       where: { id: decisionId },
       data: { status: ProcessingStatus.PROCESSING },
     });
 
-    // Revalidate to show processing status
     revalidatePath(ROUTES.DECISIONS);
     revalidatePath(`${ROUTES.DECISIONS}/${decisionId}`);
 
-    // Run AI analysis
     const analysisResult = await runAIAnalysis({
       situation: decision.situation,
       decision: decision.decision,
@@ -50,7 +46,6 @@ export async function analyzeDecision(
     });
 
     if (!analysisResult.success || !analysisResult.data) {
-      // Update status to FAILED
       await prisma.decision.update({
         where: { id: decisionId },
         data: {
@@ -69,7 +64,6 @@ export async function analyzeDecision(
       };
     }
 
-    // Update decision with analysis results
     await prisma.decision.update({
       where: { id: decisionId },
       data: {
@@ -81,11 +75,10 @@ export async function analyzeDecision(
         lastAnalyzedAt: new Date(),
         analysisAttempts: { increment: 1 },
         errorMessage: null,
-        isNew: true, // Mark as new when analysis completes
+        isNew: true,
       },
     });
 
-    // Revalidate to show completed analysis
     revalidatePath(ROUTES.DECISIONS);
     revalidatePath(`${ROUTES.DECISIONS}/${decisionId}`);
 
@@ -95,7 +88,6 @@ export async function analyzeDecision(
   } catch (error) {
     console.error('Error analyzing decision:', error);
 
-    // Update status to FAILED
     try {
       await prisma.decision.update({
         where: { id: decisionId },
@@ -134,20 +126,18 @@ export async function reanalyzeDecision(
   decisionId: string
 ): Promise<ActionResult<void>> {
   try {
-    // Reset decision status
     await prisma.decision.update({
       where: { id: decisionId },
       data: {
         status: ProcessingStatus.PENDING,
         errorMessage: null,
-        isNew: true, // Mark as new when re-analyzing
+        isNew: true,
       },
     });
 
     revalidatePath(ROUTES.DECISIONS);
     revalidatePath(`${ROUTES.DECISIONS}/${decisionId}`);
 
-    // Trigger new analysis
     return await analyzeDecision(decisionId);
   } catch (error) {
     console.error('Error re-analyzing decision:', error);

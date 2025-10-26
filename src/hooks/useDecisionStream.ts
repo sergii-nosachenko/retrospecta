@@ -49,11 +49,41 @@ interface UseDecisionStreamOptions {
 }
 
 /**
- * Custom hook to connect to server-sent events for real-time decision updates
- * Server polls database every 10 seconds and pushes updates to client
- * Shows toast notifications when decision status changes
+ * Custom hook for establishing SSE connection to receive real-time decision updates
  *
- * @param options - Sorting options for decisions
+ * Connects to server-sent events stream for real-time decision updates.
+ * The server polls the database periodically and pushes updates to connected clients.
+ *
+ * Features:
+ * - Real-time decision updates via SSE
+ * - Automatic reconnection with exponential backoff (up to 5 attempts)
+ * - Status change notifications (toast messages)
+ * - Filtering by category, bias, and date range
+ * - Sorting by various fields
+ * - Pending count tracking
+ *
+ * **Note:** This is a legacy hook. Consider using `useDecisionsSse` from the
+ * DecisionsContext for better integration with optimistic updates.
+ *
+ * @param options - Configuration options for filtering and sorting
+ * @returns SSE connection state, decisions, and control functions
+ *
+ * @example
+ * ```tsx
+ * const {
+ *   decisions,
+ *   isConnected,
+ *   isLoading,
+ *   error,
+ *   pendingCount,
+ *   refresh
+ * } = useDecisionStream({
+ *   sortBy: SortField.CREATED_AT,
+ *   sortOrder: SortOrder.DESC,
+ *   categories: ['PERSONAL'],
+ *   biases: ['Confirmation Bias']
+ * });
+ * ```
  */
 export function useDecisionStream(
   options: UseDecisionStreamOptions = {}
@@ -132,13 +162,11 @@ export function useDecisionStream(
             const data = JSON.parse(event.data as string) as StreamEvent;
 
             if (data.type === StreamEventType.UPDATE && data.decisions) {
-              // Check for status changes and show notifications
               data.decisions.forEach((decision) => {
                 const previousStatus = previousDecisionsRef.current.get(
                   decision.id
                 );
 
-                // If status changed from PENDING/PROCESSING to COMPLETED
                 if (
                   previousStatus &&
                   (previousStatus === ProcessingStatus.PENDING ||
@@ -153,7 +181,6 @@ export function useDecisionStream(
                   });
                 }
 
-                // If status changed to FAILED
                 if (
                   previousStatus &&
                   previousStatus !== ProcessingStatus.FAILED &&
@@ -168,18 +195,15 @@ export function useDecisionStream(
                   });
                 }
 
-                // Update previous status map
                 previousDecisionsRef.current.set(decision.id, decision.status);
               });
 
-              // Update decisions list
               setDecisions(data.decisions);
               setIsLoading(false);
             } else if (
               data.type === StreamEventType.PENDING &&
               data.count !== undefined
             ) {
-              // Update pending count
               setPendingCount(data.count);
             } else if (data.type === StreamEventType.ERROR) {
               setError(data.message ?? 'An error occurred');
@@ -194,7 +218,6 @@ export function useDecisionStream(
           setIsConnected(false);
           eventSource.close();
 
-          // Attempt to reconnect with exponential backoff
           if (reconnectAttempts.current < maxReconnectAttempts) {
             const delay = Math.min(
               1000 * 2 ** reconnectAttempts.current,
@@ -215,10 +238,8 @@ export function useDecisionStream(
       }
     };
 
-    // Initial connection
     connect();
 
-    // Cleanup on unmount or when sorting/filtering changes
     return () => {
       if (eventSourceRef.current) {
         eventSourceRef.current.close();

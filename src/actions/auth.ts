@@ -7,6 +7,24 @@ import { ROUTES } from '@/constants/routes';
 import { prisma } from '@/lib/prisma';
 import { createClient } from '@/lib/supabase/server';
 
+/**
+ * Server action to authenticate a user with email and password
+ *
+ * Validates credentials using Supabase Auth and redirects to decisions page on success.
+ * Revalidates the layout cache and handles authentication errors.
+ *
+ * @param formData - Form data containing email and password fields
+ * @returns Error object if authentication fails, otherwise redirects
+ *
+ * @example
+ * ```tsx
+ * <form action={login}>
+ *   <input name="email" type="email" required />
+ *   <input name="password" type="password" required />
+ *   <button type="submit">Login</button>
+ * </form>
+ * ```
+ */
 export async function login(formData: FormData) {
   const supabase = await createClient();
 
@@ -25,6 +43,26 @@ export async function login(formData: FormData) {
   redirect(ROUTES.DECISIONS);
 }
 
+/**
+ * Server action to register a new user account
+ *
+ * Creates a new user account in Supabase Auth and application database.
+ * Sends email confirmation if required, otherwise logs user in immediately.
+ * Handles user data creation/update using upsert pattern.
+ *
+ * @param formData - Form data containing email, password, and name fields
+ * @returns Error object if registration fails, otherwise redirects
+ *
+ * @example
+ * ```tsx
+ * <form action={signup}>
+ *   <input name="name" type="text" required />
+ *   <input name="email" type="email" required />
+ *   <input name="password" type="password" required />
+ *   <button type="submit">Sign Up</button>
+ * </form>
+ * ```
+ */
 export async function signup(formData: FormData) {
   const supabase = await createClient();
 
@@ -45,8 +83,6 @@ export async function signup(formData: FormData) {
   }
 
   if (authData.user) {
-    // Create or update user in our database
-    // Using upsert to handle cases where user signs up multiple times before confirming
     await prisma.user.upsert({
       where: { id: authData.user.id },
       create: {
@@ -60,8 +96,6 @@ export async function signup(formData: FormData) {
     });
   }
 
-  // Check if email confirmation is required
-  // If session is null, user needs to confirm their email
   if (!authData.session) {
     revalidatePath('/', 'layout');
     redirect(ROUTES.CONFIRM_EMAIL);
@@ -71,6 +105,17 @@ export async function signup(formData: FormData) {
   redirect(ROUTES.DECISIONS);
 }
 
+/**
+ * Server action to sign out the current user
+ *
+ * Clears the authentication session and redirects to login page.
+ * Revalidates the layout cache to clear any user-specific data.
+ *
+ * @example
+ * ```tsx
+ * <button onClick={() => signOut()}>Sign Out</button>
+ * ```
+ */
 export async function signOut() {
   const supabase = await createClient();
   await supabase.auth.signOut();
@@ -78,6 +123,21 @@ export async function signOut() {
   redirect(ROUTES.LOGIN);
 }
 
+/**
+ * Server action to initiate Google OAuth authentication
+ *
+ * Redirects user to Google OAuth consent screen.
+ * After authorization, Google redirects back to the auth callback route.
+ *
+ * @returns Error object if OAuth initiation fails, otherwise redirects
+ *
+ * @example
+ * ```tsx
+ * <button onClick={() => signInWithGoogle()}>
+ *   Sign in with Google
+ * </button>
+ * ```
+ */
 export async function signInWithGoogle() {
   const supabase = await createClient();
   const origin = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000';
@@ -98,6 +158,23 @@ export async function signInWithGoogle() {
   }
 }
 
+/**
+ * Server action to get the currently authenticated user
+ *
+ * Fetches user data from both Supabase Auth and application database.
+ * Combines data from both sources with database taking priority.
+ * Returns null if user is not authenticated.
+ *
+ * @returns User object with id, email, name, and avatarUrl, or null if not authenticated
+ *
+ * @example
+ * ```tsx
+ * const user = await getCurrentUser();
+ * if (user) {
+ *   console.log(`Welcome ${user.name}!`);
+ * }
+ * ```
+ */
 export async function getCurrentUser() {
   const supabase = await createClient();
 
@@ -110,7 +187,6 @@ export async function getCurrentUser() {
     return null;
   }
 
-  // Get additional user data from our database
   const dbUser = await prisma.user.findUnique({
     where: { id: user.id },
     select: {

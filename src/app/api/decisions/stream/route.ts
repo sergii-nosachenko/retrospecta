@@ -83,10 +83,20 @@ export async function GET(request: NextRequest) {
   const encoder = new TextEncoder();
   const stream = new ReadableStream({
     async start(controller) {
+      // Track if controller is closed to prevent enqueueing after close
+      let isClosed = false;
+
       // Function to send data to client
       const sendEvent = (data: unknown) => {
-        const message = `data: ${JSON.stringify(data)}\n\n`;
-        controller.enqueue(encoder.encode(message));
+        if (isClosed) return;
+        try {
+          const message = `data: ${JSON.stringify(data)}\n\n`;
+          controller.enqueue(encoder.encode(message));
+        } catch (error) {
+          // Controller might be closed, mark as closed and stop sending
+          isClosed = true;
+          console.error('Error sending event:', error);
+        }
       };
 
       // Smart polling: Track and adjust interval based on pending count
@@ -235,16 +245,28 @@ export async function GET(request: NextRequest) {
 
       // Send keepalive every 30 seconds to prevent connection timeout
       const keepaliveId = setInterval(() => {
-        controller.enqueue(encoder.encode(': keepalive\n\n'));
+        if (isClosed) return;
+        try {
+          controller.enqueue(encoder.encode(': keepalive\n\n'));
+        } catch (error) {
+          isClosed = true;
+          console.error('Error sending keepalive:', error);
+        }
       }, 30_000);
 
       // Handle client disconnect
       request.signal.addEventListener('abort', () => {
+        isClosed = true;
         if (intervalId) {
           clearInterval(intervalId);
         }
         clearInterval(keepaliveId);
-        controller.close();
+        try {
+          controller.close();
+        } catch (error) {
+          // Controller might already be closed
+          console.error('Error closing controller:', error);
+        }
       });
     },
   });

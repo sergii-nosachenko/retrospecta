@@ -40,7 +40,6 @@ export const DecisionFormModal = ({
   const { t } = useTranslations();
   const [open, setOpen] = useState(false);
 
-  // Define form steps
   const steps = useMemo(
     () => [
       {
@@ -59,7 +58,6 @@ export const DecisionFormModal = ({
     [t]
   );
 
-  // Use custom hooks for form logic
   const {
     currentStep,
     isFirstStep,
@@ -78,44 +76,30 @@ export const DecisionFormModal = ({
     reset: resetForm,
   } = useDecisionForm();
 
-  /**
-   * Reset both form and step state
-   */
   const resetAll = useCallback(() => {
     resetForm();
     resetStep();
   }, [resetForm, resetStep]);
 
-  /**
-   * Handle next button click with validation
-   */
   const handleNext = useCallback(() => {
     if (validateStep(currentStep)) {
       next();
     }
   }, [currentStep, validateStep, next]);
 
-  /**
-   * Handle form submission
-   */
   const handleSubmit = useCallback(async () => {
     const result = await submit();
 
     if (result.success) {
-      // Close modal and reset form
       setOpen(false);
       resetAll();
 
-      // Call success callback if provided
       if (onSuccess) {
         onSuccess();
       }
     }
   }, [submit, resetAll, onSuccess]);
 
-  /**
-   * Handle modal open/close state changes
-   */
   const handleOpenChange = useCallback(
     (isOpen: boolean) => {
       setOpen(isOpen);
@@ -127,23 +111,14 @@ export const DecisionFormModal = ({
     [resetAll]
   );
 
-  /**
-   * Handle cancel button click
-   */
   const handleCancel = () => {
     setOpen(false);
   };
 
-  /**
-   * Prevent form auto-submit on Enter key
-   */
   const handleFormSubmit = (e: React.FormEvent) => {
     e.preventDefault();
   };
 
-  /**
-   * Field change handlers
-   */
   const handleSituationChange = useCallback(
     (e: React.ChangeEvent<HTMLTextAreaElement>) => {
       updateField('situation', e.target.value);

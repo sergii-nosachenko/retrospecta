@@ -17,10 +17,20 @@ import { StatCard } from '@/components/dashboard/StatCard';
 import { ROUTES } from '@/constants/routes';
 import { useTranslations } from '@/translations';
 
+/**
+ * Props for the ErrorState component
+ */
 interface ErrorStateProps {
   error: string;
 }
 
+/**
+ * Error state display component for dashboard errors.
+ *
+ * Shows an error message in a styled red container when dashboard data fails to load.
+ *
+ * @param error - Error message to display
+ */
 const ErrorState = memo<ErrorStateProps>(({ error }) => {
   return (
     <Box p={{ base: 5, md: 8 }} maxW="7xl" mx="auto" minH="100vh">
@@ -41,10 +51,21 @@ const ErrorState = memo<ErrorStateProps>(({ error }) => {
 
 ErrorState.displayName = 'ErrorState';
 
+/**
+ * Props for the DashboardStats component
+ */
 interface DashboardStatsProps {
   analytics: DashboardAnalytics;
 }
 
+/**
+ * Dashboard statistics cards display component.
+ *
+ * Renders a responsive grid of StatCard components showing key metrics like
+ * total decisions, completed analyses, pending processing, and recent decisions.
+ *
+ * @param analytics - Dashboard analytics data containing aggregated statistics
+ */
 const DashboardStats = memo<DashboardStatsProps>(({ analytics }) => {
   const { t } = useTranslations();
 
@@ -80,10 +101,21 @@ const DashboardStats = memo<DashboardStatsProps>(({ analytics }) => {
 
 DashboardStats.displayName = 'DashboardStats';
 
+/**
+ * Props for the DashboardCharts component
+ */
 interface DashboardChartsProps {
   analytics: DashboardAnalytics;
 }
 
+/**
+ * Dashboard charts display component.
+ *
+ * Renders visualization charts for decision type distribution and bias distribution
+ * in a responsive grid layout. Shows EmptyChart placeholders when no data is available.
+ *
+ * @param analytics - Dashboard analytics data containing chart data distributions
+ */
 const DashboardCharts = memo<DashboardChartsProps>(({ analytics }) => {
   const { t } = useTranslations();
 
@@ -116,6 +148,11 @@ const DashboardCharts = memo<DashboardChartsProps>(({ analytics }) => {
 
 DashboardCharts.displayName = 'DashboardCharts';
 
+/**
+ * Dashboard page header component.
+ *
+ * Displays the dashboard title with a back navigation button to return to the decisions list.
+ */
 const DashboardHeader = memo(() => {
   const { t } = useTranslations();
 
@@ -138,6 +175,25 @@ const DashboardHeader = memo(() => {
 
 DashboardHeader.displayName = 'DashboardHeader';
 
+/**
+ * Main dashboard page content component.
+ *
+ * Fetches and displays comprehensive analytics about user decisions, including statistics
+ * cards and visualization charts. Handles loading states, error states, and data fetching
+ * from the server.
+ *
+ * Features:
+ * - Automatic data fetching on mount
+ * - Loading skeleton during data fetch
+ * - Error state display on failure
+ * - Statistics cards showing key metrics
+ * - Charts for decision type and bias distributions
+ *
+ * @example
+ * ```tsx
+ * <DashboardPageContent />
+ * ```
+ */
 export const DashboardPageContent = memo(() => {
   const { t } = useTranslations();
   const [analytics, setAnalytics] = useState<DashboardAnalytics | null>(null);

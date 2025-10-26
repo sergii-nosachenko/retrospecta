@@ -145,9 +145,6 @@ export const useDecisionsSse = (
   const reconnectAttempts = useRef(0);
   const maxReconnectAttempts = 5;
 
-  /**
-   * Build SSE connection URL with filters
-   */
   const buildConnectionURL = useCallback((): string => {
     const params = new URLSearchParams({
       sortBy: filters.sortBy,
@@ -156,19 +153,16 @@ export const useDecisionsSse = (
       pageSize: filters.pageSize.toString(),
     });
 
-    // Add decision type filters
     if (filters.decisionTypes.length > 0) {
       filters.decisionTypes.forEach((type) =>
         params.append('decisionTypes', type)
       );
     }
 
-    // Add bias filters
     if (filters.biases.length > 0) {
       filters.biases.forEach((bias) => params.append('biases', bias));
     }
 
-    // Add date filters
     if (filters.dateFrom) {
       params.append('dateFrom', filters.dateFrom);
     }
@@ -179,25 +173,19 @@ export const useDecisionsSse = (
     return `/api/decisions/stream?${params.toString()}`;
   }, [filters]);
 
-  /**
-   * Handle SSE message event
-   */
   const handleSSEMessage = useCallback(
     (event: MessageEvent) => {
       try {
         const data = JSON.parse(event.data as string) as StreamEvent;
 
         if (data.type === StreamEventType.UPDATE && data.decisions) {
-          // Clear confirmed optimistic updates if callback provided
           if (clearConfirmedUpdates) {
             clearConfirmedUpdates(data.decisions);
           }
 
-          // Update decisions with smart merge
           setDecisions((prevDecisions) => {
             const merged = mergeDecisionUpdates(prevDecisions, data.decisions!);
 
-            // Notify parent if decisions actually changed
             if (merged !== prevDecisions && onDecisionsUpdate) {
               onDecisionsUpdate(merged);
             }
@@ -205,7 +193,6 @@ export const useDecisionsSse = (
             return merged;
           });
 
-          // Update total count if provided
           if (data.totalCount !== undefined) {
             setTotalCount(data.totalCount);
           }
@@ -215,7 +202,6 @@ export const useDecisionsSse = (
           data.type === StreamEventType.PENDING &&
           data.count !== undefined
         ) {
-          // Update pending count (unless we have optimistic updates)
           const hasOptimisticUpdates = getOptimisticUpdateCount
             ? getOptimisticUpdateCount() > 0
             : false;
@@ -233,22 +219,15 @@ export const useDecisionsSse = (
     [clearConfirmedUpdates, onDecisionsUpdate, getOptimisticUpdateCount]
   );
 
-  /**
-   * Handle SSE connection open
-   */
   const handleSSEOpen = useCallback(() => {
     setError(null);
     reconnectAttempts.current = 0;
   }, []);
 
-  /**
-   * Handle SSE connection error with reconnection logic
-   */
   const handleSSEError = useCallback((eventSource: EventSource) => {
     console.error('SSE connection error');
     eventSource.close();
 
-    // Attempt to reconnect with exponential backoff
     if (reconnectAttempts.current < maxReconnectAttempts) {
       const delay = Math.min(1000 * 2 ** reconnectAttempts.current, 30_000);
 
@@ -261,9 +240,6 @@ export const useDecisionsSse = (
     }
   }, []);
 
-  /**
-   * Manually trigger a refresh of the connection
-   */
   const refresh = useCallback(() => {
     setIsLoading(true);
     setError(null);

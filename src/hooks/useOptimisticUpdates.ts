@@ -41,10 +41,6 @@ export const useOptimisticUpdates = () => {
     new Map()
   );
 
-  /**
-   * Optimistically update a decision's status
-   * Provides immediate UI feedback before server confirmation
-   */
   const optimisticUpdateStatus = useCallback(
     (
       decisionId: string,
@@ -55,12 +51,10 @@ export const useOptimisticUpdates = () => {
     ) => {
       optimisticUpdatesRef.current.set(decisionId, { status });
 
-      // Immediately update local state
       setDecisions((prev) =>
         prev.map((d) => (d.id === decisionId ? { ...d, status } : d))
       );
 
-      // Update pending count optimistically
       if (
         status === ProcessingStatus.PROCESSING ||
         status === ProcessingStatus.PENDING
@@ -71,10 +65,6 @@ export const useOptimisticUpdates = () => {
     []
   );
 
-  /**
-   * Optimistically delete a decision
-   * Immediately removes from UI before server confirmation
-   */
   const optimisticDelete = useCallback(
     (
       decisionId: string,
@@ -83,15 +73,12 @@ export const useOptimisticUpdates = () => {
       setPendingCount: React.Dispatch<React.SetStateAction<number>>,
       setTotalCount?: React.Dispatch<React.SetStateAction<number>>
     ) => {
-      // Immediately remove from local state
       setDecisions((prev) => prev.filter((d) => d.id !== decisionId));
 
-      // Update total count optimistically
       if (setTotalCount) {
         setTotalCount((prev) => Math.max(0, prev - 1));
       }
 
-      // Update pending count if necessary
       const decision = decisions.find((d) => d.id === decisionId);
       if (
         decision &&
@@ -104,9 +91,6 @@ export const useOptimisticUpdates = () => {
     []
   );
 
-  /**
-   * Clear optimistic update that has been confirmed by server
-   */
   const clearConfirmedUpdate = useCallback((decision: Decision) => {
     const optimistic = optimisticUpdatesRef.current.get(decision.id);
     if (optimistic && optimistic.status === decision.status) {
@@ -114,9 +98,6 @@ export const useOptimisticUpdates = () => {
     }
   }, []);
 
-  /**
-   * Clear all confirmed optimistic updates for a batch of decisions
-   */
   const clearConfirmedUpdates = useCallback(
     (newDecisions: Decision[]) => {
       newDecisions.forEach((decision) => {
@@ -126,24 +107,14 @@ export const useOptimisticUpdates = () => {
     [clearConfirmedUpdate]
   );
 
-  /**
-   * Check if a decision has pending optimistic updates
-   */
   const hasOptimisticUpdate = useCallback((decisionId: string): boolean => {
     return optimisticUpdatesRef.current.has(decisionId);
   }, []);
 
-  /**
-   * Get count of pending optimistic updates
-   */
   const getOptimisticUpdateCount = useCallback((): number => {
     return optimisticUpdatesRef.current.size;
   }, []);
 
-  /**
-   * Optimistically mark a decision as read (isNew: false)
-   * Provides immediate UI feedback before server confirmation
-   */
   const optimisticMarkAsRead = useCallback(
     (
       decisionId: string,
@@ -152,7 +123,6 @@ export const useOptimisticUpdates = () => {
     ) => {
       optimisticUpdatesRef.current.set(decisionId, { isNew: false });
 
-      // Immediately update local state
       setDecisions((prev) =>
         prev.map((d) => (d.id === decisionId ? { ...d, isNew: false } : d))
       );
@@ -160,13 +130,8 @@ export const useOptimisticUpdates = () => {
     []
   );
 
-  /**
-   * Optimistically increment total count when a decision is created
-   * The actual decision will be added by SSE
-   */
   const optimisticCreate = useCallback(
     (setTotalCount?: React.Dispatch<React.SetStateAction<number>>) => {
-      // Update total count optimistically
       if (setTotalCount) {
         setTotalCount((prev) => prev + 1);
       }

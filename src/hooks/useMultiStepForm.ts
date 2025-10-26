@@ -46,26 +46,15 @@ export const useMultiStepForm = ({
 }: UseMultiStepFormOptions): UseMultiStepFormReturn => {
   const [currentStep, setCurrentStep] = useState(initialStep);
 
-  /**
-   * Navigate to the next step
-   * Automatically prevents going beyond the last step
-   */
   const next = useCallback(() => {
     setCurrentStep((prev) => Math.min(prev + 1, steps.length - 1));
   }, [steps.length]);
 
-  /**
-   * Navigate to the previous step
-   * Automatically prevents going before the first step
-   */
   const previous = useCallback(() => {
     setCurrentStep((prev) => Math.max(prev - 1, 0));
   }, []);
 
   /**
-   * Navigate to a specific step by index
-   * Only navigates if the step index is valid
-   *
    * @param step - The step index to navigate to (0-based)
    */
   const goTo = useCallback(
@@ -77,9 +66,6 @@ export const useMultiStepForm = ({
     [steps.length]
   );
 
-  /**
-   * Reset to the initial step
-   */
   const reset = useCallback(() => {
     setCurrentStep(initialStep);
   }, [initialStep]);

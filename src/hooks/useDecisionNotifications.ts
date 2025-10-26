@@ -12,7 +12,6 @@ const showStatusChangeNotification = (
   previousStatus: ProcessingStatus,
   newStatus: ProcessingStatus
 ): void => {
-  // Status changed from PENDING/PROCESSING to COMPLETED
   if (
     (previousStatus === ProcessingStatus.PENDING ||
       previousStatus === ProcessingStatus.PROCESSING) &&
@@ -26,7 +25,6 @@ const showStatusChangeNotification = (
     });
   }
 
-  // Status changed to FAILED
   if (
     previousStatus !== ProcessingStatus.FAILED &&
     newStatus === ProcessingStatus.FAILED
@@ -65,15 +63,11 @@ export const useDecisionNotifications = (
 ) => {
   const previousDecisionsRef = useRef<Map<string, ProcessingStatus>>(new Map());
 
-  /**
-   * Handle status change notifications for a batch of decisions
-   */
   const handleStatusNotifications = useCallback(
     (newDecisions: Decision[]) => {
       newDecisions.forEach((decision) => {
         const previousStatus = previousDecisionsRef.current.get(decision.id);
 
-        // Only show notification if status actually changed (not optimistic update)
         if (
           previousStatus &&
           previousStatus !== decision.status &&
@@ -82,16 +76,12 @@ export const useDecisionNotifications = (
           showStatusChangeNotification(previousStatus, decision.status);
         }
 
-        // Update previous status map
         previousDecisionsRef.current.set(decision.id, decision.status);
       });
     },
     [hasOptimisticUpdate]
   );
 
-  /**
-   * Monitor decisions for status changes
-   */
   useEffect(() => {
     if (decisions.length > 0) {
       handleStatusNotifications(decisions);

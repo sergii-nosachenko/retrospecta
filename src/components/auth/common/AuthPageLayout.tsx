@@ -7,6 +7,25 @@ interface AuthPageLayoutProps {
   children: ReactNode;
 }
 
+/**
+ * Reusable layout component for authentication pages.
+ *
+ * Provides consistent styling and structure for all authentication-related pages
+ * (login, register, confirm email, etc.). Features a centered card layout with
+ * full-height viewport, title, subtitle, and support for light/dark mode.
+ * Optimized with React.memo for performance.
+ *
+ * @param title - The main heading text displayed at the top of the auth page
+ * @param subtitle - Supporting text displayed below the title
+ * @param children - Child components to render within the auth page layout (forms, buttons, etc.)
+ *
+ * @example
+ * ```tsx
+ * <AuthPageLayout title="Welcome Back" subtitle="Sign in to continue">
+ *   <LoginForm />
+ * </AuthPageLayout>
+ * ```
+ */
 export const AuthPageLayout = memo(
   ({ title, subtitle, children }: AuthPageLayoutProps) => {
     return (

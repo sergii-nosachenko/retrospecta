@@ -13,11 +13,32 @@ import {
 import { type DecisionType } from '@/constants/decisions';
 import { useTranslations } from '@/translations';
 
+/**
+ * Props for the DecisionTypeFilter component
+ */
 interface DecisionTypeFilterProps {
   selectedDecisionTypes: DecisionType[];
   onDecisionTypesChange: (decisionTypes: DecisionType[]) => void;
 }
 
+/**
+ * Multi-select dropdown filter for decision types.
+ *
+ * Provides a filterable dropdown to select one or more decision types such as
+ * EMOTIONAL, STRATEGIC, ANALYTICAL, etc. Displays the count of selected types
+ * or the individual type name when only one is selected.
+ *
+ * @param selectedDecisionTypes - Array of currently selected decision type values
+ * @param onDecisionTypesChange - Callback fired when the decision type selection changes
+ *
+ * @example
+ * ```tsx
+ * <DecisionTypeFilter
+ *   selectedDecisionTypes={['EMOTIONAL', 'STRATEGIC']}
+ *   onDecisionTypesChange={(types) => setSelectedTypes(types)}
+ * />
+ * ```
+ */
 export const DecisionTypeFilter = ({
   selectedDecisionTypes,
   onDecisionTypesChange,

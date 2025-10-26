@@ -69,9 +69,6 @@ export const useDecisionForm = (): UseDecisionFormReturn => {
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  /**
-   * Update a single form field
-   */
   const updateField = useCallback(
     (field: keyof DecisionFormData, value: string) => {
       setFormData((prev) => ({ ...prev, [field]: value }));
@@ -119,7 +116,6 @@ export const useDecisionForm = (): UseDecisionFormReturn => {
           return { isValid: true };
 
         case 'reasoning':
-          // Reasoning is optional, always valid
           return { isValid: true };
 
         default:
@@ -145,7 +141,6 @@ export const useDecisionForm = (): UseDecisionFormReturn => {
           field = 'decision';
           break;
         case 2:
-          // Reasoning is optional, always valid
           return true;
         default:
           return true;
@@ -173,7 +168,6 @@ export const useDecisionForm = (): UseDecisionFormReturn => {
    * Validates all required fields, creates the decision, and triggers background analysis
    */
   const submit = useCallback(async (): Promise<SubmitResult> => {
-    // Validate all required fields
     if (!formData.situation.trim() || !formData.decision.trim()) {
       toaster.create({
         title: t('toasts.validation.title'),
@@ -187,7 +181,6 @@ export const useDecisionForm = (): UseDecisionFormReturn => {
     setIsSubmitting(true);
 
     try {
-      // Create decision
       const result = await createDecision({
         situation: formData.situation,
         decision: formData.decision,
@@ -207,7 +200,6 @@ export const useDecisionForm = (): UseDecisionFormReturn => {
         return { success: false, error: errorMessage };
       }
 
-      // Show success message
       toaster.create({
         title: t('toasts.success.decisionCreated.title'),
         description: t('toasts.success.decisionCreated.description'),
@@ -240,9 +232,6 @@ export const useDecisionForm = (): UseDecisionFormReturn => {
     }
   }, [formData, t]);
 
-  /**
-   * Reset the form to its initial state
-   */
   const reset = useCallback(() => {
     setFormData({
       situation: '',
