@@ -5,9 +5,11 @@ import {
   type DateValue,
   parseDate,
 } from '@ark-ui/react/date-picker';
-import { Box, IconButton, Input, Portal } from '@chakra-ui/react';
+
 import * as React from 'react';
 import { LuCalendar, LuChevronLeft, LuChevronRight } from 'react-icons/lu';
+
+import { Box, IconButton, Input, Portal } from '@chakra-ui/react';
 
 export interface DatePickerRootProps extends ArkDatePicker.RootProps {
   size?: 'sm' | 'md' | 'lg';
@@ -60,21 +62,24 @@ export const DatePickerContent = React.forwardRef<
   const { children, ...rest } = props;
   return (
     <Portal>
-      <ArkDatePicker.Positioner>
-        <ArkDatePicker.Content ref={ref} {...rest}>
-          <Box
-            bg="bg"
-            borderRadius="lg"
-            borderWidth="1px"
-            borderColor="border"
-            boxShadow="lg"
-            p={4}
-            zIndex={9999}
-          >
-            {children}
-          </Box>
-        </ArkDatePicker.Content>
-      </ArkDatePicker.Positioner>
+      <Box position="fixed" inset={0} pointerEvents="none" zIndex={2000}>
+        <Box pointerEvents="auto">
+          <ArkDatePicker.Positioner>
+            <ArkDatePicker.Content ref={ref} {...rest}>
+              <Box
+                bg="bg"
+                borderRadius="lg"
+                borderWidth="1px"
+                borderColor="border"
+                boxShadow="lg"
+                p={4}
+              >
+                {children}
+              </Box>
+            </ArkDatePicker.Content>
+          </ArkDatePicker.Positioner>
+        </Box>
+      </Box>
     </Portal>
   );
 });

@@ -1,10 +1,11 @@
 'use client';
 
-import { Box } from '@chakra-ui/react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { LuFilter } from 'react-icons/lu';
+
 import { useRouter } from 'next/navigation';
-import { useCallback, useEffect, useState } from 'react';
 
-
+import { Badge, Box, Button } from '@chakra-ui/react';
 
 import { getCurrentUser, signOut } from '@/actions/auth';
 import { ErrorState } from '@/components/common/ErrorState';
@@ -19,8 +20,20 @@ import {
   FilterControls,
 } from '@/components/decisions/FilterControls';
 import { SortingControls } from '@/components/decisions/SortingControls';
+import { ActionBarContent, ActionBarRoot } from '@/components/ui/action-bar';
+import {
+  DrawerBackdrop,
+  DrawerBody,
+  DrawerCloseTrigger,
+  DrawerContent,
+  DrawerHeader,
+  DrawerRoot,
+  DrawerTitle,
+  DrawerTrigger,
+} from '@/components/ui/drawer';
 import { ROUTES } from '@/constants/routes';
 import { useDecisions } from '@/contexts/DecisionsContext';
+import { useTranslations } from '@/translations';
 import { type SortField, type SortOrder } from '@/types/enums';
 
 export const DecisionsPageContent = () => {
@@ -41,7 +54,9 @@ export const DecisionsPageContent = () => {
     avatarUrl: string | null;
   } | null>(null);
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
+  const [isFiltersOpen, setIsFiltersOpen] = useState(false);
   const router = useRouter();
+  const { t } = useTranslations();
 
   useEffect(() => {
     void getCurrentUser().then((userData) => {
@@ -103,6 +118,15 @@ export const DecisionsPageContent = () => {
     });
   }, [setFilters]);
 
+  const activeFiltersCount = useMemo(() => {
+    let count = 0;
+    if (filters.decisionTypes.length > 0) count += filters.decisionTypes.length;
+    if (filters.biases.length > 0) count += filters.biases.length;
+    if (filters.dateFrom) count += 1;
+    if (filters.dateTo) count += 1;
+    return count;
+  }, [filters]);
+
   // Show loading state while checking authentication
   if (isCheckingAuth) {
     return (
@@ -113,45 +137,121 @@ export const DecisionsPageContent = () => {
   }
 
   return (
-    <Box p={{ base: 5, md: 8 }} maxW="7xl" mx="auto" minH="100vh">
-      <DecisionsHeader
-        isConnected={isConnected}
-        pendingCount={pendingCount}
-        user={user}
-        onSignOut={handleSignOut}
-      />
-
-      {/* Sorting Controls */}
-      <Box mb={4}>
-        <SortingControls
-          sortBy={filters.sortBy}
-          sortOrder={filters.sortOrder}
-          onSortChange={handleSortChange}
+    <Box
+      px={{ base: 5, md: 8 }}
+      pb={{ base: 5, md: 8 }}
+      maxW="7xl"
+      mx="auto"
+      minH="100vh"
+    >
+      {/* Sticky header section */}
+      <Box
+        position="sticky"
+        top={0}
+        bg="bg"
+        zIndex={10}
+        pt={{ base: 5, md: 8 }}
+        px={{ base: 5, md: 8 }}
+        pb={6}
+        mx={{ base: -5, md: -8 }}
+        borderBottomWidth="1px"
+        borderBottomColor="border.muted"
+      >
+        <DecisionsHeader
+          isConnected={isConnected}
+          pendingCount={pendingCount}
+          user={user}
+          onSignOut={handleSignOut}
         />
       </Box>
 
-      {/* Filter Controls */}
-      <Box mb={6}>
-        <FilterControls
-          selectedDecisionTypes={filters.decisionTypes as DecisionType[]}
-          selectedBiases={filters.biases}
-          dateFrom={filters.dateFrom}
-          dateTo={filters.dateTo}
-          onDecisionTypesChange={handleDecisionTypesChange}
-          onBiasesChange={handleBiasesChange}
-          onDateFromChange={handleDateFromChange}
-          onDateToChange={handleDateToChange}
-          onClearFilters={handleClearFilters}
-        />
+      <Box py={6}>
+        {error ? (
+          <ErrorState message={error} onRetry={refresh} />
+        ) : isLoading ? (
+          <DecisionListSkeleton />
+        ) : (
+          <DecisionList decisions={decisions} />
+        )}
       </Box>
 
-      {error ? (
-        <ErrorState message={error} onRetry={refresh} />
-      ) : isLoading ? (
-        <DecisionListSkeleton />
-      ) : (
-        <DecisionList decisions={decisions} />
-      )}
+      {/* Action Bar for filters */}
+      <Box>
+        <ActionBarRoot open>
+          <ActionBarContent p={3}>
+            <DrawerRoot
+              open={isFiltersOpen}
+              onOpenChange={(e) => setIsFiltersOpen(e.open)}
+              placement="bottom"
+            >
+              <DrawerBackdrop />
+              <DrawerTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  width="full"
+                  justifyContent="flex-start"
+                  px={4}
+                  py={3}
+                >
+                  <LuFilter />
+                  <span>{t('decisions.filters.toggleLabel')}</span>
+                  {activeFiltersCount > 0 && (
+                    <Badge
+                      colorPalette="blue"
+                      size="sm"
+                      variant="solid"
+                      borderRadius="full"
+                      ml={2}
+                      px={2}
+                      py={0.5}
+                    >
+                      {activeFiltersCount}
+                    </Badge>
+                  )}
+                </Button>
+              </DrawerTrigger>
+              <DrawerContent>
+                <DrawerHeader p={4} pb={2}>
+                  <DrawerTitle>
+                    {t('decisions.filters.toggleLabel')}
+                  </DrawerTitle>
+                  <DrawerCloseTrigger />
+                </DrawerHeader>
+                <DrawerBody p={4} pt={2}>
+                  <Box spaceY={6}>
+                    {/* Sorting Controls */}
+                    <Box>
+                      <SortingControls
+                        sortBy={filters.sortBy}
+                        sortOrder={filters.sortOrder}
+                        onSortChange={handleSortChange}
+                      />
+                    </Box>
+
+                    {/* Filter Controls */}
+                    <Box>
+                      <FilterControls
+                        selectedDecisionTypes={
+                          filters.decisionTypes as DecisionType[]
+                        }
+                        selectedBiases={filters.biases}
+                        dateFrom={filters.dateFrom}
+                        dateTo={filters.dateTo}
+                        onDecisionTypesChange={handleDecisionTypesChange}
+                        onBiasesChange={handleBiasesChange}
+                        onDateFromChange={handleDateFromChange}
+                        onDateToChange={handleDateToChange}
+                        onClearFilters={handleClearFilters}
+                      />
+                    </Box>
+                  </Box>
+                </DrawerBody>
+              </DrawerContent>
+            </DrawerRoot>
+          </ActionBarContent>
+        </ActionBarRoot>
+      </Box>
     </Box>
   );
 };

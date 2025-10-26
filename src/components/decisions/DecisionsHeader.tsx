@@ -1,6 +1,6 @@
-import { Badge, Heading, Skeleton, Stack } from '@chakra-ui/react';
 import { memo } from 'react';
 
+import { Badge, Heading, Skeleton, Stack } from '@chakra-ui/react';
 
 import { Logo } from '@/components/common/Logo';
 import { UserMenu } from '@/components/common/UserMenu';
@@ -28,7 +28,7 @@ export const DecisionsHeader = memo(
         direction={{ base: 'column', sm: 'row' }}
         justify="space-between"
         align={{ base: 'start', sm: 'center' }}
-        mb={8}
+        mb={0}
         gap={4}
       >
         <Stack direction="row" align="center" gap={3} flexWrap="wrap">

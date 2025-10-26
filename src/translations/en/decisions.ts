@@ -104,6 +104,7 @@ export const decisions = {
   filters: {
     label: 'Filter by:',
     clear: 'Clear filters',
+    toggleLabel: 'Filters & Sorting',
     decisionType: {
       label: 'Decision Type',
       selected: '{count} types selected',

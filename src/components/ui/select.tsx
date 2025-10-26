@@ -1,12 +1,11 @@
 'use client';
 
-import { Select as ChakraSelect, Portal } from '@chakra-ui/react';
 import * as React from 'react';
 
-import { CloseButton } from './close-button';
-
+import { Box, Select as ChakraSelect, Portal } from '@chakra-ui/react';
 import type { CollectionItem } from '@chakra-ui/react';
 
+import { CloseButton } from './close-button';
 
 interface SelectTriggerProps extends ChakraSelect.ControlProps {
   clearable?: boolean;
@@ -57,9 +56,13 @@ export const SelectContent = React.forwardRef<
   const { portalled = true, portalRef, ...rest } = props;
   return (
     <Portal disabled={!portalled} container={portalRef}>
-      <ChakraSelect.Positioner>
-        <ChakraSelect.Content {...rest} ref={ref} />
-      </ChakraSelect.Positioner>
+      <Box position="fixed" inset={0} pointerEvents="none" zIndex={2000}>
+        <Box pointerEvents="auto">
+          <ChakraSelect.Positioner>
+            <ChakraSelect.Content {...rest} ref={ref} />
+          </ChakraSelect.Positioner>
+        </Box>
+      </Box>
     </Portal>
   );
 });
