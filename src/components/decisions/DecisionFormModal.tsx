@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 
 import { Button, Stack, Text, Textarea, VStack } from '@chakra-ui/react';
 
@@ -30,10 +30,10 @@ interface DecisionFormModalProps {
   onSuccess?: () => void;
 }
 
-export function DecisionFormModal({
+export const DecisionFormModal = ({
   trigger,
   onSuccess,
-}: DecisionFormModalProps) {
+}: DecisionFormModalProps) => {
   const [open, setOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
@@ -43,22 +43,25 @@ export function DecisionFormModal({
     reasoning: '',
   });
 
-  const steps = [
-    { title: 'Situation', description: 'Describe the context' },
-    { title: 'Decision', description: 'What did you decide?' },
-    { title: 'Reasoning', description: 'Why this choice?' },
-  ];
+  const steps = useMemo(
+    () => [
+      { title: 'Situation', description: 'Describe the context' },
+      { title: 'Decision', description: 'What did you decide?' },
+      { title: 'Reasoning', description: 'Why this choice?' },
+    ],
+    []
+  );
 
-  const resetForm = () => {
+  const resetForm = useCallback(() => {
     setFormData({
       situation: '',
       decision: '',
       reasoning: '',
     });
     setCurrentStep(0);
-  };
+  }, []);
 
-  const validateCurrentStep = () => {
+  const validateCurrentStep = useCallback(() => {
     switch (currentStep) {
       case 0: // Situation
         if (!formData.situation.trim()) {
@@ -105,24 +108,24 @@ export function DecisionFormModal({
       default:
         return true;
     }
-  };
+  }, [currentStep, formData]);
 
-  const handleNext = () => {
+  const handleNext = useCallback(() => {
     if (validateCurrentStep()) {
       setCurrentStep((prev) => Math.min(prev + 1, steps.length - 1));
     }
-  };
+  }, [steps.length, validateCurrentStep]);
 
-  const handlePrevious = () => {
+  const handlePrevious = useCallback(() => {
     setCurrentStep((prev) => Math.max(prev - 1, 0));
-  };
+  }, []);
 
-  const handleFormSubmit = (e: React.FormEvent) => {
+  const handleFormSubmit = useCallback((e: React.FormEvent) => {
     e.preventDefault();
     // Prevent auto-submit, only allow manual button click
-  };
+  }, []);
 
-  const handleSubmit = async () => {
+  const handleSubmit = useCallback(async () => {
     // Validate all steps before submission
     if (!formData.situation.trim() || !formData.decision.trim()) {
       toaster.create({
@@ -187,17 +190,47 @@ export function DecisionFormModal({
     } finally {
       setIsSubmitting(false);
     }
-  };
+  }, [formData, onSuccess, resetForm]);
+
+  const handleOpenChange = useCallback(
+    (e: { open: boolean }) => {
+      setOpen(e.open);
+      if (!e.open) {
+        resetForm();
+      }
+    },
+    [resetForm]
+  );
+
+  const handleSituationChange = useCallback(
+    (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+      setFormData((prev) => ({ ...prev, situation: e.target.value }));
+    },
+    []
+  );
+
+  const handleDecisionChange = useCallback(
+    (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+      setFormData((prev) => ({ ...prev, decision: e.target.value }));
+    },
+    []
+  );
+
+  const handleReasoningChange = useCallback(
+    (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+      setFormData((prev) => ({ ...prev, reasoning: e.target.value }));
+    },
+    []
+  );
+
+  const handleCloseClick = useCallback(() => {
+    setOpen(false);
+  }, []);
 
   return (
     <DialogRoot
       open={open}
-      onOpenChange={(e) => {
-        setOpen(e.open);
-        if (!e.open) {
-          resetForm();
-        }
-      }}
+      onOpenChange={handleOpenChange}
       size={{ base: 'full', sm: 'lg', md: 'xl' }}
       scrollBehavior="inside"
       placement="center"
@@ -263,12 +296,7 @@ export function DecisionFormModal({
                       <Textarea
                         placeholder="Example: I was choosing between two job offers - one with a higher salary but longer commute, and another with better work-life balance..."
                         value={formData.situation}
-                        onChange={(e) =>
-                          setFormData({
-                            ...formData,
-                            situation: e.target.value,
-                          })
-                        }
+                        onChange={handleSituationChange}
                         rows={6}
                         minH="150px"
                         maxH="150px"
@@ -292,9 +320,7 @@ export function DecisionFormModal({
                       <Textarea
                         placeholder="Example: I chose the job with better work-life balance despite the lower salary..."
                         value={formData.decision}
-                        onChange={(e) =>
-                          setFormData({ ...formData, decision: e.target.value })
-                        }
+                        onChange={handleDecisionChange}
                         rows={6}
                         minH="150px"
                         maxH="150px"
@@ -317,12 +343,7 @@ export function DecisionFormModal({
                       <Textarea
                         placeholder="Example: I realized that my mental health and time with family were more important than a higher salary..."
                         value={formData.reasoning}
-                        onChange={(e) =>
-                          setFormData({
-                            ...formData,
-                            reasoning: e.target.value,
-                          })
-                        }
+                        onChange={handleReasoningChange}
                         rows={6}
                         minH="150px"
                         maxH="150px"
@@ -366,7 +387,7 @@ export function DecisionFormModal({
               <Stack direction="row" gap={3}>
                 <Button
                   variant="outline"
-                  onClick={() => setOpen(false)}
+                  onClick={handleCloseClick}
                   disabled={isSubmitting}
                   size="lg"
                   px={6}
@@ -402,4 +423,6 @@ export function DecisionFormModal({
       </DialogContent>
     </DialogRoot>
   );
-}
+};
+
+DecisionFormModal.displayName = 'DecisionFormModal';

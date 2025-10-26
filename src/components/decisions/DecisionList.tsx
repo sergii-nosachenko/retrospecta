@@ -25,6 +25,7 @@ import {
   MenuTrigger,
 } from '@/components/ui/menu';
 import { toaster } from '@/components/ui/toaster';
+import { getCategoryIcon, getCategoryLabel } from '@/constants/decisions';
 import { useDecisions } from '@/contexts/DecisionsContext';
 
 import { DecisionDetailModal } from './DecisionDetailModal';
@@ -36,7 +37,7 @@ interface Decision {
   decision: string;
   reasoning: string | null;
   status: string;
-  category: string | null;
+  decisionType: string | null;
   biases: string[];
   alternatives: string | null;
   insights: string | null;
@@ -77,15 +78,6 @@ const DecisionCard = memo(function DecisionCard({
     }
   };
 
-  const getCategoryLabel = (category: string | null) => {
-    if (!category) return null;
-
-    return category
-      .split('_')
-      .map((word) => word.charAt(0) + word.slice(1).toLowerCase())
-      .join(' ');
-  };
-
   const truncateText = (text: string, maxLength: number) => {
     if (text.length <= maxLength) return text;
     return text.substring(0, maxLength) + '...';
@@ -119,10 +111,24 @@ const DecisionCard = memo(function DecisionCard({
             align={{ base: 'start', sm: 'center' }}
             gap={3}
           >
-            <Badge colorPalette={getStatusColor(decision.status)} px={3} py={1}>
-              {decision.status}
-            </Badge>
+            {decision.decisionType ? (
+              <Badge colorPalette="blue" px={3} py={1}>
+                <Stack direction="row" align="center" gap={1.5}>
+                  {getCategoryIcon(decision.decisionType)}
+                  <span>{getCategoryLabel(decision.decisionType)}</span>
+                </Stack>
+              </Badge>
+            ) : (
+              <Box />
+            )}
             <Stack direction="row" align="center" gap={2}>
+              <Badge
+                colorPalette={getStatusColor(decision.status)}
+                px={3}
+                py={1}
+              >
+                {decision.status}
+              </Badge>
               <Text
                 fontSize="sm"
                 color="gray.500"
@@ -216,11 +222,8 @@ const DecisionCard = memo(function DecisionCard({
             </Text>
           </Box>
 
-          {decision.status === 'COMPLETED' && decision.category && (
+          {decision.status === 'COMPLETED' && decision.biases.length > 0 && (
             <Stack direction="row" gap={2} flexWrap="wrap" pt={2}>
-              <Badge colorPalette="blue" size="sm" px={3} py={1}>
-                {getCategoryLabel(decision.category)}
-              </Badge>
               {decision.biases.slice(0, 3).map((bias, index) => (
                 <Badge
                   key={index}
@@ -245,7 +248,7 @@ const DecisionCard = memo(function DecisionCard({
   );
 });
 
-export function DecisionList({ decisions }: DecisionListProps) {
+export const DecisionList = ({ decisions }: DecisionListProps) => {
   const { optimisticUpdateStatus, optimisticDelete } = useDecisions();
   const [selectedDecisionId, setSelectedDecisionId] = useState<string | null>(
     null
@@ -387,4 +390,6 @@ export function DecisionList({ decisions }: DecisionListProps) {
       )}
     </>
   );
-}
+};
+
+DecisionList.displayName = 'DecisionList';

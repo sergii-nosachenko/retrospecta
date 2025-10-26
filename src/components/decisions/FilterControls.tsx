@@ -1,44 +1,48 @@
 'use client';
 
+import { useMemo } from 'react';
 import { LuX } from 'react-icons/lu';
 
 import { Button, HStack, Text } from '@chakra-ui/react';
 
 import { BiasFilter } from './BiasFilter';
-import { CategoryFilter, type DecisionCategory } from './CategoryFilter';
 import { DateRangeFilter } from './DateRangeFilter';
+import { type DecisionType, DecisionTypeFilter } from './DecisionTypeFilter';
 
 // Re-export for backwards compatibility
-export type { DecisionCategory };
+export type { DecisionType };
 
 interface FilterControlsProps {
-  selectedCategories: DecisionCategory[];
+  selectedDecisionTypes: DecisionType[];
   selectedBiases: string[];
   dateFrom: string | null;
   dateTo: string | null;
-  onCategoriesChange: (categories: DecisionCategory[]) => void;
+  onDecisionTypesChange: (decisionTypes: DecisionType[]) => void;
   onBiasesChange: (biases: string[]) => void;
   onDateFromChange: (date: string | null) => void;
   onDateToChange: (date: string | null) => void;
   onClearFilters: () => void;
 }
 
-export function FilterControls({
-  selectedCategories,
+export const FilterControls = ({
+  selectedDecisionTypes,
   selectedBiases,
   dateFrom,
   dateTo,
-  onCategoriesChange,
+  onDecisionTypesChange,
   onBiasesChange,
   onDateFromChange,
   onDateToChange,
   onClearFilters,
-}: FilterControlsProps) {
-  const hasActiveFilters =
-    selectedCategories.length > 0 ||
-    selectedBiases.length > 0 ||
-    dateFrom !== null ||
-    dateTo !== null;
+}: FilterControlsProps) => {
+  const hasActiveFilters = useMemo(
+    () =>
+      selectedDecisionTypes.length > 0 ||
+      selectedBiases.length > 0 ||
+      dateFrom !== null ||
+      dateTo !== null,
+    [selectedDecisionTypes.length, selectedBiases.length, dateFrom, dateTo]
+  );
 
   return (
     <HStack gap={3} flexWrap="wrap" align="center">
@@ -46,9 +50,9 @@ export function FilterControls({
         Filter by:
       </Text>
 
-      <CategoryFilter
-        selectedCategories={selectedCategories}
-        onCategoriesChange={onCategoriesChange}
+      <DecisionTypeFilter
+        selectedDecisionTypes={selectedDecisionTypes}
+        onDecisionTypesChange={onDecisionTypesChange}
       />
 
       <BiasFilter
@@ -77,4 +81,6 @@ export function FilterControls({
       )}
     </HStack>
   );
-}
+};
+
+FilterControls.displayName = 'FilterControls';

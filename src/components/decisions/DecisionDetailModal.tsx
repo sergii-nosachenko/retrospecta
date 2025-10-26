@@ -35,7 +35,7 @@ interface DecisionData {
   decision: string;
   reasoning: string | null;
   status: string;
-  category: string | null;
+  decisionType: string | null;
   biases: string[];
   alternatives: string | null;
   insights: string | null;
@@ -52,11 +52,35 @@ interface DecisionDetailModalProps {
   onOpenChange: (open: boolean) => void;
 }
 
-export function DecisionDetailModal({
+const getStatusColor = (status: string): string => {
+  switch (status) {
+    case 'COMPLETED':
+      return 'green';
+    case 'PENDING':
+      return 'yellow';
+    case 'PROCESSING':
+      return 'blue';
+    case 'FAILED':
+      return 'red';
+    default:
+      return 'gray';
+  }
+};
+
+const getCategoryLabel = (category: string | null): string | null => {
+  if (!category) return null;
+
+  return category
+    .split('_')
+    .map((word) => word.charAt(0) + word.slice(1).toLowerCase())
+    .join(' ');
+};
+
+export const DecisionDetailModal = ({
   decisionId,
   open,
   onOpenChange,
-}: DecisionDetailModalProps) {
+}: DecisionDetailModalProps) => {
   const {
     optimisticUpdateStatus,
     optimisticDelete,
@@ -183,31 +207,7 @@ export function DecisionDetailModal({
     return () => clearInterval(interval);
   }, [decision, isPolling, getDecisionFromContext]);
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'COMPLETED':
-        return 'green';
-      case 'PENDING':
-        return 'yellow';
-      case 'PROCESSING':
-        return 'blue';
-      case 'FAILED':
-        return 'red';
-      default:
-        return 'gray';
-    }
-  };
-
-  const getCategoryLabel = (category: string | null) => {
-    if (!category) return null;
-
-    return category
-      .split('_')
-      .map((word) => word.charAt(0) + word.slice(1).toLowerCase())
-      .join(' ');
-  };
-
-  const handleReanalyze = async () => {
+  const handleReanalyze = useCallback(async () => {
     if (!decision) return;
 
     setIsReanalyzing(true);
@@ -263,9 +263,9 @@ export function DecisionDetailModal({
     } finally {
       setIsReanalyzing(false);
     }
-  };
+  }, [decision, optimisticUpdateStatus]);
 
-  const handleDelete = async () => {
+  const handleDelete = useCallback(async () => {
     if (!decision) return;
 
     setIsDeleting(true);
@@ -308,7 +308,7 @@ export function DecisionDetailModal({
     } finally {
       setIsDeleting(false);
     }
-  };
+  }, [decision, onOpenChange, optimisticDelete]);
 
   return (
     <DialogRoot
@@ -469,7 +469,7 @@ export function DecisionDetailModal({
                   </Heading>
 
                   <VStack gap={4} align="stretch">
-                    {decision.category && (
+                    {decision.decisionType && (
                       <Box>
                         <Text
                           fontWeight="bold"
@@ -483,7 +483,7 @@ export function DecisionDetailModal({
                           Decision Type
                         </Text>
                         <Badge colorPalette="blue" size="lg" px={4} py={2}>
-                          {getCategoryLabel(decision.category)}
+                          {getCategoryLabel(decision.decisionType)}
                         </Badge>
                       </Box>
                     )}
@@ -691,4 +691,6 @@ export function DecisionDetailModal({
       </DialogContent>
     </DialogRoot>
   );
-}
+};
+
+DecisionDetailModal.displayName = 'DecisionDetailModal';

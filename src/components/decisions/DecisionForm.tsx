@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 
 import { useRouter } from 'next/navigation';
 
@@ -19,7 +19,7 @@ import { createDecision } from '@/actions/decisions';
 import { Field } from '@/components/ui/field';
 import { toaster } from '@/components/ui/toaster';
 
-export function DecisionForm() {
+export const DecisionForm = () => {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
@@ -28,67 +28,95 @@ export function DecisionForm() {
     reasoning: '',
   });
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = useCallback(
+    async (e: React.FormEvent) => {
+      e.preventDefault();
 
-    // Basic validation
-    if (!formData.situation.trim() || !formData.decision.trim()) {
-      toaster.create({
-        title: 'Validation Error',
-        description: 'Please fill in both situation and decision fields',
-        type: 'error',
-        duration: 4000,
-      });
-      return;
-    }
-
-    setIsSubmitting(true);
-
-    try {
-      // Create decision
-      const result = await createDecision({
-        situation: formData.situation,
-        decision: formData.decision,
-        reasoning: formData.reasoning || undefined,
-      });
-
-      if (!result.success || !result.data) {
+      // Basic validation
+      if (!formData.situation.trim() || !formData.decision.trim()) {
         toaster.create({
-          title: 'Error',
-          description: result.error || 'Failed to create decision',
+          title: 'Validation Error',
+          description: 'Please fill in both situation and decision fields',
           type: 'error',
-          duration: 5000,
+          duration: 4000,
         });
         return;
       }
 
-      // Show success message
-      toaster.create({
-        title: 'Decision Created',
-        description: 'Your decision has been saved and is being analyzed...',
-        type: 'success',
-        duration: 3000,
-      });
+      setIsSubmitting(true);
 
-      // Trigger analysis in the background (non-blocking)
-      analyzeDecision(result.data.id).catch((error) => {
-        console.error('Background analysis error:', error);
-      });
+      try {
+        // Create decision
+        const result = await createDecision({
+          situation: formData.situation,
+          decision: formData.decision,
+          reasoning: formData.reasoning || undefined,
+        });
 
-      // Redirect to decision detail page
-      router.push(`/decisions/${result.data.id}`);
-    } catch (error) {
-      console.error('Error submitting decision:', error);
-      toaster.create({
-        title: 'Error',
-        description: 'An unexpected error occurred. Please try again.',
-        type: 'error',
-        duration: 5000,
-      });
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
+        if (!result.success || !result.data) {
+          toaster.create({
+            title: 'Error',
+            description: result.error || 'Failed to create decision',
+            type: 'error',
+            duration: 5000,
+          });
+          return;
+        }
+
+        // Show success message
+        toaster.create({
+          title: 'Decision Created',
+          description: 'Your decision has been saved and is being analyzed...',
+          type: 'success',
+          duration: 3000,
+        });
+
+        // Trigger analysis in the background (non-blocking)
+        analyzeDecision(result.data.id).catch((error) => {
+          console.error('Background analysis error:', error);
+        });
+
+        // Redirect to decision detail page
+        router.push(`/decisions/${result.data.id}`);
+      } catch (error) {
+        console.error('Error submitting decision:', error);
+        toaster.create({
+          title: 'Error',
+          description: 'An unexpected error occurred. Please try again.',
+          type: 'error',
+          duration: 5000,
+        });
+      } finally {
+        setIsSubmitting(false);
+      }
+    },
+    [formData, router]
+  );
+
+  const handleSituationChange = useCallback(
+    (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+      setFormData((prev) => ({ ...prev, situation: e.target.value }));
+    },
+    []
+  );
+
+  const handleDecisionChange = useCallback(
+    (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+      setFormData((prev) => ({ ...prev, decision: e.target.value }));
+    },
+    []
+  );
+
+  const handleReasoningChange = useCallback(
+    (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+      setFormData((prev) => ({ ...prev, reasoning: e.target.value }));
+    },
+    []
+  );
+
+  const handleCancel = useCallback(() => {
+    router.back();
+  }, [router]);
 
   return (
     <Box
@@ -118,9 +146,7 @@ export function DecisionForm() {
             <Textarea
               placeholder="Example: I was choosing between two job offers - one with a higher salary but longer commute, and another with better work-life balance..."
               value={formData.situation}
-              onChange={(e) =>
-                setFormData({ ...formData, situation: e.target.value })
-              }
+              onChange={handleSituationChange}
               rows={5}
               disabled={isSubmitting}
               maxLength={5000}
@@ -135,9 +161,7 @@ export function DecisionForm() {
             <Textarea
               placeholder="Example: I chose the job with better work-life balance despite the lower salary..."
               value={formData.decision}
-              onChange={(e) =>
-                setFormData({ ...formData, decision: e.target.value })
-              }
+              onChange={handleDecisionChange}
               rows={4}
               disabled={isSubmitting}
               maxLength={2000}
@@ -151,9 +175,7 @@ export function DecisionForm() {
             <Textarea
               placeholder="Example: I realized that my mental health and time with family were more important than a higher salary. The commute would have added 2 hours to my day..."
               value={formData.reasoning}
-              onChange={(e) =>
-                setFormData({ ...formData, reasoning: e.target.value })
-              }
+              onChange={handleReasoningChange}
               rows={4}
               disabled={isSubmitting}
               maxLength={3000}
@@ -177,7 +199,7 @@ export function DecisionForm() {
             type="button"
             variant="outline"
             size="lg"
-            onClick={() => router.back()}
+            onClick={handleCancel}
             disabled={isSubmitting}
           >
             Cancel
@@ -186,4 +208,6 @@ export function DecisionForm() {
       </VStack>
     </Box>
   );
-}
+};
+
+DecisionForm.displayName = 'DecisionForm';

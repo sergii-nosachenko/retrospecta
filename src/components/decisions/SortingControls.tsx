@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useCallback } from 'react';
 import { LuArrowDown, LuArrowUp } from 'react-icons/lu';
 
 import { Button, HStack, Text, createListCollection } from '@chakra-ui/react';
@@ -13,7 +13,7 @@ import {
   SelectValueText,
 } from '@/components/ui/select';
 
-export type SortField = 'createdAt' | 'updatedAt' | 'status' | 'category';
+export type SortField = 'createdAt' | 'updatedAt' | 'status' | 'decisionType';
 export type SortOrder = 'asc' | 'desc';
 
 interface SortingControlsProps {
@@ -22,33 +22,32 @@ interface SortingControlsProps {
   onSortChange: (sortBy: SortField, sortOrder: SortOrder) => void;
 }
 
-export function SortingControls({
+const sortFields = createListCollection({
+  items: [
+    { label: 'Date Created', value: 'createdAt' },
+    { label: 'Last Updated', value: 'updatedAt' },
+    { label: 'Status', value: 'status' },
+    { label: 'Decision Type', value: 'decisionType' },
+  ],
+});
+
+export const SortingControls = ({
   sortBy,
   sortOrder,
   onSortChange,
-}: SortingControlsProps) {
-  const sortFields = useMemo(
-    () =>
-      createListCollection({
-        items: [
-          { label: 'Date Created', value: 'createdAt' },
-          { label: 'Last Updated', value: 'updatedAt' },
-          { label: 'Status', value: 'status' },
-          { label: 'Category', value: 'category' },
-        ],
-      }),
-    []
+}: SortingControlsProps) => {
+  const handleValueChange = useCallback(
+    (e: { value: string[] }) => {
+      if (e.value.length > 0) {
+        onSortChange(e.value[0] as SortField, sortOrder);
+      }
+    },
+    [onSortChange, sortOrder]
   );
 
-  const handleFieldChange = (value: string[]) => {
-    if (value.length > 0) {
-      onSortChange(value[0] as SortField, sortOrder);
-    }
-  };
-
-  const toggleSortOrder = () => {
+  const toggleSortOrder = useCallback(() => {
     onSortChange(sortBy, sortOrder === 'asc' ? 'desc' : 'asc');
-  };
+  }, [onSortChange, sortBy, sortOrder]);
 
   return (
     <HStack gap={2}>
@@ -59,7 +58,7 @@ export function SortingControls({
       <SelectRoot
         collection={sortFields}
         value={[sortBy]}
-        onValueChange={(e) => handleFieldChange(e.value)}
+        onValueChange={handleValueChange}
         size="sm"
         width="180px"
       >
@@ -86,4 +85,6 @@ export function SortingControls({
       </Button>
     </HStack>
   );
-}
+};
+
+SortingControls.displayName = 'SortingControls';

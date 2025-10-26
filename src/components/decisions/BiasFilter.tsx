@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useCallback, useMemo } from 'react';
 
 import { createListCollection } from '@chakra-ui/react';
 
@@ -37,10 +37,10 @@ interface BiasFilterProps {
   onBiasesChange: (biases: string[]) => void;
 }
 
-export function BiasFilter({
+export const BiasFilter = ({
   selectedBiases,
   onBiasesChange,
-}: BiasFilterProps) {
+}: BiasFilterProps) => {
   const biasOptions = useMemo(
     () =>
       createListCollection({
@@ -52,15 +52,18 @@ export function BiasFilter({
     []
   );
 
-  const handleBiasChange = (value: string[]) => {
-    onBiasesChange(value);
-  };
+  const handleBiasChange = useCallback(
+    (event: { value: string[] }) => {
+      onBiasesChange(event.value);
+    },
+    [onBiasesChange]
+  );
 
   return (
     <SelectRoot
       collection={biasOptions}
       value={selectedBiases}
-      onValueChange={(e) => handleBiasChange(e.value)}
+      onValueChange={handleBiasChange}
       size="sm"
       width="200px"
       multiple
@@ -83,4 +86,6 @@ export function BiasFilter({
       </SelectContent>
     </SelectRoot>
   );
-}
+};
+
+BiasFilter.displayName = 'BiasFilter';

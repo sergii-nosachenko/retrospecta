@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { useRouter } from 'next/navigation';
 
@@ -18,6 +18,7 @@ import {
 import { reanalyzeDecision } from '@/actions/analysis';
 import { getDecision } from '@/actions/decisions';
 import { toaster } from '@/components/ui/toaster';
+import { getCategoryIcon, getCategoryLabel } from '@/constants/decisions';
 
 interface DecisionData {
   id: string;
@@ -25,7 +26,7 @@ interface DecisionData {
   decision: string;
   reasoning: string | null;
   status: string;
-  category: string | null;
+  decisionType: string | null;
   biases: string[];
   alternatives: string | null;
   insights: string | null;
@@ -40,9 +41,24 @@ interface DecisionDetailProps {
   decision: DecisionData;
 }
 
-export function DecisionDetail({
+const getStatusColor = (status: string): string => {
+  switch (status) {
+    case 'COMPLETED':
+      return 'green';
+    case 'PENDING':
+      return 'yellow';
+    case 'PROCESSING':
+      return 'blue';
+    case 'FAILED':
+      return 'red';
+    default:
+      return 'gray';
+  }
+};
+
+export const DecisionDetail = ({
   decision: initialDecision,
-}: DecisionDetailProps) {
+}: DecisionDetailProps) => {
   const router = useRouter();
   const [decision, setDecision] = useState(initialDecision);
   const [isPolling, setIsPolling] = useState(
@@ -74,31 +90,28 @@ export function DecisionDetail({
     return () => clearInterval(interval);
   }, [decision.id, isPolling]);
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'COMPLETED':
-        return 'green';
-      case 'PENDING':
-        return 'yellow';
-      case 'PROCESSING':
-        return 'blue';
-      case 'FAILED':
-        return 'red';
-      default:
-        return 'gray';
-    }
-  };
+  const statusColor = useMemo(
+    () => getStatusColor(decision.status),
+    [decision.status]
+  );
+  const decisionTypeLabel = useMemo(
+    () => getCategoryLabel(decision.decisionType),
+    [decision.decisionType]
+  );
 
-  const getCategoryLabel = (category: string | null) => {
-    if (!category) return null;
+  const formattedDate = useMemo(
+    () =>
+      new Date(decision.createdAt).toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+      }),
+    [decision.createdAt]
+  );
 
-    return category
-      .split('_')
-      .map((word) => word.charAt(0) + word.slice(1).toLowerCase())
-      .join(' ');
-  };
-
-  const handleReanalyze = async () => {
+  const handleReanalyze = useCallback(async () => {
     setIsReanalyzing(true);
 
     try {
@@ -133,7 +146,11 @@ export function DecisionDetail({
     } finally {
       setIsReanalyzing(false);
     }
-  };
+  }, [decision.id]);
+
+  const handleBackClick = useCallback(() => {
+    router.push('/decisions');
+  }, [router]);
 
   return (
     <Box maxW="4xl" mx="auto">
@@ -146,7 +163,7 @@ export function DecisionDetail({
           gap={4}
         >
           <Heading size="2xl">Decision Details</Heading>
-          <Badge colorPalette={getStatusColor(decision.status)} size="lg">
+          <Badge colorPalette={statusColor} size="lg">
             {decision.status}
           </Badge>
         </Stack>
@@ -202,15 +219,7 @@ export function DecisionDetail({
                 >
                   Created
                 </Text>
-                <Text>
-                  {new Date(decision.createdAt).toLocaleDateString('en-US', {
-                    year: 'numeric',
-                    month: 'long',
-                    day: 'numeric',
-                    hour: '2-digit',
-                    minute: '2-digit',
-                  })}
-                </Text>
+                <Text>{formattedDate}</Text>
               </Box>
             </VStack>
           </Card.Body>
@@ -224,7 +233,7 @@ export function DecisionDetail({
             </Card.Header>
             <Card.Body>
               <VStack gap={6} align="stretch">
-                {decision.category && (
+                {decision.decisionType && (
                   <Box>
                     <Text
                       fontWeight="bold"
@@ -235,7 +244,10 @@ export function DecisionDetail({
                       Decision Type
                     </Text>
                     <Badge colorPalette="blue" size="lg">
-                      {getCategoryLabel(decision.category)}
+                      <Stack direction="row" align="center" gap={1.5}>
+                        {getCategoryIcon(decision.decisionType)}
+                        <span>{decisionTypeLabel}</span>
+                      </Stack>
                     </Badge>
                   </Box>
                 )}
@@ -345,14 +357,12 @@ export function DecisionDetail({
         )}
 
         {/* Actions */}
-        <Button
-          variant="outline"
-          onClick={() => router.push('/decisions')}
-          alignSelf="start"
-        >
+        <Button variant="outline" onClick={handleBackClick} alignSelf="start">
           Back to Decisions
         </Button>
       </VStack>
     </Box>
   );
-}
+};
+
+DecisionDetail.displayName = 'DecisionDetail';
