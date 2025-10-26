@@ -19,7 +19,6 @@ import { LinkButton } from './link-button';
 
 import type { ButtonProps, TextProps } from '@chakra-ui/react';
 
-
 interface ButtonVariantMap {
   current: ButtonProps['variant'];
   default: ButtonProps['variant'];

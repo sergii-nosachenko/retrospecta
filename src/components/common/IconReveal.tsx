@@ -4,7 +4,6 @@ import { Box, Group } from '@chakra-ui/react';
 import { memo, useMemo } from 'react';
 import { LuBrain, LuLightbulb, LuTarget } from 'react-icons/lu';
 
-
 const PULSE_KEYFRAMES = `
   @keyframes pulse1 {
     0%, 100% { filter: blur(24px); }

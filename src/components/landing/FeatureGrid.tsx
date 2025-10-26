@@ -1,7 +1,6 @@
 import { Stack } from '@chakra-ui/react';
 import { memo } from 'react';
 
-
 import { useTranslations } from '@/translations';
 
 import { FeatureCard } from './FeatureCard';

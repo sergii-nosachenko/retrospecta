@@ -10,9 +10,6 @@ import { ColorMode } from '@/types/enums';
 import type { IconButtonProps, SpanProps } from '@chakra-ui/react';
 import type { ThemeProviderProps } from 'next-themes';
 
-
-
-
 export type ColorModeProviderProps = ThemeProviderProps;
 
 export function ColorModeProvider(props: ColorModeProviderProps) {

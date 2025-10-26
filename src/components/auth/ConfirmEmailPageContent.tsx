@@ -1,6 +1,5 @@
-import Link from 'next/link';
-
 import { Box, Button, Stack, Text } from '@chakra-ui/react';
+import Link from 'next/link';
 
 import { AuthPageLayout } from '@/components/auth/AuthPageLayout';
 import { ROUTES } from '@/constants/routes';

@@ -3,7 +3,6 @@
 import { Box, Button, Input, Stack } from '@chakra-ui/react';
 import { useCallback, useState } from 'react';
 
-
 import { login } from '@/actions/auth';
 import { ErrorMessage } from '@/components/auth/ErrorMessage';
 import { Field } from '@/components/ui/field';

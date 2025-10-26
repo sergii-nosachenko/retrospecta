@@ -1,11 +1,11 @@
 'use client';
 
+import { Box, Select as ChakraSelect, Portal } from '@chakra-ui/react';
 import * as React from 'react';
 
-import { Box, Select as ChakraSelect, Portal } from '@chakra-ui/react';
-import type { CollectionItem } from '@chakra-ui/react';
-
 import { CloseButton } from './close-button';
+
+import type { CollectionItem } from '@chakra-ui/react';
 
 interface SelectTriggerProps extends ChakraSelect.ControlProps {
   clearable?: boolean;

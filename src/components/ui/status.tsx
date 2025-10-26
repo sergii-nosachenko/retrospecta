@@ -5,7 +5,6 @@ import { StatusValue } from '@/types/enums';
 
 import type { ColorPalette } from '@chakra-ui/react';
 
-
 export interface StatusProps extends ChakraStatus.RootProps {
   value?: StatusValue;
 }

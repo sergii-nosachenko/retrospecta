@@ -1,7 +1,6 @@
 import { Box, Heading, Text } from '@chakra-ui/react';
 import { memo } from 'react';
 
-
 interface FeatureCardProps {
   icon: string;
   title: string;

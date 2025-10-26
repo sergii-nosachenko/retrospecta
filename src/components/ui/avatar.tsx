@@ -4,7 +4,6 @@ import {
 } from '@chakra-ui/react';
 import * as React from 'react';
 
-
 type ImageProps = React.ImgHTMLAttributes<HTMLImageElement>;
 
 export interface AvatarProps extends ChakraAvatar.RootProps {

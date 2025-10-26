@@ -8,7 +8,6 @@ import {
 } from '@chakra-ui/react';
 import { memo, useMemo } from 'react';
 
-
 const DecisionSkeletonCard = memo(() => (
   <Card.Root>
     <Card.Body p={6}>

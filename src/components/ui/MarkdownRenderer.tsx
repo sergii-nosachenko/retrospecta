@@ -6,7 +6,6 @@ import remarkGfm from 'remark-gfm';
 
 import type { Components } from 'react-markdown';
 
-
 import './markdown-renderer.css';
 
 interface MarkdownRendererProps extends BoxProps {

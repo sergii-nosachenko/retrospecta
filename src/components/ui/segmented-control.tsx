@@ -3,7 +3,6 @@
 import { For, SegmentGroup } from '@chakra-ui/react';
 import * as React from 'react';
 
-
 interface Item {
   value: string;
   label: React.ReactNode;

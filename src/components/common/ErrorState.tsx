@@ -1,7 +1,6 @@
 import { Box, Button, Stack } from '@chakra-ui/react';
 import { memo, useCallback } from 'react';
 
-
 import { useTranslations } from '@/translations';
 
 interface ErrorStateProps {

@@ -1,7 +1,6 @@
 import { Text } from '@chakra-ui/react';
 import Link from 'next/link';
 
-
 import { AuthDivider } from '@/components/auth/AuthDivider';
 import { AuthPageLayout } from '@/components/auth/AuthPageLayout';
 import { LoginForm } from '@/components/auth/LoginForm';

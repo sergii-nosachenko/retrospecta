@@ -1,7 +1,6 @@
 import { HoverCard, Portal } from '@chakra-ui/react';
 import * as React from 'react';
 
-
 interface HoverCardContentProps extends HoverCard.ContentProps {
   portalled?: boolean;
   portalRef?: React.RefObject<HTMLElement | null>;

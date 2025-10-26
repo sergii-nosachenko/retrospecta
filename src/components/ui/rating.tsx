@@ -1,7 +1,6 @@
 import { RatingGroup } from '@chakra-ui/react';
 import * as React from 'react';
 
-
 export interface RatingProps extends RatingGroup.RootProps {
   icon?: React.ReactElement;
   count?: number;

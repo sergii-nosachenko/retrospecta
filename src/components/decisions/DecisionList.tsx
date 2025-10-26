@@ -1,9 +1,5 @@
 'use client';
 
-import { memo, useCallback, useState } from 'react';
-import { HiOutlineDotsVertical } from 'react-icons/hi';
-import { LuBrainCircuit, LuRefreshCw, LuTrash2 } from 'react-icons/lu';
-
 import {
   Badge,
   Box,
@@ -14,6 +10,9 @@ import {
   Text,
   VStack,
 } from '@chakra-ui/react';
+import { memo, useCallback, useState } from 'react';
+import { HiOutlineDotsVertical } from 'react-icons/hi';
+import { LuBrainCircuit, LuRefreshCw, LuTrash2 } from 'react-icons/lu';
 
 import { reanalyzeDecision } from '@/actions/analysis';
 import { deleteDecision } from '@/actions/decisions';

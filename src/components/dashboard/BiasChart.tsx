@@ -1,7 +1,5 @@
 'use client';
 
-
-
 import { useChart } from '@chakra-ui/charts';
 import { Box, Heading } from '@chakra-ui/react';
 import { memo } from 'react';

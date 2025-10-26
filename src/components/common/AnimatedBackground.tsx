@@ -3,7 +3,6 @@
 import { Box } from '@chakra-ui/react';
 import { type ReactNode, memo, useMemo } from 'react';
 
-
 interface AuroraBackgroundProps {
   children?: ReactNode;
   showRadialGradient?: boolean;

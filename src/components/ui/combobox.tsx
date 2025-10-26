@@ -3,7 +3,6 @@
 import { Combobox as ChakraCombobox, Portal } from '@chakra-ui/react';
 import * as React from 'react';
 
-
 import { CloseButton } from './close-button';
 
 interface ComboboxControlProps extends ChakraCombobox.ControlProps {

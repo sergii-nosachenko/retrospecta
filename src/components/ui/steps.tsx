@@ -2,7 +2,6 @@ import { Box, Steps as ChakraSteps } from '@chakra-ui/react';
 import * as React from 'react';
 import { LuCheck } from 'react-icons/lu';
 
-
 interface StepInfoProps {
   title?: React.ReactNode;
   description?: React.ReactNode;

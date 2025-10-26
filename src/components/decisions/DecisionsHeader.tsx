@@ -1,6 +1,5 @@
-import { memo } from 'react';
-
 import { Badge, Heading, Skeleton, Stack } from '@chakra-ui/react';
+import { memo } from 'react';
 
 import { Logo } from '@/components/common/Logo';
 import { UserMenu } from '@/components/common/UserMenu';

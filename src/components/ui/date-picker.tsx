@@ -5,11 +5,9 @@ import {
   type DateValue,
   parseDate,
 } from '@ark-ui/react/date-picker';
-
+import { Box, IconButton, Input, Portal } from '@chakra-ui/react';
 import * as React from 'react';
 import { LuCalendar, LuChevronLeft, LuChevronRight } from 'react-icons/lu';
-
-import { Box, IconButton, Input, Portal } from '@chakra-ui/react';
 
 export interface DatePickerRootProps extends ArkDatePicker.RootProps {
   size?: 'sm' | 'md' | 'lg';

@@ -3,7 +3,6 @@
 import { TagsInput as ChakraTagsInput } from '@chakra-ui/react';
 import * as React from 'react';
 
-
 import { CloseButton } from './close-button';
 
 interface TagsInputControlProps extends ChakraTagsInput.ControlProps {

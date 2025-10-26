@@ -1,7 +1,6 @@
 import { Blockquote as ChakraBlockquote } from '@chakra-ui/react';
 import * as React from 'react';
 
-
 export interface BlockquoteProps extends ChakraBlockquote.RootProps {
   cite?: React.ReactNode;
   citeUrl?: string;

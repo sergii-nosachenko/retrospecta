@@ -1,11 +1,9 @@
 'use client';
 
+import { Badge, Box, Button } from '@chakra-ui/react';
+import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { LuFilter, LuX } from 'react-icons/lu';
-
-import { useRouter } from 'next/navigation';
-
-import { Badge, Box, Button } from '@chakra-ui/react';
 
 import { getCurrentUser, signOut } from '@/actions/auth';
 import { ErrorState } from '@/components/common/ErrorState';

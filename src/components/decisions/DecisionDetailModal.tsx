@@ -13,7 +13,6 @@ import {
 } from '@chakra-ui/react';
 import { useCallback, useEffect, useState } from 'react';
 
-
 import { reanalyzeDecision } from '@/actions/analysis';
 import { deleteDecision, getDecision } from '@/actions/decisions';
 import {

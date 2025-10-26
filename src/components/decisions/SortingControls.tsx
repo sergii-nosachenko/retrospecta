@@ -4,7 +4,6 @@ import { Button, HStack, Text, createListCollection } from '@chakra-ui/react';
 import { useCallback } from 'react';
 import { LuArrowDown, LuArrowUp } from 'react-icons/lu';
 
-
 import {
   SelectContent,
   SelectItem,

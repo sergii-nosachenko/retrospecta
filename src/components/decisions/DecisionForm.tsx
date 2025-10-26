@@ -12,8 +12,6 @@ import {
 import { useRouter } from 'next/navigation';
 import { useCallback, useState } from 'react';
 
-
-
 import { analyzeDecision } from '@/actions/analysis';
 import { createDecision } from '@/actions/decisions';
 import { Field } from '@/components/ui/field';

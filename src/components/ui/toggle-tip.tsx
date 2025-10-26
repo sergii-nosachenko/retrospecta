@@ -7,7 +7,6 @@ import {
 import * as React from 'react';
 import { HiOutlineInformationCircle } from 'react-icons/hi';
 
-
 export interface ToggleTipProps extends ChakraPopover.RootProps {
   showArrow?: boolean;
   portalled?: boolean;

@@ -6,7 +6,6 @@ import {
 } from '@chakra-ui/react';
 import * as React from 'react';
 
-
 import { InfoTip } from './toggle-tip';
 
 interface StatLabelProps extends ChakraStat.LabelProps {
