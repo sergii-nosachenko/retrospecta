@@ -2,6 +2,7 @@
  * Prompt template for analyzing user decisions
  * Designed to extract decision category, cognitive biases, and insights
  */
+import { CognitiveBias, DecisionType } from '@/types/enums';
 
 interface DecisionInput {
   situation: string;
@@ -9,7 +10,60 @@ interface DecisionInput {
   reasoning?: string | null;
 }
 
-export function createAnalysisPrompt(input: DecisionInput): string {
+const availableBiasesDescriptions: Record<CognitiveBias, string> = {
+  [CognitiveBias.CONFIRMATION_BIAS]:
+    'Seeking information that confirms existing beliefs',
+  [CognitiveBias.ANCHORING_BIAS]:
+    'Over-relying on the first piece of information',
+  [CognitiveBias.AVAILABILITY_HEURISTIC]:
+    'Overweighting recent or easily recalled information',
+  [CognitiveBias.SUNK_COST_FALLACY]:
+    'Continuing based on past investment rather than future value',
+  [CognitiveBias.RECENCY_BIAS]: 'Overweighting recent events',
+  [CognitiveBias.OVERCONFIDENCE_BIAS]:
+    "Overestimating one's knowledge or abilities",
+  [CognitiveBias.HINDSIGHT_BIAS]: 'Believing past events were predictable',
+  [CognitiveBias.STATUS_QUO_BIAS]: 'Preferring things to stay the same',
+  [CognitiveBias.LOSS_AVERSION]:
+    'Fearing losses more than valuing equivalent gains',
+  [CognitiveBias.FRAMING_EFFECT]:
+    'Being influenced by how information is presented',
+  [CognitiveBias.GROUPTHINK]:
+    'Conforming to group consensus without critical evaluation',
+  [CognitiveBias.AUTHORITY_BIAS]:
+    'Over-trusting information from authority figures',
+  [CognitiveBias.BANDWAGON_EFFECT]: 'Adopting beliefs because many others do',
+  [CognitiveBias.DUNNING_KRUGER_EFFECT]:
+    'Overestimating competence in areas of low ability',
+  [CognitiveBias.OPTIMISM_BIAS]: 'Overestimating positive outcomes',
+  [CognitiveBias.NEGATIVITY_BIAS]: 'Giving more weight to negative experiences',
+  [CognitiveBias.FUNDAMENTAL_ATTRIBUTION_ERROR]:
+    'Overemphasizing personality-based explanations while underemphasizing situational factors',
+};
+
+const decisionCategoryDescriptions: Record<DecisionType, string> = {
+  [DecisionType.EMOTIONAL]:
+    'Driven primarily by feelings and emotional responses',
+  [DecisionType.STRATEGIC]: 'Carefully planned with long-term goals in mind',
+  [DecisionType.IMPULSIVE]: 'Made quickly without thorough consideration',
+  [DecisionType.ANALYTICAL]: 'Based on data, facts, and logical reasoning',
+  [DecisionType.INTUITIVE]: 'Based on gut feeling or instinct',
+  [DecisionType.COLLABORATIVE]:
+    'Made with input from others or considering group dynamics',
+  [DecisionType.RISK_AVERSE]:
+    'Focused on minimizing potential losses or dangers',
+  [DecisionType.RISK_TAKING]:
+    'Willing to embrace uncertainty for potential gains',
+  [DecisionType.OTHER]: "Doesn't fit the above categories",
+};
+
+const buildList = (items: [string, string][]): string => {
+  return items
+    .map(([key, description]) => `- ${key}: ${description}`)
+    .join('\n');
+};
+
+export const createAnalysisPrompt = (input: DecisionInput): string => {
   const { situation, decision, reasoning } = input;
 
   return `<role>
@@ -36,37 +90,19 @@ Provide a comprehensive analysis of this decision by completing the following fo
 <instruction>
 Determine the primary decision-making style used. Choose the single best-fit category from the options below.
 </instruction>
-<category_options>
-- EMOTIONAL: Driven primarily by feelings and emotional responses
-- STRATEGIC: Carefully planned with long-term goals in mind
-- IMPULSIVE: Made quickly without thorough consideration
-- ANALYTICAL: Based on data, facts, and logical reasoning
-- INTUITIVE: Based on gut feeling or instinct
-- COLLABORATIVE: Made with input from others or considering group dynamics
-- RISK_AVERSE: Focused on minimizing potential losses or dangers
-- RISK_TAKING: Willing to embrace uncertainty for potential gains
-- OTHER: Doesn't fit the above categories
-</category_options>
+<decision_category_options>
+${buildList(Object.entries(decisionCategoryDescriptions))}
+</decision_category_options>
 </component_1>
 
 <component_2>
 <name>Cognitive Biases</name>
 <instruction>
-Identify 0-5 cognitive biases that may have influenced this decision. Only include biases where you see clear evidence in the decision context.
+Identify 0-5 cognitive biases that may have influenced this decision. Only include biases where you see clear evidence in the decision context. Return the bias names exactly as listed below (e.g., "CONFIRMATION_BIAS" not "Confirmation Bias").
 </instruction>
-<bias_examples>
-- Confirmation Bias: Seeking information that confirms existing beliefs
-- Anchoring Bias: Over-relying on the first piece of information
-- Availability Heuristic: Overweighting recent or easily recalled information
-- Sunk Cost Fallacy: Continuing based on past investment rather than future value
-- Overconfidence Bias: Overestimating one's knowledge or abilities
-- Status Quo Bias: Preferring things to stay the same
-- Loss Aversion: Fearing losses more than valuing equivalent gains
-- Optimism Bias: Overestimating positive outcomes
-- Recency Bias: Overweighting recent events
-- Hindsight Bias: Believing past events were predictable
-- And other relevant cognitive biases
-</bias_examples>
+<available_biases>
+${buildList(Object.entries(availableBiasesDescriptions))}
+</available_biases>
 </component_2>
 
 <component_3>
@@ -139,4 +175,4 @@ EXAMPLE STRUCTURE:
 - Use clear, accessible language that helps the person learn
 - Ground all observations in the specific details provided in the decision context
 </guidelines>`;
-}
+};

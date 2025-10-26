@@ -159,5 +159,6 @@ export const decisions = {
     DUNNING_KRUGER_EFFECT: 'Dunning-Kruger Effect',
     OPTIMISM_BIAS: 'Optimism Bias',
     NEGATIVITY_BIAS: 'Negativity Bias',
+    FUNDAMENTAL_ATTRIBUTION_ERROR: 'Fundamental Attribution Error',
   },
 } as const;

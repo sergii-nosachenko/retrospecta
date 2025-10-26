@@ -31,23 +31,3 @@ export const analysisSchema = z.object({
 });
 
 export type DecisionAnalysis = z.infer<typeof analysisSchema>;
-
-/**
- * Common cognitive biases for reference
- */
-export const COMMON_BIASES = [
-  'Confirmation Bias',
-  'Anchoring Bias',
-  'Availability Heuristic',
-  'Sunk Cost Fallacy',
-  'Overconfidence Bias',
-  'Hindsight Bias',
-  'Status Quo Bias',
-  'Recency Bias',
-  'Optimism Bias',
-  'Loss Aversion',
-  'Framing Effect',
-  'Bandwagon Effect',
-  'Dunning-Kruger Effect',
-  'Fundamental Attribution Error',
-] as const;

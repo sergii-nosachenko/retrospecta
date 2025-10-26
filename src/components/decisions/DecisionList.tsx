@@ -1,5 +1,9 @@
 'use client';
 
+import { memo, useCallback, useState } from 'react';
+import { HiOutlineDotsVertical } from 'react-icons/hi';
+import { LuBrainCircuit, LuRefreshCw, LuTrash2 } from 'react-icons/lu';
+
 import {
   Badge,
   Box,
@@ -10,10 +14,6 @@ import {
   Text,
   VStack,
 } from '@chakra-ui/react';
-import { memo, useCallback, useState } from 'react';
-import { HiOutlineDotsVertical } from 'react-icons/hi';
-import { LuBrainCircuit, LuRefreshCw, LuTrash2 } from 'react-icons/lu';
-
 
 import { reanalyzeDecision } from '@/actions/analysis';
 import { deleteDecision } from '@/actions/decisions';
@@ -246,26 +246,37 @@ const DecisionCard = memo(
 
             {decision.status === ProcessingStatus.COMPLETED &&
               decision.biases.length > 0 && (
-                <Stack direction="row" gap={2} flexWrap="wrap" pt={2}>
-                  {decision.biases.slice(0, 3).map((bias, index) => (
-                    <Badge
-                      key={index}
-                      colorPalette="orange"
-                      size="sm"
-                      px={3}
-                      py={1}
-                    >
-                      {bias}
-                    </Badge>
-                  ))}
-                  {decision.biases.length > 3 && (
-                    <Badge colorPalette="gray" size="sm" px={3} py={1}>
-                      {t('decisions.list.actions.showMore', {
-                        count: decision.biases.length - 3,
-                      })}
-                    </Badge>
-                  )}
-                </Stack>
+                <Box pt={2}>
+                  <Text
+                    fontWeight="semibold"
+                    mb={2}
+                    fontSize="sm"
+                    color="gray.600"
+                    _dark={{ color: 'gray.400' }}
+                  >
+                    {t('decisions.detail.sections.biases')}
+                  </Text>
+                  <Stack direction="row" gap={2} flexWrap="wrap">
+                    {decision.biases.slice(0, 3).map((bias, index) => (
+                      <Badge
+                        key={index}
+                        colorPalette="orange"
+                        size="sm"
+                        px={3}
+                        py={1}
+                      >
+                        {bias}
+                      </Badge>
+                    ))}
+                    {decision.biases.length > 3 && (
+                      <Badge colorPalette="gray" size="sm" px={3} py={1}>
+                        {t('decisions.list.actions.showMore', {
+                          count: decision.biases.length - 3,
+                        })}
+                      </Badge>
+                    )}
+                  </Stack>
+                </Box>
               )}
           </Stack>
         </Card.Body>

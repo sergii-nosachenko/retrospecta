@@ -1,8 +1,8 @@
 'use client';
 
-import { createListCollection } from '@chakra-ui/react';
 import { useCallback, useMemo } from 'react';
 
+import { createListCollection } from '@chakra-ui/react';
 
 import {
   SelectContent,
@@ -12,26 +12,10 @@ import {
   SelectValueText,
 } from '@/components/ui/select';
 import { useTranslations } from '@/translations';
+import { CognitiveBias } from '@/types/enums';
 
-// Common cognitive biases that might be detected - using enum keys
-export const COMMON_BIASES = [
-  'CONFIRMATION_BIAS',
-  'ANCHORING_BIAS',
-  'AVAILABILITY_HEURISTIC',
-  'SUNK_COST_FALLACY',
-  'RECENCY_BIAS',
-  'OVERCONFIDENCE_BIAS',
-  'HINDSIGHT_BIAS',
-  'STATUS_QUO_BIAS',
-  'LOSS_AVERSION',
-  'FRAMING_EFFECT',
-  'GROUPTHINK',
-  'AUTHORITY_BIAS',
-  'BANDWAGON_EFFECT',
-  'DUNNING_KRUGER_EFFECT',
-  'OPTIMISM_BIAS',
-  'NEGATIVITY_BIAS',
-] as const;
+// Get all cognitive biases from the enum
+const COMMON_BIASES = Object.values(CognitiveBias);
 
 interface BiasFilterProps {
   selectedBiases: string[];
