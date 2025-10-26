@@ -110,23 +110,32 @@ ${buildList(Object.entries(availableBiasesDescriptions))}
 <instruction>
 Thoughtfully explore what other options, perspectives, or paths might have been available but weren't considered. Be specific, constructive, and evidence-based.
 
-FORMAT REQUIREMENTS - Return this as well-structured markdown:
-- **Primary structure**: Use bullet points (- or *) to list each distinct alternative
-- **Emphasis**: Use **bold** for the main alternative name or key action at the start of each bullet
-- **Detail**: After the bolded alternative name, provide 1-2 sentences of explanation
-- **Organization**: Group related alternatives together, with a blank line between groups
-- **Prioritization**: If alternatives have clear priority levels, use numbered lists (1., 2., 3.)
-- **Clarity**: Break up long lists - add blank lines between major alternatives for better readability
-- **Formatting**: Use _italic_ for subtle nuances or caveats (e.g., _"though this may require..."_)
-- **NO HEADERS**: Do not use headings (# or ##) - rely on bold text and structure instead
+FORMAT REQUIREMENTS:
+Return markdown text with a blank line (two newlines: \\n\\n) between each bullet point.
 
-EXAMPLE STRUCTURE:
-- **Alternative Name**: Brief explanation of what this option entails and why it's worth considering.
+Structure:
+- **Bold alternative name** at the start of each bullet
+- Explanation after the name
+- Blank line before the next bullet
+- Use _italic_ for nuances
 
-- **Another Option**: Description of this path and its potential benefits.
+REQUIRED OUTPUT PATTERN - Follow this exact spacing:
+\`\`\`
+- **First Alternative**: Explanation here.
 
-1. **Prioritized Option A**: If showing priority, use numbered lists with bold names.
-2. **Prioritized Option B**: Each with clear explanations.
+- **Second Alternative**: Another explanation here.
+
+- **Third Alternative**: Final alternative with details.
+\`\`\`
+
+For numbered lists, use the same blank line pattern:
+\`\`\`
+1. **First Option**: Explanation.
+
+2. **Second Option**: Another explanation.
+
+3. **Third Option**: Final option.
+\`\`\`
 </instruction>
 </component_3>
 
@@ -139,29 +148,37 @@ Provide additional observations about the decision-making process, including:
 - Potential areas for growth or awareness
 - Any nuanced observations about the decision context
 
-FORMAT REQUIREMENTS - Return this as well-structured markdown:
-- **Primary structure**: Use bullet points to organize distinct insights
-- **Category labels**: Start each major insight with **bold text** that summarizes the insight category
-- **Detail**: Follow the bold label with explanation or examples
-- **Mixed content**: Combine standalone bullet points with short paragraphs where appropriate
-- **Emphasis hierarchy**:
-  - **Bold** for key insights, strengths, or areas for growth
-  - _Italic_ for subtle observations, nuances, or qualifying statements
-- **Nested insights**: Use sub-bullets (indented) when you have supporting points
-- **Readability**: Add blank lines between major insight groups for visual breathing room
-- **Actionability**: When suggesting improvements, be specific and constructive
-- **NO HEADERS**: Do not use headings (# or ##) - rely on bold text and list structure
+FORMAT REQUIREMENTS:
+Return markdown text with a blank line (two newlines: \\n\\n) between each major insight.
 
-EXAMPLE STRUCTURE:
-**Decision-making pattern observed**: Brief explanation of the pattern you noticed.
+Structure:
+- Start insights with **bold text** summarizing the category
+- Follow with explanation or examples
+- Use _italic_ for subtle observations
+- Add blank line before the next insight
+- Use sub-bullets for supporting details when needed
 
-**Key strength**: What they did well in their process, with specific examples.
+REQUIRED OUTPUT PATTERN - Follow this exact spacing:
+\`\`\`
+**Decision-making pattern**: Brief explanation of the pattern.
 
-- **Area for growth**: Constructive suggestion with practical guidance
-  - Supporting point or specific example
-  - Another supporting detail
+**Key strength**: What they did well with examples.
 
-**Additional observation**: _Subtle nuance or contextual insight that adds depth._
+**Area for growth**: Constructive suggestion here.
+
+**Additional observation**: _Subtle nuance or insight._
+\`\`\`
+
+For insights with sub-bullets:
+\`\`\`
+**Main insight**: Primary explanation here.
+
+- **Supporting point A**: Detail about this aspect.
+  - Nested detail if needed
+  - Another nested point
+
+**Next insight**: Continue with proper spacing.
+\`\`\`
 </instruction>
 </component_4>
 </task>
@@ -174,5 +191,12 @@ EXAMPLE STRUCTURE:
 - If no clear biases are present, return an empty array for the biases field
 - Use clear, accessible language that helps the person learn
 - Ground all observations in the specific details provided in the decision context
-</guidelines>`;
+</guidelines>
+
+<formatting_critical>
+CRITICAL FORMATTING RULE:
+Your "alternatives" and "insights" outputs MUST include a blank line between each bullet point or major element.
+Follow the code block examples exactly - they show the required spacing with actual blank lines.
+Without these blank lines, the markdown will not render correctly.
+</formatting_critical>`;
 };

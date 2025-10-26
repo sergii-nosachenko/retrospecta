@@ -21,12 +21,16 @@ export const analysisSchema = z.object({
   alternatives: z
     .string()
     .describe(
-      'Thoughtful analysis of overlooked alternatives or paths not considered'
+      'Thoughtful analysis of overlooked alternatives or paths not considered. ' +
+        'Return complete, well-formatted markdown with blank lines between points. ' +
+        'Provide 3-5 substantial alternatives with detailed explanations.'
     ),
   insights: z
     .string()
     .describe(
-      'Additional insights, patterns, or observations about the decision-making process'
+      'Additional insights, patterns, or observations about the decision-making process. ' +
+        'Return complete, well-formatted markdown with blank lines between major points. ' +
+        'Provide comprehensive analysis covering strengths, patterns, and growth areas.'
     ),
 });
 

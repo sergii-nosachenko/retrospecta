@@ -59,7 +59,7 @@ export async function analyzeDecision(
       model: geminiModel,
       schema: analysisSchema,
       prompt,
-      temperature: 0.7, // Balanced creativity and consistency
+      temperature: 0.5, // Balanced creativity and consistency
     });
 
     return {
