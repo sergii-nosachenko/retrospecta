@@ -1,13 +1,6 @@
 'use client';
 
-import {
-  Box,
-  Grid,
-  Group,
-  Heading,
-  IconButton,
-  Skeleton,
-} from '@chakra-ui/react';
+import { Box, Grid, Group, Heading, IconButton } from '@chakra-ui/react';
 import Link from 'next/link';
 import { memo, useCallback, useEffect, useMemo, useState } from 'react';
 import { LuArrowLeft } from 'react-icons/lu';
@@ -16,36 +9,13 @@ import {
   type DashboardAnalytics,
   getDashboardAnalytics,
 } from '@/actions/decisions';
+import { DashboardSkeleton } from '@/components/common/skeletons';
 import { BiasChart } from '@/components/dashboard/charts/BiasChart';
 import { DecisionTypeChart } from '@/components/dashboard/charts/DecisionTypeChart';
 import { EmptyChart } from '@/components/dashboard/charts/EmptyChart';
 import { StatCard } from '@/components/dashboard/StatCard';
 import { ROUTES } from '@/constants/routes';
 import { useTranslations } from '@/translations';
-
-const LoadingState = memo(() => {
-  return (
-    <Box p={{ base: 5, md: 8 }} maxW="7xl" mx="auto" minH="100vh">
-      <Skeleton height="40px" mb={6} width="300px" />
-      <Grid gap={6} templateColumns={{ base: '1fr', md: 'repeat(4, 1fr)' }}>
-        <Skeleton height="120px" />
-        <Skeleton height="120px" />
-        <Skeleton height="120px" />
-        <Skeleton height="120px" />
-      </Grid>
-      <Grid
-        gap={6}
-        mt={6}
-        templateColumns={{ base: '1fr', lg: 'repeat(2, 1fr)' }}
-      >
-        <Skeleton height="400px" />
-        <Skeleton height="400px" />
-      </Grid>
-    </Box>
-  );
-});
-
-LoadingState.displayName = 'LoadingState';
 
 interface ErrorStateProps {
   error: string;
@@ -198,7 +168,7 @@ export const DashboardPageContent = memo(() => {
   }, [fetchAnalytics]);
 
   if (loading) {
-    return <LoadingState />;
+    return <DashboardSkeleton />;
   }
 
   if (error || !analytics) {

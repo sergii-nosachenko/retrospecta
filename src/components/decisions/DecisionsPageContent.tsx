@@ -15,7 +15,7 @@ import { ErrorState } from '@/components/common/ErrorState';
 import {
   DecisionListSkeleton,
   SimpleListSkeleton,
-} from '@/components/common/LoadingSkeleton';
+} from '@/components/common/skeletons';
 import {
   type DecisionType,
   FilterControls,

@@ -1,11 +1,11 @@
 'use client';
 
+import { DecisionDetailSkeleton } from '@/components/common/skeletons';
 import {
   DecisionAnalysisResults,
   DecisionDetailBody,
   DecisionDetailFooter,
   DecisionDetailHeader,
-  DecisionDetailSkeleton,
   DecisionErrorState,
   DecisionProcessingState,
 } from '@/components/decisions/detail';
