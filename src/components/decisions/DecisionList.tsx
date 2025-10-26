@@ -127,9 +127,109 @@ const DecisionCard = memo(
       >
         <Card.Body p={6}>
           <Stack gap={4}>
-            {/* Status + Date + Menu block */}
-            <Stack direction="row" justify="space-between" align="center">
-              {/* Status + Date on the left */}
+            {/* Mobile layout: Status + Date + Menu first, then Decision Type */}
+            <Stack display={{ base: 'flex', sm: 'none' }} gap={3}>
+              {/* Status + Date + Menu block */}
+              <Stack direction="row" justify="space-between" align="center">
+                {/* Status + Date on the left */}
+                <Stack direction="row" align="center" gap={2}>
+                  <Badge
+                    colorPalette={getStatusColor(decision.status)}
+                    px={3}
+                    py={1}
+                  >
+                    {getStatusLabel(decision.status, t)}
+                  </Badge>
+                  <Text
+                    fontSize="sm"
+                    color="gray.500"
+                    _dark={{ color: 'gray.400' }}
+                  >
+                    {new Date(decision.createdAt).toLocaleDateString('en-US', {
+                      year: 'numeric',
+                      month: 'short',
+                      day: 'numeric',
+                    })}
+                  </Text>
+                </Stack>
+
+                {/* Menu on the right */}
+                <MenuRoot positioning={{ placement: 'bottom-end' }}>
+                  <MenuTrigger asChild>
+                    <IconButton
+                      variant="ghost"
+                      size="sm"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <HiOutlineDotsVertical />
+                    </IconButton>
+                  </MenuTrigger>
+                  <MenuContent minW="150px">
+                    <MenuItem
+                      value={DecisionActionType.REANALYZE}
+                      onClick={(event) =>
+                        handleMenuAction(DecisionActionType.REANALYZE, event)
+                      }
+                      gap={2}
+                      px={3}
+                      py={2}
+                    >
+                      <LuRefreshCw />
+                      {t('decisions.list.actions.reAnalyze')}
+                    </MenuItem>
+                    <MenuItem
+                      value={DecisionActionType.DELETE}
+                      color="red.500"
+                      _dark={{ color: 'red.400' }}
+                      onClick={(e) =>
+                        handleMenuAction(
+                          DecisionActionType.DELETE,
+                          e as unknown as React.MouseEvent
+                        )
+                      }
+                      gap={2}
+                      px={3}
+                      py={2}
+                    >
+                      <LuTrash2 />
+                      {t('decisions.list.actions.delete')}
+                    </MenuItem>
+                  </MenuContent>
+                </MenuRoot>
+              </Stack>
+
+              {/* Decision Type */}
+              {decision.decisionType && (
+                <Badge colorPalette="blue" px={3} py={1} width="fit-content">
+                  <Stack direction="row" align="center" gap={1.5}>
+                    {getDecisionTypeIcon(decision.decisionType)}
+                    <span>
+                      {getDecisionTypeLabel(t, decision.decisionType)}
+                    </span>
+                  </Stack>
+                </Badge>
+              )}
+            </Stack>
+
+            {/* Desktop layout: Original layout with Decision Type on left, Status + Date + Menu on right */}
+            <Stack
+              display={{ base: 'none', sm: 'flex' }}
+              direction="row"
+              justify="space-between"
+              align="center"
+            >
+              {decision.decisionType ? (
+                <Badge colorPalette="blue" px={3} py={1}>
+                  <Stack direction="row" align="center" gap={1.5}>
+                    {getDecisionTypeIcon(decision.decisionType)}
+                    <span>
+                      {getDecisionTypeLabel(t, decision.decisionType)}
+                    </span>
+                  </Stack>
+                </Badge>
+              ) : (
+                <Box />
+              )}
               <Stack direction="row" align="center" gap={2}>
                 <Badge
                   colorPalette={getStatusColor(decision.status)}
@@ -149,62 +249,50 @@ const DecisionCard = memo(
                     day: 'numeric',
                   })}
                 </Text>
+                <MenuRoot positioning={{ placement: 'bottom-end' }}>
+                  <MenuTrigger asChild>
+                    <IconButton
+                      variant="ghost"
+                      size="sm"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <HiOutlineDotsVertical />
+                    </IconButton>
+                  </MenuTrigger>
+                  <MenuContent minW="150px">
+                    <MenuItem
+                      value={DecisionActionType.REANALYZE}
+                      onClick={(event) =>
+                        handleMenuAction(DecisionActionType.REANALYZE, event)
+                      }
+                      gap={2}
+                      px={3}
+                      py={2}
+                    >
+                      <LuRefreshCw />
+                      {t('decisions.list.actions.reAnalyze')}
+                    </MenuItem>
+                    <MenuItem
+                      value={DecisionActionType.DELETE}
+                      color="red.500"
+                      _dark={{ color: 'red.400' }}
+                      onClick={(e) =>
+                        handleMenuAction(
+                          DecisionActionType.DELETE,
+                          e as unknown as React.MouseEvent
+                        )
+                      }
+                      gap={2}
+                      px={3}
+                      py={2}
+                    >
+                      <LuTrash2 />
+                      {t('decisions.list.actions.delete')}
+                    </MenuItem>
+                  </MenuContent>
+                </MenuRoot>
               </Stack>
-
-              {/* Menu on the right */}
-              <MenuRoot positioning={{ placement: 'bottom-end' }}>
-                <MenuTrigger asChild>
-                  <IconButton
-                    variant="ghost"
-                    size="sm"
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    <HiOutlineDotsVertical />
-                  </IconButton>
-                </MenuTrigger>
-                <MenuContent minW="150px">
-                  <MenuItem
-                    value={DecisionActionType.REANALYZE}
-                    onClick={(event) =>
-                      handleMenuAction(DecisionActionType.REANALYZE, event)
-                    }
-                    gap={2}
-                    px={3}
-                    py={2}
-                  >
-                    <LuRefreshCw />
-                    {t('decisions.list.actions.reAnalyze')}
-                  </MenuItem>
-                  <MenuItem
-                    value={DecisionActionType.DELETE}
-                    color="red.500"
-                    _dark={{ color: 'red.400' }}
-                    onClick={(e) =>
-                      handleMenuAction(
-                        DecisionActionType.DELETE,
-                        e as unknown as React.MouseEvent
-                      )
-                    }
-                    gap={2}
-                    px={3}
-                    py={2}
-                  >
-                    <LuTrash2 />
-                    {t('decisions.list.actions.delete')}
-                  </MenuItem>
-                </MenuContent>
-              </MenuRoot>
             </Stack>
-
-            {/* Decision Type */}
-            {decision.decisionType && (
-              <Badge colorPalette="blue" px={3} py={1} width="fit-content">
-                <Stack direction="row" align="center" gap={1.5}>
-                  {getDecisionTypeIcon(decision.decisionType)}
-                  <span>{getDecisionTypeLabel(t, decision.decisionType)}</span>
-                </Stack>
-              </Badge>
-            )}
 
             <Box>
               <Text
