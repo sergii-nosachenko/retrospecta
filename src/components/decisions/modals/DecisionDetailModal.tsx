@@ -93,9 +93,8 @@ export const DecisionDetailModal = ({
         />
       }
     >
-      {isLoading ? (
-        <DecisionDetailSkeleton />
-      ) : decision ? (
+      {isLoading && <DecisionDetailSkeleton />}
+      {!isLoading && decision && (
         <>
           <DecisionDetailBody decision={decision} />
 
@@ -116,7 +115,7 @@ export const DecisionDetailModal = ({
             />
           )}
         </>
-      ) : null}
+      )}
     </BaseModal>
   );
 };

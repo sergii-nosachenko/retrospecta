@@ -146,7 +146,7 @@ const eslintConfig = defineConfig([
       "unicorn/no-instanceof-array": "error",
       "unicorn/no-invalid-remove-event-listener": "error",
       "unicorn/no-negated-condition": "warn",
-      "unicorn/no-nested-ternary": "warn",
+      "unicorn/no-nested-ternary": "error",
       "unicorn/no-null": "off", // null is valid in many cases
       "unicorn/no-object-as-default-parameter": "error",
       "unicorn/no-static-only-class": "error",
@@ -258,6 +258,7 @@ const eslintConfig = defineConfig([
       "prefer-arrow-callback": "error",
       "no-implicit-coercion": "error",
       "no-unneeded-ternary": "error",
+      "no-nested-ternary": "error",
       "multiline-ternary": ["error", "always-multiline"],
       "operator-linebreak": ["error", "before", { overrides: { "=": "after" } }],
       "react/display-name": "off", // Allow anonymous components
