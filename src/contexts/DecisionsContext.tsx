@@ -30,6 +30,7 @@ interface DecisionsContextValue {
     status: ProcessingStatus
   ) => void;
   optimisticDelete: (decisionId: string) => void;
+  optimisticMarkAsRead: (decisionId: string) => void;
   getDecision: (decisionId: string) => Decision | undefined;
 }
 
@@ -80,6 +81,7 @@ export const DecisionsProvider = ({ children }: DecisionsProviderProps) => {
   const {
     optimisticUpdateStatus: optimisticUpdateStatusFn,
     optimisticDelete: optimisticDeleteFn,
+    optimisticMarkAsRead: optimisticMarkAsReadFn,
     clearConfirmedUpdates,
     hasOptimisticUpdate,
     getOptimisticUpdateCount,
@@ -125,6 +127,13 @@ export const DecisionsProvider = ({ children }: DecisionsProviderProps) => {
     [optimisticDeleteFn, decisions, setDecisions, setPendingCount]
   );
 
+  const optimisticMarkAsRead = useCallback(
+    (decisionId: string) => {
+      optimisticMarkAsReadFn(decisionId, decisions, setDecisions);
+    },
+    [optimisticMarkAsReadFn, decisions, setDecisions]
+  );
+
   // Get a specific decision by ID
   const getDecision = useCallback(
     (decisionId: string) => {
@@ -145,6 +154,7 @@ export const DecisionsProvider = ({ children }: DecisionsProviderProps) => {
       refresh,
       optimisticUpdateStatus,
       optimisticDelete,
+      optimisticMarkAsRead,
       getDecision,
     }),
     [
@@ -157,6 +167,7 @@ export const DecisionsProvider = ({ children }: DecisionsProviderProps) => {
       refresh,
       optimisticUpdateStatus,
       optimisticDelete,
+      optimisticMarkAsRead,
       getDecision,
     ]
   );

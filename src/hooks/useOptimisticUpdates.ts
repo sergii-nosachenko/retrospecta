@@ -134,9 +134,30 @@ export const useOptimisticUpdates = () => {
     return optimisticUpdatesRef.current.size;
   }, []);
 
+  /**
+   * Optimistically mark a decision as read (isNew: false)
+   * Provides immediate UI feedback before server confirmation
+   */
+  const optimisticMarkAsRead = useCallback(
+    (
+      decisionId: string,
+      decisions: Decision[],
+      setDecisions: React.Dispatch<React.SetStateAction<Decision[]>>
+    ) => {
+      optimisticUpdatesRef.current.set(decisionId, { isNew: false });
+
+      // Immediately update local state
+      setDecisions((prev) =>
+        prev.map((d) => (d.id === decisionId ? { ...d, isNew: false } : d))
+      );
+    },
+    []
+  );
+
   return {
     optimisticUpdateStatus,
     optimisticDelete,
+    optimisticMarkAsRead,
     clearConfirmedUpdate,
     clearConfirmedUpdates,
     hasOptimisticUpdate,

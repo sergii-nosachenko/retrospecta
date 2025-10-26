@@ -18,6 +18,7 @@ export interface Decision {
   analysisAttempts: number;
   lastAnalyzedAt: Date | null;
   errorMessage: string | null;
+  isNew: boolean;
   createdAt: Date;
   updatedAt: Date;
 }

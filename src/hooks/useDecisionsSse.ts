@@ -29,6 +29,7 @@ const hasDecisionChanged = (
     oldDecision.decisionType !== newDecision.decisionType ||
     oldDecision.analysisAttempts !== newDecision.analysisAttempts ||
     oldDecision.errorMessage !== newDecision.errorMessage ||
+    oldDecision.isNew !== newDecision.isNew ||
     oldDecision.biases.length !== newDecision.biases.length ||
     oldDecision.biases.some((bias, i) => bias !== newDecision.biases[i]) ||
     new Date(oldDecision.updatedAt).getTime() !==

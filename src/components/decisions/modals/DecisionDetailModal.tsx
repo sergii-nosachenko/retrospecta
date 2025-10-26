@@ -1,5 +1,8 @@
 'use client';
 
+import { useEffect } from 'react';
+
+import { markDecisionAsRead } from '@/actions/decisions';
 import { BaseModal } from '@/components/common';
 import { DecisionDetailSkeleton } from '@/components/common/skeletons';
 import {
@@ -10,6 +13,7 @@ import {
   DecisionErrorState,
   DecisionProcessingState,
 } from '@/components/decisions/detail';
+import { useDecisions } from '@/contexts/DecisionsContext';
 import { useDecisionActions } from '@/hooks/useDecisionActions';
 import { useDecisionPolling } from '@/hooks/useDecisionPolling';
 import { ProcessingStatus } from '@/types/enums';
@@ -44,6 +48,9 @@ export const DecisionDetailModal = ({
   open,
   onOpenChange,
 }: DecisionDetailModalProps) => {
+  // Get optimistic update function from context
+  const { optimisticMarkAsRead } = useDecisions();
+
   // Use the polling hook to manage decision state and updates
   const { decision, isLoading } = useDecisionPolling({
     decisionId,
@@ -59,6 +66,16 @@ export const DecisionDetailModal = ({
   const handleDeleteWithClose = () => {
     void handleDelete(() => onOpenChange(false));
   };
+
+  // Mark decision as read when modal opens and decision is new
+  useEffect(() => {
+    if (open && decision?.isNew) {
+      // Optimistically update UI immediately
+      optimisticMarkAsRead(decisionId);
+      // Update database in background
+      void markDecisionAsRead(decisionId);
+    }
+  }, [open, decision, decisionId, optimisticMarkAsRead]);
 
   return (
     <BaseModal

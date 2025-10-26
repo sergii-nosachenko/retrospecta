@@ -181,6 +181,7 @@ export async function GET(request: NextRequest) {
               analysisAttempts: true,
               lastAnalyzedAt: true,
               errorMessage: true,
+              isNew: true,
               createdAt: true,
               updatedAt: true,
             },

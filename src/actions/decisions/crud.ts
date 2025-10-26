@@ -130,6 +130,7 @@ export async function getUserDecisions(
       biases: string[];
       alternatives: string | null;
       insights: string | null;
+      isNew: boolean;
       createdAt: Date;
       updatedAt: Date;
     }[]
@@ -168,6 +169,7 @@ export async function getUserDecisions(
         biases: true,
         alternatives: true,
         insights: true,
+        isNew: true,
         createdAt: true,
         updatedAt: true,
       },
@@ -207,6 +209,7 @@ export async function getDecision(decisionId: string): Promise<
     analysisAttempts: number;
     lastAnalyzedAt: Date | null;
     errorMessage: string | null;
+    isNew: boolean;
     createdAt: Date;
     updatedAt: Date;
   }>
@@ -258,6 +261,80 @@ export async function getDecision(decisionId: string): Promise<
     return {
       success: false,
       error: 'Failed to fetch decision. Please try again.',
+    };
+  }
+}
+
+/**
+ * Marks a decision as read (isNew: false)
+ * Called when user opens/views a decision
+ *
+ * @param decisionId - ID of the decision to mark as read
+ * @returns Action result indicating success or error
+ */
+export async function markDecisionAsRead(
+  decisionId: string
+): Promise<ActionResult<void>> {
+  try {
+    // Get authenticated user
+    const supabase = await createClient();
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
+
+    if (authError || !user) {
+      return {
+        success: false,
+        error: 'You must be logged in to update a decision',
+      };
+    }
+
+    // Fetch decision to verify ownership
+    const decision = await prisma.decision.findUnique({
+      where: {
+        id: decisionId,
+      },
+    });
+
+    // Check if decision exists
+    if (!decision) {
+      return {
+        success: false,
+        error: 'Decision not found',
+      };
+    }
+
+    // Check if decision belongs to user
+    if (decision.userId !== user.id) {
+      return {
+        success: false,
+        error: 'You do not have permission to update this decision',
+      };
+    }
+
+    // Mark as read
+    await prisma.decision.update({
+      where: {
+        id: decisionId,
+      },
+      data: {
+        isNew: false,
+      },
+    });
+
+    // Revalidate decisions page
+    revalidatePath(ROUTES.DECISIONS);
+    revalidatePath(`${ROUTES.DECISIONS}/${decisionId}`);
+
+    return {
+      success: true,
+    };
+  } catch (error) {
+    console.error('Error marking decision as read:', error);
+    return {
+      success: false,
+      error: 'Failed to mark decision as read.',
     };
   }
 }

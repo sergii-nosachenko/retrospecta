@@ -14,6 +14,7 @@ export {
   getUserDecisions,
   getDecision,
   deleteDecision,
+  markDecisionAsRead,
   type ActionResult,
 } from './crud';
 

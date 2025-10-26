@@ -70,6 +70,9 @@ export const decisions = {
       processing: 'PROCESSING',
       failed: 'FAILED',
     },
+    badge: {
+      new: 'NEW',
+    },
   },
   detail: {
     title: 'Decision Details',

@@ -73,6 +73,7 @@ model Decision {
   analysisAttempts Int       @default(0) @map("analysis_attempts")
   lastAnalyzedAt   DateTime? @map("last_analyzed_at")
   errorMessage     String?   @db.Text @map("error_message")
+  isNew            Boolean   @default(true) @map("is_new")
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")

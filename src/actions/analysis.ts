@@ -81,6 +81,7 @@ export async function analyzeDecision(
         lastAnalyzedAt: new Date(),
         analysisAttempts: { increment: 1 },
         errorMessage: null,
+        isNew: true, // Mark as new when analysis completes
       },
     });
 
@@ -139,6 +140,7 @@ export async function reanalyzeDecision(
       data: {
         status: ProcessingStatus.PENDING,
         errorMessage: null,
+        isNew: true, // Mark as new when re-analyzing
       },
     });
 

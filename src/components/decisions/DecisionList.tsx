@@ -8,6 +8,7 @@ import { ActionMenu } from '@/components/common';
 import {
   BiasesBadgeList,
   DecisionTypeBadge,
+  NewBadge,
   StatusBadge,
 } from '@/components/decisions/shared';
 import { EmptyState } from '@/components/ui/empty-state';
@@ -32,6 +33,7 @@ interface Decision {
   biases: string[];
   alternatives: string | null;
   insights: string | null;
+  isNew: boolean;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -116,6 +118,7 @@ const DecisionCardComponent = ({
               {/* Status + Date on the left */}
               <Stack direction="row" align="center" gap={2}>
                 <StatusBadge status={decision.status} />
+                {decision.isNew && <NewBadge />}
                 <Text
                   fontSize="sm"
                   color="gray.500"
@@ -155,6 +158,7 @@ const DecisionCardComponent = ({
             )}
             <Stack direction="row" align="center" gap={2}>
               <StatusBadge status={decision.status} />
+              {decision.isNew && <NewBadge />}
               <Text
                 fontSize="sm"
                 color="gray.500"
