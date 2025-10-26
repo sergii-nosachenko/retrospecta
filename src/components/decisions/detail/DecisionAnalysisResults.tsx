@@ -3,7 +3,7 @@
 import { Badge, Box, Heading, Stack, Text, VStack } from '@chakra-ui/react';
 import { memo } from 'react';
 
-import { DecisionSection } from '@/components/decisions/shared/DecisionSection';
+import { DecisionSection } from '@/components/decisions/common/DecisionSection';
 import { MarkdownRenderer } from '@/components/ui/MarkdownRenderer';
 import {
   getBiasLabel,

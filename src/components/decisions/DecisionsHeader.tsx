@@ -2,8 +2,8 @@ import { Badge, Heading, Skeleton, Stack } from '@chakra-ui/react';
 import { memo } from 'react';
 
 import { Logo } from '@/components/common/Logo';
-import { UserMenu } from '@/components/common/UserMenu';
-import { DecisionFormModal } from '@/components/decisions/DecisionFormModal';
+import { DecisionFormModal } from '@/components/decisions/modals/DecisionFormModal';
+import { UserMenu } from '@/components/decisions/userMenu/UserMenu';
 import { useTranslations } from '@/translations';
 
 interface DecisionsHeaderProps {

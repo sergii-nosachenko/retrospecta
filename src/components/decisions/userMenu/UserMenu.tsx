@@ -14,7 +14,7 @@ import {
 import { ROUTES } from '@/constants/routes';
 import { useTranslations } from '@/translations';
 
-import { useColorMode } from '../ui/color-mode';
+import { useColorMode } from '../../ui/color-mode';
 
 interface UserMenuProps {
   user: {

@@ -1,7 +1,7 @@
 import { Box, Button, Stack, Text } from '@chakra-ui/react';
 import Link from 'next/link';
 
-import { AuthPageLayout } from '@/components/auth/AuthPageLayout';
+import { AuthPageLayout } from '@/components/auth/common/AuthPageLayout';
 import { ROUTES } from '@/constants/routes';
 import { useTranslations } from '@/translations';
 

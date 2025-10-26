@@ -2,9 +2,9 @@ import { Box, Button, Container, Heading, Stack, Text } from '@chakra-ui/react';
 import Link from 'next/link';
 import { memo } from 'react';
 
-import { AnimatedBackground } from '@/components/common/AnimatedBackground';
-import { IconReveal } from '@/components/common/IconReveal';
+import { AnimatedBackground } from '@/components/landing/AnimatedBackground';
 import { FeatureGrid } from '@/components/landing/FeatureGrid';
+import { IconReveal } from '@/components/landing/IconReveal';
 import { ROUTES } from '@/constants/routes';
 import { useTranslations } from '@/translations';
 

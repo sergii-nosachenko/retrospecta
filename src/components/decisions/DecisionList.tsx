@@ -34,8 +34,8 @@ import {
 import { type TFunction, useTranslations } from '@/translations';
 import { DecisionActionType, ProcessingStatus } from '@/types/enums';
 
-import { DecisionDetailModal } from './DecisionDetailModal';
-import { DecisionFormModal } from './DecisionFormModal';
+import { DecisionDetailModal } from './modals/DecisionDetailModal';
+import { DecisionFormModal } from './modals/DecisionFormModal';
 
 interface Decision {
   id: string;

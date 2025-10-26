@@ -14,7 +14,7 @@ import {
 
 import { useTranslations } from '@/translations';
 
-import { CustomPieTooltip } from './ChartTooltips';
+import { CustomPieTooltip } from '../ChartTooltips';
 
 interface DecisionTypeChartProps {
   data: { name: string; value: number }[];

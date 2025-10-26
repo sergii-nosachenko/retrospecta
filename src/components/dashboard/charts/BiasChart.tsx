@@ -15,7 +15,7 @@ import {
 
 import { useTranslations } from '@/translations';
 
-import { CustomBarTooltip } from './ChartTooltips';
+import { CustomBarTooltip } from '../ChartTooltips';
 
 interface BiasChartProps {
   data: { name: string; count: number }[];

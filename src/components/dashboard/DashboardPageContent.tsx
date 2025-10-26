@@ -16,9 +16,9 @@ import {
   type DashboardAnalytics,
   getDashboardAnalytics,
 } from '@/actions/decisions';
-import { BiasChart } from '@/components/dashboard/BiasChart';
-import { DecisionTypeChart } from '@/components/dashboard/DecisionTypeChart';
-import { EmptyChart } from '@/components/dashboard/EmptyChart';
+import { BiasChart } from '@/components/dashboard/charts/BiasChart';
+import { DecisionTypeChart } from '@/components/dashboard/charts/DecisionTypeChart';
+import { EmptyChart } from '@/components/dashboard/charts/EmptyChart';
 import { StatCard } from '@/components/dashboard/StatCard';
 import { ROUTES } from '@/constants/routes';
 import { useTranslations } from '@/translations';

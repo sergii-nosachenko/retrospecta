@@ -1,10 +1,10 @@
 import { Text } from '@chakra-ui/react';
 import Link from 'next/link';
 
-import { AuthDivider } from '@/components/auth/AuthDivider';
-import { AuthPageLayout } from '@/components/auth/AuthPageLayout';
-import { OAuthButtons } from '@/components/auth/OAuthButtons';
-import { RegisterForm } from '@/components/auth/RegisterForm';
+import { AuthDivider } from '@/components/auth/common/AuthDivider';
+import { AuthPageLayout } from '@/components/auth/common/AuthPageLayout';
+import { OAuthButtons } from '@/components/auth/common/OAuthButtons';
+import { RegisterForm } from '@/components/auth/forms/RegisterForm';
 import { ROUTES } from '@/constants/routes';
 import { useTranslations } from '@/translations';
 

@@ -7,9 +7,9 @@ import { LuX } from 'react-icons/lu';
 import { type DecisionType } from '@/constants/decisions';
 import { useTranslations } from '@/translations';
 
-import { BiasFilter } from './BiasFilter';
-import { DateRangeFilter } from './DateRangeFilter';
-import { DecisionTypeFilter } from './DecisionTypeFilter';
+import { BiasFilter } from '../filters/BiasFilter';
+import { DateRangeFilter } from '../filters/DateRangeFilter';
+import { DecisionTypeFilter } from '../filters/DecisionTypeFilter';
 
 // Re-export for backwards compatibility
 export type { DecisionType };

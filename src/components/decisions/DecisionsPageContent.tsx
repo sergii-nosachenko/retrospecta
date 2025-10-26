@@ -16,13 +16,13 @@ import {
   DecisionListSkeleton,
   SimpleListSkeleton,
 } from '@/components/common/LoadingSkeleton';
-import { DecisionList } from '@/components/decisions/DecisionList';
-import { DecisionsHeader } from '@/components/decisions/DecisionsHeader';
 import {
   type DecisionType,
   FilterControls,
-} from '@/components/decisions/FilterControls';
-import { SortingControls } from '@/components/decisions/SortingControls';
+} from '@/components/decisions/controls/FilterControls';
+import { SortingControls } from '@/components/decisions/controls/SortingControls';
+import { DecisionList } from '@/components/decisions/DecisionList';
+import { DecisionsHeader } from '@/components/decisions/DecisionsHeader';
 import { ActionBarContent, ActionBarRoot } from '@/components/ui/action-bar';
 import {
   DrawerBackdrop,

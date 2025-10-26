@@ -18,10 +18,10 @@ import { useDecisionForm } from '@/hooks/useDecisionForm';
 import { useMultiStepForm } from '@/hooks/useMultiStepForm';
 import { useTranslations } from '@/translations';
 
-import { DecisionFormStep1 } from './form/DecisionFormStep1';
-import { DecisionFormStep2 } from './form/DecisionFormStep2';
-import { DecisionFormStep3 } from './form/DecisionFormStep3';
-import { FormNavigation } from './form/FormNavigation';
+import { DecisionFormStep1 } from '../form/DecisionFormStep1';
+import { DecisionFormStep2 } from '../form/DecisionFormStep2';
+import { DecisionFormStep3 } from '../form/DecisionFormStep3';
+import { FormNavigation } from '../form/FormNavigation';
 
 interface DecisionFormModalProps {
   trigger?: React.ReactNode;
