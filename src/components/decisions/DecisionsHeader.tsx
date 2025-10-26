@@ -7,7 +7,6 @@ import { DecisionFormModal } from '@/components/decisions/DecisionFormModal';
 import { useTranslations } from '@/translations';
 
 interface DecisionsHeaderProps {
-  isConnected: boolean;
   pendingCount: number;
   user: {
     id: string;
@@ -19,7 +18,7 @@ interface DecisionsHeaderProps {
 }
 
 export const DecisionsHeader = memo(
-  ({ isConnected, pendingCount, user, onSignOut }: DecisionsHeaderProps) => {
+  ({ pendingCount, user, onSignOut }: DecisionsHeaderProps) => {
     const { t } = useTranslations();
 
     return (
@@ -33,19 +32,6 @@ export const DecisionsHeader = memo(
         <Stack direction="row" align="center" gap={3} flexWrap="wrap">
           <Logo size="2xl" />
           <Heading size="2xl">{t('decisions.header.title')}</Heading>
-
-          {/* Connection status indicator */}
-          <Badge
-            colorPalette={isConnected ? 'green' : 'gray'}
-            size="sm"
-            variant="subtle"
-            px={3}
-            py={1}
-          >
-            {isConnected
-              ? `● ${t('common.status.live')}`
-              : `○ ${t('common.status.offline')}`}
-          </Badge>
 
           {/* Pending count indicator */}
           {pendingCount > 0 && (

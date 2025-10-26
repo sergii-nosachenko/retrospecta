@@ -37,7 +37,6 @@ import { type SortField, type SortOrder } from '@/types/enums';
 export const DecisionsPageContent = () => {
   const {
     decisions,
-    isConnected,
     isLoading,
     error,
     pendingCount,
@@ -156,7 +155,6 @@ export const DecisionsPageContent = () => {
         borderBottomColor="border.muted"
       >
         <DecisionsHeader
-          isConnected={isConnected}
           pendingCount={pendingCount}
           user={user}
           onSignOut={handleSignOut}

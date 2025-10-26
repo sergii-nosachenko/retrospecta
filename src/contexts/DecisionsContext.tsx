@@ -54,7 +54,6 @@ interface FilterOptions {
 
 interface DecisionsContextValue {
   decisions: Decision[];
-  isConnected: boolean;
   isLoading: boolean;
   error: string | null;
   pendingCount: number;
@@ -202,7 +201,6 @@ interface DecisionsProviderProps {
 
 export const DecisionsProvider = ({ children }: DecisionsProviderProps) => {
   const [decisions, setDecisions] = useState<Decision[]>([]);
-  const [isConnected, setIsConnected] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [pendingCount, setPendingCount] = useState(0);
@@ -383,7 +381,6 @@ export const DecisionsProvider = ({ children }: DecisionsProviderProps) => {
 
   // Handle SSE connection open
   const handleSSEOpen = useCallback(() => {
-    setIsConnected(true);
     setError(null);
     reconnectAttempts.current = 0;
   }, []);
@@ -391,7 +388,6 @@ export const DecisionsProvider = ({ children }: DecisionsProviderProps) => {
   // Handle SSE connection error with reconnection logic
   const handleSSEError = useCallback((eventSource: EventSource) => {
     console.error('SSE connection error');
-    setIsConnected(false);
     eventSource.close();
 
     // Attempt to reconnect with exponential backoff
@@ -457,7 +453,6 @@ export const DecisionsProvider = ({ children }: DecisionsProviderProps) => {
   const value = useMemo<DecisionsContextValue>(
     () => ({
       decisions,
-      isConnected,
       isLoading,
       error,
       pendingCount,
@@ -470,7 +465,6 @@ export const DecisionsProvider = ({ children }: DecisionsProviderProps) => {
     }),
     [
       decisions,
-      isConnected,
       isLoading,
       error,
       pendingCount,

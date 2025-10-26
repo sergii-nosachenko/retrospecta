@@ -28,11 +28,6 @@ export const common = {
     lightMode: 'Light Mode',
     darkMode: 'Dark Mode',
   },
-  status: {
-    live: 'Live',
-    offline: 'Offline',
-    analyzing: 'analyzing...',
-  },
   menu: {
     userMenu: 'User menu',
   },
