@@ -1,6 +1,11 @@
 'use client';
 
-import { Badge, Box, Button } from '@chakra-ui/react';
+import {
+  Badge,
+  Box,
+  Button,
+  type DrawerOpenChangeDetails,
+} from '@chakra-ui/react';
 import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { LuFilter, LuX } from 'react-icons/lu';
@@ -115,6 +120,13 @@ export const DecisionsPageContent = () => {
     });
   }, [setFilters]);
 
+  const handleTriggerDrawer = useCallback(
+    (details: DrawerOpenChangeDetails) => {
+      setIsFiltersOpen(details.open);
+    },
+    []
+  );
+
   const activeFiltersCount = useMemo(() => {
     let count = 0;
     if (filters.decisionTypes.length > 0) count += filters.decisionTypes.length;
@@ -178,7 +190,7 @@ export const DecisionsPageContent = () => {
             <Box display="flex" gap={2} width="full">
               <DrawerRoot
                 open={isFiltersOpen}
-                onOpenChange={(e) => setIsFiltersOpen(e.open)}
+                onOpenChange={handleTriggerDrawer}
                 placement="bottom"
               >
                 <DrawerBackdrop />
@@ -209,14 +221,32 @@ export const DecisionsPageContent = () => {
                   </Button>
                 </DrawerTrigger>
                 <DrawerContent>
-                  <DrawerHeader p={4} pb={2}>
-                    <DrawerTitle>
-                      {t('decisions.filters.toggleLabel')}
-                    </DrawerTitle>
-                    <DrawerCloseTrigger />
+                  <DrawerHeader pt={4} pb={2}>
+                    <Box
+                      maxW="7xl"
+                      mx="auto"
+                      w="full"
+                      px={{ base: 5, md: 8 }}
+                      position="relative"
+                    >
+                      <DrawerTitle>
+                        {t('decisions.filters.toggleLabel')}
+                      </DrawerTitle>
+                      <DrawerCloseTrigger
+                        position="absolute"
+                        top={0}
+                        right={{ base: 5, md: 8 }}
+                      />
+                    </Box>
                   </DrawerHeader>
-                  <DrawerBody p={4} pt={2}>
-                    <Box spaceY={6}>
+                  <DrawerBody pt={2} pb={4}>
+                    <Box
+                      spaceY={6}
+                      maxW="7xl"
+                      mx="auto"
+                      w="full"
+                      px={{ base: 5, md: 8 }}
+                    >
                       {/* Sorting Controls */}
                       <Box>
                         <SortingControls
