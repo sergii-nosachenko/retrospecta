@@ -1,8 +1,8 @@
+import { Box, Button, Container, Heading, Stack, Text } from '@chakra-ui/react';
+import Link from 'next/link';
 import { memo } from 'react';
 
-import Link from 'next/link';
 
-import { Box, Button, Container, Heading, Stack, Text } from '@chakra-ui/react';
 
 import { AnimatedBackground } from '@/components/common/AnimatedBackground';
 import { IconReveal } from '@/components/common/IconReveal';

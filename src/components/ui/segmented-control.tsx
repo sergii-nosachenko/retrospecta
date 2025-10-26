@@ -1,8 +1,8 @@
 'use client';
 
+import { For, SegmentGroup } from '@chakra-ui/react';
 import * as React from 'react';
 
-import { For, SegmentGroup } from '@chakra-ui/react';
 
 interface Item {
   value: string;

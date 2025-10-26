@@ -1,6 +1,6 @@
+import { ActionBar, Portal } from '@chakra-ui/react';
 import * as React from 'react';
 
-import { ActionBar, Portal } from '@chakra-ui/react';
 
 import { CloseButton } from './close-button';
 

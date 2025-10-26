@@ -1,6 +1,3 @@
-import * as React from 'react';
-import { LuCheck, LuPipette } from 'react-icons/lu';
-
 import {
   ColorPicker as ChakraColorPicker,
   For,
@@ -11,6 +8,9 @@ import {
   Text,
   VStack,
 } from '@chakra-ui/react';
+import * as React from 'react';
+import { LuCheck, LuPipette } from 'react-icons/lu';
+
 import type { IconButtonProps, StackProps } from '@chakra-ui/react';
 
 export const ColorPickerTrigger = React.forwardRef<

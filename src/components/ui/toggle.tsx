@@ -1,12 +1,12 @@
 'use client';
 
-import * as React from 'react';
-
 import {
   Button,
   Toggle as ChakraToggle,
   useToggleContext,
 } from '@chakra-ui/react';
+import * as React from 'react';
+
 import type { ButtonProps } from '@chakra-ui/react';
 
 interface ToggleProps extends ChakraToggle.RootProps {

@@ -1,6 +1,6 @@
+import { CheckboxCard as ChakraCheckboxCard } from '@chakra-ui/react';
 import * as React from 'react';
 
-import { CheckboxCard as ChakraCheckboxCard } from '@chakra-ui/react';
 
 export interface CheckboxCardProps extends ChakraCheckboxCard.RootProps {
   icon?: React.ReactElement;

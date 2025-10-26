@@ -1,11 +1,11 @@
-import * as React from 'react';
-
 import {
   Badge,
   type BadgeProps,
   Stat as ChakraStat,
   FormatNumber,
 } from '@chakra-ui/react';
+import * as React from 'react';
+
 
 import { InfoTip } from './toggle-tip';
 

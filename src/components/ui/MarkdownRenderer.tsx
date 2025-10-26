@@ -1,11 +1,11 @@
 'use client';
 
+import { Box, type BoxProps } from '@chakra-ui/react';
+import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 
-import ReactMarkdown from 'react-markdown';
 import type { Components } from 'react-markdown';
 
-import { Box, type BoxProps } from '@chakra-ui/react';
 
 import './markdown-renderer.css';
 

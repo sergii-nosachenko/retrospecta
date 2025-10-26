@@ -1,9 +1,10 @@
+import { Status as ChakraStatus } from '@chakra-ui/react';
 import * as React from 'react';
 
-import { Status as ChakraStatus } from '@chakra-ui/react';
+import { StatusValue } from '@/types/enums';
+
 import type { ColorPalette } from '@chakra-ui/react';
 
-import { StatusValue } from '@/types/enums';
 
 export interface StatusProps extends ChakraStatus.RootProps {
   value?: StatusValue;

@@ -1,8 +1,8 @@
 'use client';
 
+import { Box, Text } from '@chakra-ui/react';
 import { memo, useMemo } from 'react';
 
-import { Box, Text } from '@chakra-ui/react';
 
 import { useColorMode } from '@/components/ui/color-mode';
 import { useTranslations } from '@/translations';

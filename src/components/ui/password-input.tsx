@@ -1,8 +1,5 @@
 'use client';
 
-import * as React from 'react';
-import { LuEye, LuEyeOff } from 'react-icons/lu';
-
 import {
   Box,
   HStack,
@@ -13,6 +10,9 @@ import {
   mergeRefs,
   useControllableState,
 } from '@chakra-ui/react';
+import * as React from 'react';
+import { LuEye, LuEyeOff } from 'react-icons/lu';
+
 import type {
   ButtonProps,
   GroupProps,

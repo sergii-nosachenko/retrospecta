@@ -1,5 +1,10 @@
 'use client';
 
+
+
+import { useChart } from '@chakra-ui/charts';
+import { Box, Heading } from '@chakra-ui/react';
+import { memo } from 'react';
 import {
   Bar,
   BarChart,
@@ -9,11 +14,6 @@ import {
   XAxis,
   YAxis,
 } from 'recharts';
-
-import { memo } from 'react';
-
-import { useChart } from '@chakra-ui/charts';
-import { Box, Heading } from '@chakra-ui/react';
 
 import { useTranslations } from '@/translations';
 

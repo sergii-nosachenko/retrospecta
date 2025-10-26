@@ -1,10 +1,10 @@
 'use client';
 
+import { Box } from '@chakra-ui/react';
+import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useState } from 'react';
 
-import { useRouter } from 'next/navigation';
 
-import { Box } from '@chakra-ui/react';
 
 import { getCurrentUser, signOut } from '@/actions/auth';
 import { ErrorState } from '@/components/common/ErrorState';

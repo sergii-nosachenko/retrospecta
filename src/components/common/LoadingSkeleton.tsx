@@ -1,5 +1,3 @@
-import { memo, useMemo } from 'react';
-
 import {
   Box,
   Card,
@@ -8,6 +6,8 @@ import {
   Stack,
   VStack,
 } from '@chakra-ui/react';
+import { memo, useMemo } from 'react';
+
 
 const DecisionSkeletonCard = memo(() => (
   <Card.Root>

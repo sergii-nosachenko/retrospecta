@@ -1,9 +1,5 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
-
-import { useRouter } from 'next/navigation';
-
 import {
   Badge,
   Box,
@@ -14,6 +10,10 @@ import {
   Text,
   VStack,
 } from '@chakra-ui/react';
+import { useRouter } from 'next/navigation';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+
+
 
 import { reanalyzeDecision } from '@/actions/analysis';
 import { getDecision } from '@/actions/decisions';

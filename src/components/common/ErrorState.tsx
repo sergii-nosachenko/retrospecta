@@ -1,6 +1,6 @@
+import { Box, Button, Stack } from '@chakra-ui/react';
 import { memo, useCallback } from 'react';
 
-import { Box, Button, Stack } from '@chakra-ui/react';
 
 import { useTranslations } from '@/translations';
 

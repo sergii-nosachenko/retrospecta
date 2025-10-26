@@ -1,7 +1,5 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
-
 import {
   Badge,
   Box,
@@ -13,10 +11,11 @@ import {
   Text,
   VStack,
 } from '@chakra-ui/react';
+import { useCallback, useEffect, useState } from 'react';
+
 
 import { reanalyzeDecision } from '@/actions/analysis';
 import { deleteDecision, getDecision } from '@/actions/decisions';
-import { MarkdownRenderer } from '@/components/ui/MarkdownRenderer';
 import {
   DialogBody,
   DialogCloseTrigger,
@@ -26,6 +25,7 @@ import {
   DialogRoot,
   DialogTitle,
 } from '@/components/ui/dialog';
+import { MarkdownRenderer } from '@/components/ui/MarkdownRenderer';
 import { toaster } from '@/components/ui/toaster';
 import {
   getDecisionTypeIcon,

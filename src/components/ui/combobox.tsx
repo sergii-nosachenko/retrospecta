@@ -1,8 +1,8 @@
 'use client';
 
+import { Combobox as ChakraCombobox, Portal } from '@chakra-ui/react';
 import * as React from 'react';
 
-import { Combobox as ChakraCombobox, Portal } from '@chakra-ui/react';
 
 import { CloseButton } from './close-button';
 

@@ -1,9 +1,9 @@
 'use client';
 
+import { Button, Stack } from '@chakra-ui/react';
 import { useCallback } from 'react';
 import { FaGoogle } from 'react-icons/fa';
 
-import { Button, Stack } from '@chakra-ui/react';
 
 import { signInWithGoogle } from '@/actions/auth';
 import { useTranslations } from '@/translations';

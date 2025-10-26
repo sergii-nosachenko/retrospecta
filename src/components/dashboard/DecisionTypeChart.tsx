@@ -1,5 +1,10 @@
 'use client';
 
+
+
+import { useChart } from '@chakra-ui/charts';
+import { Box, Heading } from '@chakra-ui/react';
+import { memo, useMemo } from 'react';
 import {
   Cell,
   Legend,
@@ -8,11 +13,6 @@ import {
   ResponsiveContainer,
   Tooltip,
 } from 'recharts';
-
-import { memo, useMemo } from 'react';
-
-import { useChart } from '@chakra-ui/charts';
-import { Box, Heading } from '@chakra-ui/react';
 
 import { useTranslations } from '@/translations';
 

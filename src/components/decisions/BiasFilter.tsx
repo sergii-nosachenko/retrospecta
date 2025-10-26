@@ -1,8 +1,8 @@
 'use client';
 
+import { createListCollection } from '@chakra-ui/react';
 import { useCallback, useMemo } from 'react';
 
-import { createListCollection } from '@chakra-ui/react';
 
 import {
   SelectContent,

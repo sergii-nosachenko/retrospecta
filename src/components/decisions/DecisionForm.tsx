@@ -1,9 +1,5 @@
 'use client';
 
-import { useCallback, useState } from 'react';
-
-import { useRouter } from 'next/navigation';
-
 import {
   Box,
   Button,
@@ -13,6 +9,10 @@ import {
   Textarea,
   VStack,
 } from '@chakra-ui/react';
+import { useRouter } from 'next/navigation';
+import { useCallback, useState } from 'react';
+
+
 
 import { analyzeDecision } from '@/actions/analysis';
 import { createDecision } from '@/actions/decisions';

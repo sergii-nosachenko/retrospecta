@@ -1,12 +1,12 @@
-import * as React from 'react';
-import { HiOutlineInformationCircle } from 'react-icons/hi';
-
 import {
   Popover as ChakraPopover,
   IconButton,
   type IconButtonProps,
   Portal,
 } from '@chakra-ui/react';
+import * as React from 'react';
+import { HiOutlineInformationCircle } from 'react-icons/hi';
+
 
 export interface ToggleTipProps extends ChakraPopover.RootProps {
   showArrow?: boolean;

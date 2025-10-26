@@ -1,6 +1,6 @@
+import { Skeleton as ChakraSkeleton, Circle, Stack } from '@chakra-ui/react';
 import * as React from 'react';
 
-import { Skeleton as ChakraSkeleton, Circle, Stack } from '@chakra-ui/react';
 import type {
   SkeletonProps as ChakraSkeletonProps,
   CircleProps,

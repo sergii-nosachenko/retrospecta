@@ -1,6 +1,6 @@
+import { Box, Card, Heading, Stack, Text } from '@chakra-ui/react';
 import { type ReactNode, memo } from 'react';
 
-import { Box, Card, Heading, Stack, Text } from '@chakra-ui/react';
 
 interface AuthPageLayoutProps {
   title: string;

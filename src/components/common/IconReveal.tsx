@@ -1,9 +1,9 @@
 'use client';
 
+import { Box, Group } from '@chakra-ui/react';
 import { memo, useMemo } from 'react';
 import { LuBrain, LuLightbulb, LuTarget } from 'react-icons/lu';
 
-import { Box, Group } from '@chakra-ui/react';
 
 const PULSE_KEYFRAMES = `
   @keyframes pulse1 {

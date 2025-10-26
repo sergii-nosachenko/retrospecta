@@ -1,8 +1,8 @@
 'use client';
 
+import { Box } from '@chakra-ui/react';
 import { type ReactNode, memo, useMemo } from 'react';
 
-import { Box } from '@chakra-ui/react';
 
 interface AuroraBackgroundProps {
   children?: ReactNode;

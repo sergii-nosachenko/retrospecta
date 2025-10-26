@@ -1,6 +1,6 @@
+import { Breadcrumb, type SystemStyleObject } from '@chakra-ui/react';
 import * as React from 'react';
 
-import { Breadcrumb, type SystemStyleObject } from '@chakra-ui/react';
 
 export interface BreadcrumbRootProps extends Breadcrumb.RootProps {
   separator?: React.ReactNode;

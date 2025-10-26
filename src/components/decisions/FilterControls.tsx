@@ -1,9 +1,9 @@
 'use client';
 
+import { Button, HStack, Text } from '@chakra-ui/react';
 import { useMemo } from 'react';
 import { LuX } from 'react-icons/lu';
 
-import { Button, HStack, Text } from '@chakra-ui/react';
 
 import { type DecisionType } from '@/constants/decisions';
 import { useTranslations } from '@/translations';

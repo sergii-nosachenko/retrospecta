@@ -1,6 +1,6 @@
+import { QrCode as ChakraQrCode } from '@chakra-ui/react';
 import * as React from 'react';
 
-import { QrCode as ChakraQrCode } from '@chakra-ui/react';
 
 export interface QrCodeProps
   extends Omit<ChakraQrCode.RootProps, 'fill' | 'overlay'> {

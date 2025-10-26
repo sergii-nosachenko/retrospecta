@@ -1,6 +1,6 @@
+import { Box, Text } from '@chakra-ui/react';
 import { memo } from 'react';
 
-import { Box, Text } from '@chakra-ui/react';
 
 interface ErrorMessageProps {
   message: string;

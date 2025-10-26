@@ -1,6 +1,6 @@
+import { NumberInput as ChakraNumberInput } from '@chakra-ui/react';
 import * as React from 'react';
 
-import { NumberInput as ChakraNumberInput } from '@chakra-ui/react';
 
 export type NumberInputProps = ChakraNumberInput.RootProps;
 

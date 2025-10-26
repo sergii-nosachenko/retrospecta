@@ -1,8 +1,8 @@
 'use client';
 
+import { Button, Stack, Text, Textarea, VStack } from '@chakra-ui/react';
 import { useCallback, useMemo, useState } from 'react';
 
-import { Button, Stack, Text, Textarea, VStack } from '@chakra-ui/react';
 
 import { analyzeDecision } from '@/actions/analysis';
 import { createDecision } from '@/actions/decisions';

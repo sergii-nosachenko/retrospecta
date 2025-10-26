@@ -1,11 +1,11 @@
 'use client';
 
+import { Avatar, Group, IconButton, Separator, Text } from '@chakra-ui/react';
+import Link from 'next/link';
 import { memo, useCallback } from 'react';
 import { LuChartBar, LuLogOut, LuMoon, LuSun } from 'react-icons/lu';
 
-import Link from 'next/link';
 
-import { Avatar, Group, IconButton, Separator, Text } from '@chakra-ui/react';
 
 import {
   MenuContent,

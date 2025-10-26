@@ -1,7 +1,7 @@
+import { Box, Group } from '@chakra-ui/react';
 import { memo } from 'react';
 import { LuBrain, LuLightbulb, LuTarget } from 'react-icons/lu';
 
-import { Box, Group } from '@chakra-ui/react';
 
 interface LogoProps {
   size?: string;

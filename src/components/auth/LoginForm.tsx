@@ -1,8 +1,8 @@
 'use client';
 
+import { Box, Button, Input, Stack } from '@chakra-ui/react';
 import { useCallback, useState } from 'react';
 
-import { Box, Button, Input, Stack } from '@chakra-ui/react';
 
 import { login } from '@/actions/auth';
 import { ErrorMessage } from '@/components/auth/ErrorMessage';

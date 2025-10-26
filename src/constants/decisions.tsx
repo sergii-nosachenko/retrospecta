@@ -10,8 +10,9 @@ import {
   LuZap,
 } from 'react-icons/lu';
 
-import type { TFunction } from '@/translations';
 import { DecisionType, ProcessingStatus } from '@/types/enums';
+
+import type { TFunction } from '@/translations';
 
 export { DecisionType };
 
