@@ -18,12 +18,10 @@ import {
   type DecisionType,
   FilterControls,
 } from '@/components/decisions/FilterControls';
-import {
-  type SortField,
-  type SortOrder,
-  SortingControls,
-} from '@/components/decisions/SortingControls';
+import { SortingControls } from '@/components/decisions/SortingControls';
+import { ROUTES } from '@/constants/routes';
 import { useDecisions } from '@/contexts/DecisionsContext';
+import { type SortField, type SortOrder } from '@/types/enums';
 
 export const DecisionsPageContent = () => {
   const {
@@ -46,12 +44,12 @@ export const DecisionsPageContent = () => {
   const router = useRouter();
 
   useEffect(() => {
-    getCurrentUser().then((userData) => {
+    void getCurrentUser().then((userData) => {
       if (userData) {
         setUser(userData);
       } else {
         // User is not authenticated, redirect to login
-        router.push('/login');
+        router.push(ROUTES.LOGIN);
       }
       setIsCheckingAuth(false);
     });

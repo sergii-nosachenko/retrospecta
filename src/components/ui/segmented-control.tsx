@@ -11,10 +11,10 @@ interface Item {
 }
 
 export interface SegmentedControlProps extends SegmentGroup.RootProps {
-  items: Array<string | Item>;
+  items: (string | Item)[];
 }
 
-function normalize(items: Array<string | Item>): Item[] {
+function normalize(items: (string | Item)[]): Item[] {
   return items.map((item) => {
     if (typeof item === 'string') return { value: item, label: item };
     return item;
@@ -24,7 +24,7 @@ function normalize(items: Array<string | Item>): Item[] {
 export const SegmentedControl = React.forwardRef<
   HTMLDivElement,
   SegmentedControlProps
->(function SegmentedControl(props, ref) {
+>((props, ref) => {
   const { items, ...rest } = props;
   const data = React.useMemo(() => normalize(items), [items]);
 

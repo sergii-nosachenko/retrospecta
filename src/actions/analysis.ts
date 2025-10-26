@@ -2,8 +2,10 @@
 
 import { revalidatePath } from 'next/cache';
 
+import { ROUTES } from '@/constants/routes';
 import { analyzeDecision as runAIAnalysis } from '@/lib/ai/analyzer';
 import { prisma } from '@/lib/prisma';
+import { ProcessingStatus } from '@/types/enums';
 
 import type { ActionResult } from './decisions';
 
@@ -33,12 +35,12 @@ export async function analyzeDecision(
     // Update status to PROCESSING
     await prisma.decision.update({
       where: { id: decisionId },
-      data: { status: 'PROCESSING' },
+      data: { status: ProcessingStatus.PROCESSING },
     });
 
     // Revalidate to show processing status
-    revalidatePath('/decisions');
-    revalidatePath(`/decisions/${decisionId}`);
+    revalidatePath(ROUTES.DECISIONS);
+    revalidatePath(`${ROUTES.DECISIONS}/${decisionId}`);
 
     // Run AI analysis
     const analysisResult = await runAIAnalysis({
@@ -52,18 +54,18 @@ export async function analyzeDecision(
       await prisma.decision.update({
         where: { id: decisionId },
         data: {
-          status: 'FAILED',
-          errorMessage: analysisResult.error || 'Analysis failed',
+          status: ProcessingStatus.FAILED,
+          errorMessage: analysisResult.error ?? 'Analysis failed',
           analysisAttempts: { increment: 1 },
         },
       });
 
-      revalidatePath('/decisions');
-      revalidatePath(`/decisions/${decisionId}`);
+      revalidatePath(ROUTES.DECISIONS);
+      revalidatePath(`${ROUTES.DECISIONS}/${decisionId}`);
 
       return {
         success: false,
-        error: analysisResult.error || 'Analysis failed',
+        error: analysisResult.error ?? 'Analysis failed',
       };
     }
 
@@ -71,7 +73,7 @@ export async function analyzeDecision(
     await prisma.decision.update({
       where: { id: decisionId },
       data: {
-        status: 'COMPLETED',
+        status: ProcessingStatus.COMPLETED,
         decisionType: analysisResult.data.category,
         biases: analysisResult.data.biases,
         alternatives: analysisResult.data.alternatives,
@@ -83,8 +85,8 @@ export async function analyzeDecision(
     });
 
     // Revalidate to show completed analysis
-    revalidatePath('/decisions');
-    revalidatePath(`/decisions/${decisionId}`);
+    revalidatePath(ROUTES.DECISIONS);
+    revalidatePath(`${ROUTES.DECISIONS}/${decisionId}`);
 
     return {
       success: true,
@@ -97,7 +99,7 @@ export async function analyzeDecision(
       await prisma.decision.update({
         where: { id: decisionId },
         data: {
-          status: 'FAILED',
+          status: ProcessingStatus.FAILED,
           errorMessage:
             error instanceof Error
               ? error.message
@@ -106,8 +108,8 @@ export async function analyzeDecision(
         },
       });
 
-      revalidatePath('/decisions');
-      revalidatePath(`/decisions/${decisionId}`);
+      revalidatePath(ROUTES.DECISIONS);
+      revalidatePath(`${ROUTES.DECISIONS}/${decisionId}`);
     } catch (updateError) {
       console.error('Error updating decision status:', updateError);
     }
@@ -135,13 +137,13 @@ export async function reanalyzeDecision(
     await prisma.decision.update({
       where: { id: decisionId },
       data: {
-        status: 'PENDING',
+        status: ProcessingStatus.PENDING,
         errorMessage: null,
       },
     });
 
-    revalidatePath('/decisions');
-    revalidatePath(`/decisions/${decisionId}`);
+    revalidatePath(ROUTES.DECISIONS);
+    revalidatePath(`${ROUTES.DECISIONS}/${decisionId}`);
 
     // Trigger new analysis
     return await analyzeDecision(decisionId);

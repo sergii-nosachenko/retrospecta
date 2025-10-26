@@ -13,7 +13,7 @@ interface ComboboxControlProps extends ChakraCombobox.ControlProps {
 export const ComboboxControl = React.forwardRef<
   HTMLDivElement,
   ComboboxControlProps
->(function ComboboxControl(props, ref) {
+>((props, ref) => {
   const { children, clearable, ...rest } = props;
   return (
     <ChakraCombobox.Control {...rest} ref={ref}>
@@ -29,7 +29,7 @@ export const ComboboxControl = React.forwardRef<
 const ComboboxClearTrigger = React.forwardRef<
   HTMLButtonElement,
   ChakraCombobox.ClearTriggerProps
->(function ComboboxClearTrigger(props, ref) {
+>((props, ref) => {
   return (
     <ChakraCombobox.ClearTrigger asChild {...props} ref={ref}>
       <CloseButton
@@ -51,7 +51,7 @@ interface ComboboxContentProps extends ChakraCombobox.ContentProps {
 export const ComboboxContent = React.forwardRef<
   HTMLDivElement,
   ComboboxContentProps
->(function ComboboxContent(props, ref) {
+>((props, ref) => {
   const { portalled = true, portalRef, ...rest } = props;
   return (
     <Portal disabled={!portalled} container={portalRef}>
@@ -65,7 +65,7 @@ export const ComboboxContent = React.forwardRef<
 export const ComboboxItem = React.forwardRef<
   HTMLDivElement,
   ChakraCombobox.ItemProps
->(function ComboboxItem(props, ref) {
+>((props, ref) => {
   const { item, children, ...rest } = props;
   return (
     <ChakraCombobox.Item key={item.value} item={item} {...rest} ref={ref}>
@@ -78,7 +78,7 @@ export const ComboboxItem = React.forwardRef<
 export const ComboboxRoot = React.forwardRef<
   HTMLDivElement,
   ChakraCombobox.RootProps
->(function ComboboxRoot(props, ref) {
+>((props, ref) => {
   return (
     <ChakraCombobox.Root
       {...props}
@@ -95,7 +95,7 @@ interface ComboboxItemGroupProps extends ChakraCombobox.ItemGroupProps {
 export const ComboboxItemGroup = React.forwardRef<
   HTMLDivElement,
   ComboboxItemGroupProps
->(function ComboboxItemGroup(props, ref) {
+>((props, ref) => {
   const { children, label, ...rest } = props;
   return (
     <ChakraCombobox.ItemGroup {...rest} ref={ref}>

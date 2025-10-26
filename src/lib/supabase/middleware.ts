@@ -2,6 +2,8 @@ import { createServerClient } from '@supabase/ssr';
 
 import { type NextRequest, NextResponse } from 'next/server';
 
+import { ROUTES } from '@/constants/routes';
+
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({
     request,
@@ -39,7 +41,7 @@ export async function updateSession(request: NextRequest) {
   } = await supabase.auth.getUser();
 
   // List of public paths that don't require authentication
-  const publicPaths = ['/', '/login', '/register', '/auth'];
+  const publicPaths = [ROUTES.HOME, ROUTES.LOGIN, ROUTES.REGISTER, '/auth'];
   const isPublicPath = publicPaths.some((path) =>
     request.nextUrl.pathname.startsWith(path)
   );
@@ -47,7 +49,7 @@ export async function updateSession(request: NextRequest) {
   if (!user && !isPublicPath) {
     // No user, redirect to the login page
     const url = request.nextUrl.clone();
-    url.pathname = '/login';
+    url.pathname = ROUTES.LOGIN;
     return NextResponse.redirect(url);
   }
 

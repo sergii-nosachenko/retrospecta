@@ -6,10 +6,12 @@ import { FaGoogle } from 'react-icons/fa';
 import { Button, Stack } from '@chakra-ui/react';
 
 import { signInWithGoogle } from '@/actions/auth';
+import { useTranslations } from '@/translations';
 
 export const OAuthButtons = () => {
+  const { t } = useTranslations();
   const handleGoogleSignIn = useCallback(() => {
-    signInWithGoogle();
+    void signInWithGoogle();
   }, []);
 
   return (
@@ -22,7 +24,7 @@ export const OAuthButtons = () => {
         py={3}
       >
         <FaGoogle />
-        Continue with Google
+        {t('auth.oauth.google')}
       </Button>
     </Stack>
   );

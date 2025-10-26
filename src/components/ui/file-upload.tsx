@@ -3,7 +3,6 @@
 import * as React from 'react';
 import { LuFile, LuUpload, LuX } from 'react-icons/lu';
 
-import type { ButtonProps, RecipeProps } from '@chakra-ui/react';
 import {
   Button,
   FileUpload as ChakraFileUpload,
@@ -14,6 +13,7 @@ import {
   useFileUploadContext,
   useRecipe,
 } from '@chakra-ui/react';
+import type { ButtonProps, RecipeProps } from '@chakra-ui/react';
 
 export interface FileUploadRootProps extends ChakraFileUpload.RootProps {
   inputProps?: React.InputHTMLAttributes<HTMLInputElement>;
@@ -22,7 +22,7 @@ export interface FileUploadRootProps extends ChakraFileUpload.RootProps {
 export const FileUploadRoot = React.forwardRef<
   HTMLInputElement,
   FileUploadRootProps
->(function FileUploadRoot(props, ref) {
+>((props, ref) => {
   const { children, inputProps, ...rest } = props;
   return (
     <ChakraFileUpload.Root {...rest}>
@@ -41,7 +41,7 @@ export interface FileUploadDropzoneProps
 export const FileUploadDropzone = React.forwardRef<
   HTMLInputElement,
   FileUploadDropzoneProps
->(function FileUploadDropzone(props, ref) {
+>((props, ref) => {
   const { children, label, description, ...rest } = props;
   return (
     <ChakraFileUpload.Dropzone ref={ref} {...rest}>
@@ -67,7 +67,7 @@ interface FileUploadItemProps extends VisibilityProps {
 }
 
 const FileUploadItem = React.forwardRef<HTMLLIElement, FileUploadItemProps>(
-  function FileUploadItem(props, ref) {
+  (props, ref) => {
     const { file, showSize, clearable } = props;
     return (
       <ChakraFileUpload.Item file={file} ref={ref}>
@@ -107,7 +107,7 @@ interface FileUploadListProps
 export const FileUploadList = React.forwardRef<
   HTMLUListElement,
   FileUploadListProps
->(function FileUploadList(props, ref) {
+>((props, ref) => {
   const { showSize, clearable, files, ...rest } = props;
 
   const fileUpload = useFileUploadContext();
@@ -136,7 +136,7 @@ interface FileInputProps extends Assign<ButtonProps, RecipeProps<'input'>> {
 }
 
 export const FileInput = React.forwardRef<HTMLButtonElement, FileInputProps>(
-  function FileInput(props, ref) {
+  (props, ref) => {
     const inputRecipe = useRecipe({ key: 'input' });
     const [recipeProps, restProps] = inputRecipe.splitVariantProps(props);
     const { placeholder = 'Select file(s)', ...rest } = restProps;

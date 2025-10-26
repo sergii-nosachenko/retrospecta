@@ -1,18 +1,18 @@
 import * as React from 'react';
 import { LuCheck, LuClipboard, LuLink } from 'react-icons/lu';
 
-import type { ButtonProps, InputProps } from '@chakra-ui/react';
 import {
   Button,
   Clipboard as ChakraClipboard,
   IconButton,
   Input,
 } from '@chakra-ui/react';
+import type { ButtonProps, InputProps } from '@chakra-ui/react';
 
 const ClipboardIcon = React.forwardRef<
   HTMLDivElement,
   ChakraClipboard.IndicatorProps
->(function ClipboardIcon(props, ref) {
+>((props, ref) => {
   return (
     <ChakraClipboard.Indicator copied={<LuCheck />} {...props} ref={ref}>
       <LuClipboard />
@@ -23,7 +23,7 @@ const ClipboardIcon = React.forwardRef<
 const ClipboardCopyText = React.forwardRef<
   HTMLDivElement,
   ChakraClipboard.IndicatorProps
->(function ClipboardCopyText(props, ref) {
+>((props, ref) => {
   return (
     <ChakraClipboard.Indicator copied="Copied" {...props} ref={ref}>
       Copy
@@ -34,7 +34,7 @@ const ClipboardCopyText = React.forwardRef<
 export const ClipboardLabel = React.forwardRef<
   HTMLLabelElement,
   ChakraClipboard.LabelProps
->(function ClipboardLabel(props, ref) {
+>((props, ref) => {
   return (
     <ChakraClipboard.Label
       textStyle="sm"
@@ -48,7 +48,7 @@ export const ClipboardLabel = React.forwardRef<
 });
 
 export const ClipboardButton = React.forwardRef<HTMLButtonElement, ButtonProps>(
-  function ClipboardButton(props, ref) {
+  (props, ref) => {
     return (
       <ChakraClipboard.Trigger asChild>
         <Button ref={ref} size="sm" variant="surface" {...props}>
@@ -61,7 +61,7 @@ export const ClipboardButton = React.forwardRef<HTMLButtonElement, ButtonProps>(
 );
 
 export const ClipboardLink = React.forwardRef<HTMLButtonElement, ButtonProps>(
-  function ClipboardLink(props, ref) {
+  (props, ref) => {
     return (
       <ChakraClipboard.Trigger asChild>
         <Button
@@ -85,7 +85,7 @@ export const ClipboardLink = React.forwardRef<HTMLButtonElement, ButtonProps>(
 export const ClipboardIconButton = React.forwardRef<
   HTMLButtonElement,
   ButtonProps
->(function ClipboardIconButton(props, ref) {
+>((props, ref) => {
   return (
     <ChakraClipboard.Trigger asChild>
       <IconButton ref={ref} size="xs" variant="subtle" {...props}>
@@ -97,7 +97,7 @@ export const ClipboardIconButton = React.forwardRef<
 });
 
 export const ClipboardInput = React.forwardRef<HTMLInputElement, InputProps>(
-  function ClipboardInputElement(props, ref) {
+  (props, ref) => {
     return (
       <ChakraClipboard.Input asChild>
         <Input ref={ref} {...props} />

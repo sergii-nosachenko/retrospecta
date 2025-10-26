@@ -11,26 +11,27 @@ import {
   SelectTrigger,
   SelectValueText,
 } from '@/components/ui/select';
+import { useTranslations } from '@/translations';
 
-// Common cognitive biases that might be detected
+// Common cognitive biases that might be detected - using enum keys
 export const COMMON_BIASES = [
-  'Confirmation Bias',
-  'Anchoring Bias',
-  'Availability Heuristic',
-  'Sunk Cost Fallacy',
-  'Recency Bias',
-  'Overconfidence Bias',
-  'Hindsight Bias',
-  'Status Quo Bias',
-  'Loss Aversion',
-  'Framing Effect',
-  'Groupthink',
-  'Authority Bias',
-  'Bandwagon Effect',
-  'Dunning-Kruger Effect',
-  'Optimism Bias',
-  'Negativity Bias',
-];
+  'CONFIRMATION_BIAS',
+  'ANCHORING_BIAS',
+  'AVAILABILITY_HEURISTIC',
+  'SUNK_COST_FALLACY',
+  'RECENCY_BIAS',
+  'OVERCONFIDENCE_BIAS',
+  'HINDSIGHT_BIAS',
+  'STATUS_QUO_BIAS',
+  'LOSS_AVERSION',
+  'FRAMING_EFFECT',
+  'GROUPTHINK',
+  'AUTHORITY_BIAS',
+  'BANDWAGON_EFFECT',
+  'DUNNING_KRUGER_EFFECT',
+  'OPTIMISM_BIAS',
+  'NEGATIVITY_BIAS',
+] as const;
 
 interface BiasFilterProps {
   selectedBiases: string[];
@@ -41,15 +42,17 @@ export const BiasFilter = ({
   selectedBiases,
   onBiasesChange,
 }: BiasFilterProps) => {
+  const { t } = useTranslations();
+
   const biasOptions = useMemo(
     () =>
       createListCollection({
         items: COMMON_BIASES.map((bias) => ({
-          label: bias,
+          label: t(`decisions.biases.${bias}` as const),
           value: bias,
         })),
       }),
-    []
+    [t]
   );
 
   const handleBiasChange = useCallback(
@@ -69,11 +72,16 @@ export const BiasFilter = ({
       multiple
     >
       <SelectTrigger>
-        <SelectValueText placeholder="Biases" px={3}>
-          {(items) => {
-            if (items.length === 0) return 'Biases';
+        <SelectValueText
+          placeholder={t('decisions.filters.biases.label')}
+          px={3}
+        >
+          {(items: { label: string; value: string }[]) => {
+            if (items.length === 0) return t('decisions.filters.biases.label');
             if (items.length === 1) return items[0].label;
-            return `${items.length} biases selected`;
+            return t('decisions.filters.biases.selected', {
+              count: items.length,
+            });
           }}
         </SelectValueText>
       </SelectTrigger>

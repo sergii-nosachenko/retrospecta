@@ -5,18 +5,20 @@ import { memo, useMemo } from 'react';
 import { Box, Text } from '@chakra-ui/react';
 
 import { useColorMode } from '@/components/ui/color-mode';
+import { useTranslations } from '@/translations';
 
 interface TooltipProps {
   active?: boolean;
-  payload?: Array<{
+  payload?: {
     name: string;
     value: number;
     payload?: { name: string };
-  }>;
+  }[];
 }
 
 export const CustomPieTooltip = memo<TooltipProps>(({ active, payload }) => {
   const { colorMode } = useColorMode();
+  const { t } = useTranslations();
 
   const isDark = useMemo(() => colorMode === 'dark', [colorMode]);
 
@@ -35,7 +37,7 @@ export const CustomPieTooltip = memo<TooltipProps>(({ active, payload }) => {
 
   const textColor = useMemo(() => (isDark ? 'gray.300' : 'gray.600'), [isDark]);
 
-  if (!active || !payload || !payload.length) {
+  if (!active || !payload?.length) {
     return null;
   }
 
@@ -52,7 +54,8 @@ export const CustomPieTooltip = memo<TooltipProps>(({ active, payload }) => {
         {payload[0].name}
       </Text>
       <Text fontSize="sm" color={textColor}>
-        Count: {payload[0].value}
+        {t('dashboard.chart.tooltip.count')}
+        {payload[0].value}
       </Text>
     </Box>
   );
@@ -62,6 +65,7 @@ CustomPieTooltip.displayName = 'CustomPieTooltip';
 
 export const CustomBarTooltip = memo<TooltipProps>(({ active, payload }) => {
   const { colorMode } = useColorMode();
+  const { t } = useTranslations();
 
   const isDark = useMemo(() => colorMode === 'dark', [colorMode]);
 
@@ -80,7 +84,7 @@ export const CustomBarTooltip = memo<TooltipProps>(({ active, payload }) => {
 
   const textColor = useMemo(() => (isDark ? 'gray.300' : 'gray.600'), [isDark]);
 
-  if (!active || !payload || !payload.length) {
+  if (!active || !payload?.length) {
     return null;
   }
 
@@ -97,7 +101,8 @@ export const CustomBarTooltip = memo<TooltipProps>(({ active, payload }) => {
         {payload[0].payload?.name}
       </Text>
       <Text fontSize="sm" color={textColor}>
-        Occurrences: {payload[0].value}
+        {t('dashboard.chart.tooltip.occurrences')}
+        {payload[0].value}
       </Text>
     </Box>
   );

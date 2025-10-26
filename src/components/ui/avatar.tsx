@@ -17,7 +17,7 @@ export interface AvatarProps extends ChakraAvatar.RootProps {
 }
 
 export const Avatar = React.forwardRef<HTMLDivElement, AvatarProps>(
-  function Avatar(props, ref) {
+  (props, ref) => {
     const { name, src, srcSet, loading, icon, fallback, children, ...rest } =
       props;
     return (

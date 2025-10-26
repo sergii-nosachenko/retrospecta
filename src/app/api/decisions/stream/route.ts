@@ -1,10 +1,11 @@
-import { Prisma } from '@prisma/client';
+import { type Prisma } from '@prisma/client';
 
-import { NextRequest } from 'next/server';
+import { type NextRequest } from 'next/server';
 
-import { DecisionType } from '@/components/decisions/DecisionTypeFilter';
+import { type DecisionType } from '@/constants/decisions';
 import { prisma } from '@/lib/prisma';
 import { createClient } from '@/lib/supabase/server';
+import { SortField, SortOrder, StreamEventType } from '@/types/enums';
 
 // Force Node.js runtime for Prisma compatibility
 export const runtime = 'nodejs';
@@ -30,8 +31,8 @@ export async function GET(request: NextRequest) {
 
   // Get sorting and filtering parameters from query string
   const { searchParams } = new URL(request.url);
-  const sortBy = searchParams.get('sortBy') || 'createdAt';
-  const sortOrder = searchParams.get('sortOrder') || 'desc';
+  const sortBy = searchParams.get('sortBy') ?? SortField.CREATED_AT;
+  const sortOrder = searchParams.get('sortOrder') ?? SortOrder.DESC;
   // Support both old 'categories' and new 'decisionTypes' parameter names
   const decisionTypes =
     searchParams.getAll('decisionTypes').length > 0
@@ -44,25 +45,27 @@ export async function GET(request: NextRequest) {
   // Validate sortBy parameter
   // Support both 'category' (old) and 'decisionType' (new) for backwards compatibility
   const validSortFields = [
-    'createdAt',
-    'updatedAt',
-    'status',
-    'decisionType',
-    'category',
+    SortField.CREATED_AT,
+    SortField.UPDATED_AT,
+    SortField.STATUS,
+    SortField.DECISION_TYPE,
+    'category', // Keep for backwards compatibility
   ] as const;
   type ValidSortField = (typeof validSortFields)[number];
-  let sortField: 'createdAt' | 'updatedAt' | 'status' | 'decisionType' =
-    'createdAt';
+  let sortField: SortField = SortField.CREATED_AT;
 
   if (validSortFields.includes(sortBy as ValidSortField)) {
     // Map old 'category' to new 'decisionType'
     sortField =
-      sortBy === 'category' ? 'decisionType' : (sortBy as typeof sortField);
+      sortBy === 'category' ? SortField.DECISION_TYPE : (sortBy as SortField);
   }
 
   // Validate sortOrder parameter
-  const order =
-    sortOrder === 'asc' || sortOrder === 'desc' ? sortOrder : ('desc' as const);
+  const order: SortOrder =
+    (sortOrder as SortOrder) === SortOrder.ASC ||
+    (sortOrder as SortOrder) === SortOrder.DESC
+      ? (sortOrder as SortOrder)
+      : SortOrder.DESC;
 
   // Create a readable stream for SSE
   const encoder = new TextEncoder();
@@ -94,7 +97,7 @@ export async function GET(request: NextRequest) {
 
           // Always send pending count to keep client in sync
           sendEvent({
-            type: 'pending',
+            type: StreamEventType.PENDING,
             count: pendingDecisions.length,
             decisions: pendingDecisions,
           });
@@ -157,14 +160,14 @@ export async function GET(request: NextRequest) {
           });
 
           sendEvent({
-            type: 'update',
+            type: StreamEventType.UPDATE,
             decisions: allDecisions,
             timestamp: new Date().toISOString(),
           });
         } catch (error) {
           console.error('Error checking pending decisions:', error);
           sendEvent({
-            type: 'error',
+            type: StreamEventType.ERROR,
             message: 'Failed to fetch decisions',
           });
         }
@@ -174,12 +177,14 @@ export async function GET(request: NextRequest) {
       await checkPendingDecisions();
 
       // Set up interval for polling every 3 seconds for faster real-time updates
-      const intervalId = setInterval(checkPendingDecisions, 3000);
+      const intervalId = setInterval(() => {
+        void checkPendingDecisions();
+      }, 3000);
 
       // Send keepalive every 30 seconds to prevent connection timeout
       const keepaliveId = setInterval(() => {
         controller.enqueue(encoder.encode(': keepalive\n\n'));
-      }, 30000);
+      }, 30_000);
 
       // Handle client disconnect
       request.signal.addEventListener('abort', () => {

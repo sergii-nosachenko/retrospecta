@@ -10,7 +10,7 @@ export interface SwitchProps extends ChakraSwitch.RootProps {
 }
 
 export const Switch = React.forwardRef<HTMLInputElement, SwitchProps>(
-  function Switch(props, ref) {
+  (props, ref) => {
     const { inputProps, children, rootRef, trackLabel, thumbLabel, ...rest } =
       props;
 

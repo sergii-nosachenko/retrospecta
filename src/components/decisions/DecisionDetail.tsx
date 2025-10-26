@@ -18,7 +18,14 @@ import {
 import { reanalyzeDecision } from '@/actions/analysis';
 import { getDecision } from '@/actions/decisions';
 import { toaster } from '@/components/ui/toaster';
-import { getCategoryIcon, getCategoryLabel } from '@/constants/decisions';
+import {
+  getDecisionTypeIcon,
+  getDecisionTypeLabel,
+  getStatusLabel,
+} from '@/constants/decisions';
+import { ROUTES } from '@/constants/routes';
+import { useTranslations } from '@/translations';
+import { ProcessingStatus } from '@/types/enums';
 
 interface DecisionData {
   id: string;
@@ -43,13 +50,13 @@ interface DecisionDetailProps {
 
 const getStatusColor = (status: string): string => {
   switch (status) {
-    case 'COMPLETED':
+    case ProcessingStatus.COMPLETED:
       return 'green';
-    case 'PENDING':
+    case ProcessingStatus.PENDING:
       return 'yellow';
-    case 'PROCESSING':
+    case ProcessingStatus.PROCESSING:
       return 'blue';
-    case 'FAILED':
+    case ProcessingStatus.FAILED:
       return 'red';
     default:
       return 'gray';
@@ -59,11 +66,12 @@ const getStatusColor = (status: string): string => {
 export const DecisionDetail = ({
   decision: initialDecision,
 }: DecisionDetailProps) => {
+  const { t } = useTranslations();
   const router = useRouter();
   const [decision, setDecision] = useState(initialDecision);
   const [isPolling, setIsPolling] = useState(
-    initialDecision.status === 'PENDING' ||
-      initialDecision.status === 'PROCESSING'
+    initialDecision.status === ProcessingStatus.PENDING ||
+      initialDecision.status === ProcessingStatus.PROCESSING
   );
   const [isReanalyzing, setIsReanalyzing] = useState(false);
 
@@ -71,20 +79,22 @@ export const DecisionDetail = ({
   useEffect(() => {
     if (!isPolling) return;
 
-    const interval = setInterval(async () => {
-      const result = await getDecision(decision.id);
+    const interval = setInterval(() => {
+      void (async () => {
+        const result = await getDecision(decision.id);
 
-      if (result.success && result.data) {
-        setDecision(result.data);
+        if (result.success && result.data) {
+          setDecision(result.data);
 
-        // Stop polling if analysis is complete or failed
-        if (
-          result.data.status === 'COMPLETED' ||
-          result.data.status === 'FAILED'
-        ) {
-          setIsPolling(false);
+          // Stop polling if analysis is complete or failed
+          if (
+            result.data.status === ProcessingStatus.COMPLETED ||
+            result.data.status === ProcessingStatus.FAILED
+          ) {
+            setIsPolling(false);
+          }
         }
-      }
+      })();
     }, 3000); // Poll every 3 seconds
 
     return () => clearInterval(interval);
@@ -95,8 +105,8 @@ export const DecisionDetail = ({
     [decision.status]
   );
   const decisionTypeLabel = useMemo(
-    () => getCategoryLabel(decision.decisionType),
-    [decision.decisionType]
+    () => getDecisionTypeLabel(t, decision.decisionType),
+    [decision.decisionType, t]
   );
 
   const formattedDate = useMemo(
@@ -119,8 +129,8 @@ export const DecisionDetail = ({
 
       if (result.success) {
         toaster.create({
-          title: 'Re-analysis Started',
-          description: 'Your decision is being re-analyzed...',
+          title: t('toasts.success.reAnalysisStarted.title'),
+          description: t('toasts.success.reAnalysisStarted.description'),
           type: 'success',
           duration: 3000,
         });
@@ -129,8 +139,8 @@ export const DecisionDetail = ({
         setIsPolling(true);
       } else {
         toaster.create({
-          title: 'Error',
-          description: result.error || 'Failed to re-analyze decision',
+          title: t('toasts.error.title'),
+          description: result.error ?? t('toasts.errors.reAnalyze'),
           type: 'error',
           duration: 5000,
         });
@@ -138,18 +148,18 @@ export const DecisionDetail = ({
     } catch (error) {
       console.error('Error re-analyzing:', error);
       toaster.create({
-        title: 'Error',
-        description: 'An unexpected error occurred',
+        title: t('toasts.error.title'),
+        description: t('toasts.errors.unexpected'),
         type: 'error',
         duration: 5000,
       });
     } finally {
       setIsReanalyzing(false);
     }
-  }, [decision.id]);
+  }, [decision.id, t]);
 
   const handleBackClick = useCallback(() => {
-    router.push('/decisions');
+    router.push(ROUTES.DECISIONS);
   }, [router]);
 
   return (
@@ -162,9 +172,9 @@ export const DecisionDetail = ({
           align={{ base: 'start', sm: 'center' }}
           gap={4}
         >
-          <Heading size="2xl">Decision Details</Heading>
+          <Heading size="2xl">{t('decisions.detail.title')}</Heading>
           <Badge colorPalette={statusColor} size="lg">
-            {decision.status}
+            {getStatusLabel(t, decision.status)}
           </Badge>
         </Stack>
 
@@ -179,7 +189,7 @@ export const DecisionDetail = ({
                   color="gray.600"
                   _dark={{ color: 'gray.400' }}
                 >
-                  Situation
+                  {t('decisions.detail.sections.situation')}
                 </Text>
                 <Text>{decision.situation}</Text>
               </Box>
@@ -191,7 +201,7 @@ export const DecisionDetail = ({
                   color="gray.600"
                   _dark={{ color: 'gray.400' }}
                 >
-                  Decision
+                  {t('decisions.detail.sections.decision')}
                 </Text>
                 <Text>{decision.decision}</Text>
               </Box>
@@ -204,7 +214,7 @@ export const DecisionDetail = ({
                     color="gray.600"
                     _dark={{ color: 'gray.400' }}
                   >
-                    Reasoning
+                    {t('decisions.detail.sections.reasoning')}
                   </Text>
                   <Text>{decision.reasoning}</Text>
                 </Box>
@@ -217,7 +227,7 @@ export const DecisionDetail = ({
                   color="gray.600"
                   _dark={{ color: 'gray.400' }}
                 >
-                  Created
+                  {t('decisions.detail.sections.created')}
                 </Text>
                 <Text>{formattedDate}</Text>
               </Box>
@@ -226,10 +236,12 @@ export const DecisionDetail = ({
         </Card.Root>
 
         {/* Analysis Results */}
-        {decision.status === 'COMPLETED' && (
+        {decision.status === ProcessingStatus.COMPLETED && (
           <Card.Root>
             <Card.Header>
-              <Heading size="xl">AI Analysis</Heading>
+              <Heading size="xl">
+                {t('decisions.detail.sections.analysis')}
+              </Heading>
             </Card.Header>
             <Card.Body>
               <VStack gap={6} align="stretch">
@@ -241,11 +253,11 @@ export const DecisionDetail = ({
                       color="gray.600"
                       _dark={{ color: 'gray.400' }}
                     >
-                      Decision Type
+                      {t('decisions.detail.sections.decisionType')}
                     </Text>
                     <Badge colorPalette="blue" size="lg">
                       <Stack direction="row" align="center" gap={1.5}>
-                        {getCategoryIcon(decision.decisionType)}
+                        {getDecisionTypeIcon(decision.decisionType)}
                         <span>{decisionTypeLabel}</span>
                       </Stack>
                     </Badge>
@@ -260,7 +272,7 @@ export const DecisionDetail = ({
                       color="gray.600"
                       _dark={{ color: 'gray.400' }}
                     >
-                      Potential Cognitive Biases
+                      {t('decisions.detail.sections.biases')}
                     </Text>
                     <Stack direction="row" wrap="wrap" gap={2}>
                       {decision.biases.map((bias, index) => (
@@ -280,7 +292,7 @@ export const DecisionDetail = ({
                       color="gray.600"
                       _dark={{ color: 'gray.400' }}
                     >
-                      Overlooked Alternatives
+                      {t('decisions.detail.sections.alternatives')}
                     </Text>
                     <Text whiteSpace="pre-wrap">{decision.alternatives}</Text>
                   </Box>
@@ -294,7 +306,7 @@ export const DecisionDetail = ({
                       color="gray.600"
                       _dark={{ color: 'gray.400' }}
                     >
-                      Additional Insights
+                      {t('decisions.detail.sections.insights')}
                     </Text>
                     <Text whiteSpace="pre-wrap">{decision.insights}</Text>
                   </Box>
@@ -305,21 +317,20 @@ export const DecisionDetail = ({
         )}
 
         {/* Processing State */}
-        {(decision.status === 'PENDING' ||
-          decision.status === 'PROCESSING') && (
+        {(decision.status === ProcessingStatus.PENDING ||
+          decision.status === ProcessingStatus.PROCESSING) && (
           <Card.Root>
             <Card.Body>
               <VStack gap={3}>
                 <Text fontWeight="bold" fontSize="lg">
-                  Analysis in Progress
+                  {t('decisions.detail.states.analyzing.title')}
                 </Text>
                 <Text
                   color="gray.600"
                   _dark={{ color: 'gray.400' }}
                   textAlign="center"
                 >
-                  Your decision is being analyzed by AI. This usually takes a
-                  few seconds...
+                  {t('decisions.detail.states.analyzing.description')}
                 </Text>
               </VStack>
             </Card.Body>
@@ -327,29 +338,29 @@ export const DecisionDetail = ({
         )}
 
         {/* Error State */}
-        {decision.status === 'FAILED' && (
+        {decision.status === ProcessingStatus.FAILED && (
           <Card.Root colorPalette="red">
             <Card.Body>
               <VStack gap={3}>
                 <Text fontWeight="bold" fontSize="lg">
-                  Analysis Failed
+                  {t('decisions.detail.states.failed.title')}
                 </Text>
                 <Text
                   color="gray.600"
                   _dark={{ color: 'gray.400' }}
                   textAlign="center"
                 >
-                  {decision.errorMessage ||
-                    'An error occurred while analyzing your decision.'}
+                  {decision.errorMessage ??
+                    t('decisions.detail.states.failed.description')}
                 </Text>
                 <Button
                   colorPalette="red"
                   variant="outline"
                   onClick={handleReanalyze}
                   loading={isReanalyzing}
-                  loadingText="Retrying..."
+                  loadingText={t('common.actions.retrying')}
                 >
-                  Retry Analysis
+                  {t('decisions.detail.states.failed.retry')}
                 </Button>
               </VStack>
             </Card.Body>
@@ -358,7 +369,7 @@ export const DecisionDetail = ({
 
         {/* Actions */}
         <Button variant="outline" onClick={handleBackClick} alignSelf="start">
-          Back to Decisions
+          {t('common.actions.back')}
         </Button>
       </VStack>
     </Box>

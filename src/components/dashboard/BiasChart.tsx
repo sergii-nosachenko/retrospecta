@@ -15,10 +15,12 @@ import { memo } from 'react';
 import { useChart } from '@chakra-ui/charts';
 import { Box, Heading } from '@chakra-ui/react';
 
+import { useTranslations } from '@/translations';
+
 import { CustomBarTooltip } from './ChartTooltips';
 
 interface BiasChartProps {
-  data: Array<{ name: string; count: number }>;
+  data: { name: string; count: number }[];
 }
 
 const CHART_SERIES = [{ name: 'count' as const, color: 'teal.solid' }];
@@ -26,6 +28,8 @@ const CHART_MARGIN = { top: 5, right: 5, left: -20, bottom: 80 } as const;
 const BAR_RADIUS: [number, number, number, number] = [8, 8, 0, 0];
 
 export const BiasChart = memo<BiasChartProps>(({ data }) => {
+  const { t } = useTranslations();
+
   const chart = useChart({
     data,
     series: CHART_SERIES,
@@ -41,7 +45,7 @@ export const BiasChart = memo<BiasChartProps>(({ data }) => {
       overflow="hidden"
     >
       <Heading mb={4} size="md">
-        Top Cognitive Biases
+        {t('decisions.detail.sections.biases')}
       </Heading>
       <Box width="100%" height={{ base: '400px', md: '300px' }}>
         <ResponsiveContainer width="99%" height="100%">

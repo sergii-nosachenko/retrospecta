@@ -9,7 +9,7 @@ export interface QrCodeProps
 }
 
 export const QrCode = React.forwardRef<HTMLDivElement, QrCodeProps>(
-  function QrCode(props, ref) {
+  (props, ref) => {
     const { children, fill, overlay, ...rest } = props;
     return (
       <ChakraQrCode.Root ref={ref} {...rest}>

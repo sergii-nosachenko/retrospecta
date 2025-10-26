@@ -25,8 +25,13 @@ import {
   MenuTrigger,
 } from '@/components/ui/menu';
 import { toaster } from '@/components/ui/toaster';
-import { getCategoryIcon, getCategoryLabel } from '@/constants/decisions';
+import {
+  getDecisionTypeIcon,
+  getDecisionTypeLabel,
+} from '@/constants/decisions';
 import { useDecisions } from '@/contexts/DecisionsContext';
+import { type TFunction, useTranslations } from '@/translations';
+import { DecisionActionType, ProcessingStatus } from '@/types/enums';
 
 import { DecisionDetailModal } from './DecisionDetailModal';
 import { DecisionFormModal } from './DecisionFormModal';
@@ -36,7 +41,7 @@ interface Decision {
   situation: string;
   decision: string;
   reasoning: string | null;
-  status: string;
+  status: ProcessingStatus;
   decisionType: string | null;
   biases: string[];
   alternatives: string | null;
@@ -56,199 +61,221 @@ interface DecisionCardProps {
   onDelete: (id: string) => void;
 }
 
+// Utility functions for decision cards
+const getStatusColor = (status: string) => {
+  switch (status) {
+    case ProcessingStatus.COMPLETED:
+      return 'green';
+    case ProcessingStatus.PENDING:
+      return 'yellow';
+    case ProcessingStatus.PROCESSING:
+      return 'blue';
+    case ProcessingStatus.FAILED:
+      return 'red';
+    default:
+      return 'gray';
+  }
+};
+
+const getStatusLabel = (status: ProcessingStatus, t: TFunction) => {
+  switch (status) {
+    case ProcessingStatus.COMPLETED:
+      return t('decisions.list.status.completed');
+    case ProcessingStatus.PENDING:
+      return t('decisions.list.status.pending');
+    case ProcessingStatus.PROCESSING:
+      return t('decisions.list.status.processing');
+    case ProcessingStatus.FAILED:
+      return t('decisions.list.status.failed');
+    default:
+      return status;
+  }
+};
+
+const truncateText = (text: string, maxLength: number) => {
+  if (text.length <= maxLength) return text;
+  return `${text.slice(0, Math.max(0, maxLength))}...`;
+};
+
 // Memoized decision card component to prevent unnecessary re-renders
-const DecisionCard = memo(function DecisionCard({
-  decision,
-  onClick,
-  onReanalyze,
-  onDelete,
-}: DecisionCardProps) {
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'COMPLETED':
-        return 'green';
-      case 'PENDING':
-        return 'yellow';
-      case 'PROCESSING':
-        return 'blue';
-      case 'FAILED':
-        return 'red';
-      default:
-        return 'gray';
-    }
-  };
+const DecisionCard = memo(
+  ({ decision, onClick, onReanalyze, onDelete }: DecisionCardProps) => {
+    const { t } = useTranslations();
 
-  const truncateText = (text: string, maxLength: number) => {
-    if (text.length <= maxLength) return text;
-    return text.substring(0, maxLength) + '...';
-  };
+    const handleMenuAction = useCallback(
+      (action: DecisionActionType, event: React.MouseEvent) => {
+        // Stop event propagation to prevent card click
+        event.stopPropagation();
 
-  const handleMenuAction = (
-    action: 'reanalyze' | 'delete',
-    e: React.MouseEvent
-  ) => {
-    // Stop event propagation to prevent card click
-    e.stopPropagation();
+        if (action === DecisionActionType.REANALYZE) {
+          onReanalyze(decision.id);
 
-    if (action === 'reanalyze') {
-      onReanalyze(decision.id);
-    } else if (action === 'delete') {
-      onDelete(decision.id);
-    }
-  };
+          return;
+        }
 
-  return (
-    <Card.Root
-      _hover={{ shadow: 'md', cursor: 'pointer' }}
-      transition="all 0.2s"
-      onClick={() => onClick(decision.id)}
-    >
-      <Card.Body p={6}>
-        <Stack gap={4}>
-          <Stack
-            direction={{ base: 'column', sm: 'row' }}
-            justify="space-between"
-            align={{ base: 'start', sm: 'center' }}
-            gap={3}
-          >
-            {decision.decisionType ? (
-              <Badge colorPalette="blue" px={3} py={1}>
-                <Stack direction="row" align="center" gap={1.5}>
-                  {getCategoryIcon(decision.decisionType)}
-                  <span>{getCategoryLabel(decision.decisionType)}</span>
-                </Stack>
-              </Badge>
-            ) : (
-              <Box />
-            )}
-            <Stack direction="row" align="center" gap={2}>
-              <Badge
-                colorPalette={getStatusColor(decision.status)}
-                px={3}
-                py={1}
-              >
-                {decision.status}
-              </Badge>
-              <Text
-                fontSize="sm"
-                color="gray.500"
-                _dark={{ color: 'gray.400' }}
-              >
-                {new Date(decision.createdAt).toLocaleDateString('en-US', {
-                  year: 'numeric',
-                  month: 'short',
-                  day: 'numeric',
-                })}
-              </Text>
-              <MenuRoot positioning={{ placement: 'bottom-end' }}>
-                <MenuTrigger asChild>
-                  <IconButton
-                    variant="ghost"
-                    size="sm"
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    <HiOutlineDotsVertical />
-                  </IconButton>
-                </MenuTrigger>
-                <MenuContent minW="150px">
-                  <MenuItem
-                    value="reanalyze"
-                    onClick={(e) =>
-                      handleMenuAction(
-                        'reanalyze',
-                        e as unknown as React.MouseEvent
-                      )
-                    }
-                    gap={2}
-                    px={3}
-                    py={2}
-                  >
-                    <LuRefreshCw />
-                    Re-analyze
-                  </MenuItem>
-                  <MenuItem
-                    value="delete"
-                    color="red.500"
-                    _dark={{ color: 'red.400' }}
-                    onClick={(e) =>
-                      handleMenuAction(
-                        'delete',
-                        e as unknown as React.MouseEvent
-                      )
-                    }
-                    gap={2}
-                    px={3}
-                    py={2}
-                  >
-                    <LuTrash2 />
-                    Delete
-                  </MenuItem>
-                </MenuContent>
-              </MenuRoot>
-            </Stack>
-          </Stack>
+        if (action === DecisionActionType.DELETE) {
+          onDelete(decision.id);
+        }
+      },
+      [decision.id, onReanalyze, onDelete]
+    );
 
-          <Box>
-            <Text
-              fontWeight="semibold"
-              mb={2}
-              fontSize="sm"
-              color="gray.600"
-              _dark={{ color: 'gray.400' }}
+    return (
+      <Card.Root
+        _hover={{ shadow: 'md', cursor: 'pointer' }}
+        transition="all 0.2s"
+        onClick={() => onClick(decision.id)}
+      >
+        <Card.Body p={6}>
+          <Stack gap={4}>
+            <Stack
+              direction={{ base: 'column', sm: 'row' }}
+              justify="space-between"
+              align={{ base: 'start', sm: 'center' }}
+              gap={3}
             >
-              Decision
-            </Text>
-            <Text fontSize="lg" fontWeight="medium" lineHeight="1.6">
-              {truncateText(decision.decision, 150)}
-            </Text>
-          </Box>
-
-          <Box>
-            <Text
-              fontWeight="semibold"
-              mb={2}
-              fontSize="sm"
-              color="gray.600"
-              _dark={{ color: 'gray.400' }}
-            >
-              Situation
-            </Text>
-            <Text
-              color="gray.700"
-              _dark={{ color: 'gray.300' }}
-              lineHeight="1.6"
-            >
-              {truncateText(decision.situation, 200)}
-            </Text>
-          </Box>
-
-          {decision.status === 'COMPLETED' && decision.biases.length > 0 && (
-            <Stack direction="row" gap={2} flexWrap="wrap" pt={2}>
-              {decision.biases.slice(0, 3).map((bias, index) => (
+              {decision.decisionType ? (
+                <Badge colorPalette="blue" px={3} py={1}>
+                  <Stack direction="row" align="center" gap={1.5}>
+                    {getDecisionTypeIcon(decision.decisionType)}
+                    <span>
+                      {getDecisionTypeLabel(t, decision.decisionType)}
+                    </span>
+                  </Stack>
+                </Badge>
+              ) : (
+                <Box />
+              )}
+              <Stack direction="row" align="center" gap={2}>
                 <Badge
-                  key={index}
-                  colorPalette="orange"
-                  size="sm"
+                  colorPalette={getStatusColor(decision.status)}
                   px={3}
                   py={1}
                 >
-                  {bias}
+                  {getStatusLabel(decision.status, t)}
                 </Badge>
-              ))}
-              {decision.biases.length > 3 && (
-                <Badge colorPalette="gray" size="sm" px={3} py={1}>
-                  +{decision.biases.length - 3} more
-                </Badge>
-              )}
+                <Text
+                  fontSize="sm"
+                  color="gray.500"
+                  _dark={{ color: 'gray.400' }}
+                >
+                  {new Date(decision.createdAt).toLocaleDateString('en-US', {
+                    year: 'numeric',
+                    month: 'short',
+                    day: 'numeric',
+                  })}
+                </Text>
+                <MenuRoot positioning={{ placement: 'bottom-end' }}>
+                  <MenuTrigger asChild>
+                    <IconButton
+                      variant="ghost"
+                      size="sm"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <HiOutlineDotsVertical />
+                    </IconButton>
+                  </MenuTrigger>
+                  <MenuContent minW="150px">
+                    <MenuItem
+                      value={DecisionActionType.REANALYZE}
+                      onClick={(event) =>
+                        handleMenuAction(DecisionActionType.REANALYZE, event)
+                      }
+                      gap={2}
+                      px={3}
+                      py={2}
+                    >
+                      <LuRefreshCw />
+                      {t('decisions.list.actions.reAnalyze')}
+                    </MenuItem>
+                    <MenuItem
+                      value={DecisionActionType.DELETE}
+                      color="red.500"
+                      _dark={{ color: 'red.400' }}
+                      onClick={(e) =>
+                        handleMenuAction(
+                          DecisionActionType.DELETE,
+                          e as unknown as React.MouseEvent
+                        )
+                      }
+                      gap={2}
+                      px={3}
+                      py={2}
+                    >
+                      <LuTrash2 />
+                      {t('decisions.list.actions.delete')}
+                    </MenuItem>
+                  </MenuContent>
+                </MenuRoot>
+              </Stack>
             </Stack>
-          )}
-        </Stack>
-      </Card.Body>
-    </Card.Root>
-  );
-});
+
+            <Box>
+              <Text
+                fontWeight="semibold"
+                mb={2}
+                fontSize="sm"
+                color="gray.600"
+                _dark={{ color: 'gray.400' }}
+              >
+                {t('decisions.list.columns.decision')}
+              </Text>
+              <Text fontSize="lg" fontWeight="medium" lineHeight="1.6">
+                {truncateText(decision.decision, 150)}
+              </Text>
+            </Box>
+
+            <Box>
+              <Text
+                fontWeight="semibold"
+                mb={2}
+                fontSize="sm"
+                color="gray.600"
+                _dark={{ color: 'gray.400' }}
+              >
+                {t('decisions.list.columns.situation')}
+              </Text>
+              <Text
+                color="gray.700"
+                _dark={{ color: 'gray.300' }}
+                lineHeight="1.6"
+              >
+                {truncateText(decision.situation, 200)}
+              </Text>
+            </Box>
+
+            {decision.status === ProcessingStatus.COMPLETED &&
+              decision.biases.length > 0 && (
+                <Stack direction="row" gap={2} flexWrap="wrap" pt={2}>
+                  {decision.biases.slice(0, 3).map((bias, index) => (
+                    <Badge
+                      key={index}
+                      colorPalette="orange"
+                      size="sm"
+                      px={3}
+                      py={1}
+                    >
+                      {bias}
+                    </Badge>
+                  ))}
+                  {decision.biases.length > 3 && (
+                    <Badge colorPalette="gray" size="sm" px={3} py={1}>
+                      {t('decisions.list.actions.showMore', {
+                        count: decision.biases.length - 3,
+                      })}
+                    </Badge>
+                  )}
+                </Stack>
+              )}
+          </Stack>
+        </Card.Body>
+      </Card.Root>
+    );
+  }
+);
 
 export const DecisionList = ({ decisions }: DecisionListProps) => {
+  const { t } = useTranslations();
   const { optimisticUpdateStatus, optimisticDelete } = useDecisions();
   const [selectedDecisionId, setSelectedDecisionId] = useState<string | null>(
     null
@@ -265,24 +292,24 @@ export const DecisionList = ({ decisions }: DecisionListProps) => {
     async (decisionId: string) => {
       try {
         // Optimistically update status immediately for instant UI feedback
-        optimisticUpdateStatus(decisionId, 'PROCESSING');
+        optimisticUpdateStatus(decisionId, ProcessingStatus.PROCESSING);
 
         const result = await reanalyzeDecision(decisionId);
 
         if (result.success) {
           toaster.create({
-            title: 'Re-analysis Started',
-            description: 'Your decision is being re-analyzed...',
+            title: t('toasts.success.reAnalysisStarted.title'),
+            description: t('toasts.success.reAnalysisStarted.description'),
             type: 'info',
             duration: 2000,
           });
         } else {
           // Revert optimistic update on error
-          optimisticUpdateStatus(decisionId, 'COMPLETED');
+          optimisticUpdateStatus(decisionId, ProcessingStatus.COMPLETED);
 
           toaster.create({
-            title: 'Error',
-            description: result.error || 'Failed to re-analyze decision',
+            title: t('toasts.error.title'),
+            description: result.error ?? t('toasts.errors.reAnalyze'),
             type: 'error',
             duration: 5000,
           });
@@ -291,17 +318,17 @@ export const DecisionList = ({ decisions }: DecisionListProps) => {
         console.error('Error re-analyzing:', error);
 
         // Revert optimistic update on error
-        optimisticUpdateStatus(decisionId, 'COMPLETED');
+        optimisticUpdateStatus(decisionId, ProcessingStatus.COMPLETED);
 
         toaster.create({
-          title: 'Error',
-          description: 'An unexpected error occurred',
+          title: t('toasts.error.title'),
+          description: t('toasts.errors.unexpected'),
           type: 'error',
           duration: 5000,
         });
       }
     },
-    [optimisticUpdateStatus]
+    [optimisticUpdateStatus, t]
   );
 
   const handleDelete = useCallback(
@@ -314,15 +341,15 @@ export const DecisionList = ({ decisions }: DecisionListProps) => {
 
         if (result.success) {
           toaster.create({
-            title: 'Decision Deleted',
-            description: 'Your decision has been deleted successfully',
+            title: t('toasts.success.decisionDeleted.title'),
+            description: t('toasts.success.decisionDeleted.description'),
             type: 'success',
             duration: 3000,
           });
         } else {
           toaster.create({
-            title: 'Error',
-            description: result.error || 'Failed to delete decision',
+            title: t('toasts.error.title'),
+            description: result.error ?? t('toasts.errors.deleteDecision'),
             type: 'error',
             duration: 5000,
           });
@@ -333,21 +360,21 @@ export const DecisionList = ({ decisions }: DecisionListProps) => {
         console.error('Error deleting:', error);
 
         toaster.create({
-          title: 'Error',
-          description: 'An unexpected error occurred',
+          title: t('toasts.error.title'),
+          description: t('toasts.errors.unexpected'),
           type: 'error',
           duration: 5000,
         });
       }
     },
-    [optimisticDelete]
+    [optimisticDelete, t]
   );
 
   if (decisions.length === 0) {
     return (
       <EmptyState
-        title="No decisions yet"
-        description="Start recording your decisions to receive AI-powered insights about your decision-making patterns."
+        title={t('decisions.list.empty.title')}
+        description={t('decisions.list.empty.description')}
         py={12}
         icon={
           <Box color="gray.400" _dark={{ color: 'gray.600' }} fontSize="128px">
@@ -358,7 +385,7 @@ export const DecisionList = ({ decisions }: DecisionListProps) => {
         <DecisionFormModal
           trigger={
             <Button colorPalette="blue" size="lg" mt={4} px={6}>
-              New Decision
+              {t('decisions.list.empty.cta')}
             </Button>
           }
         />

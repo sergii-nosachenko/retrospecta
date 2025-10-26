@@ -7,8 +7,10 @@ import { Box, Button, Input, Stack } from '@chakra-ui/react';
 import { signup } from '@/actions/auth';
 import { ErrorMessage } from '@/components/auth/ErrorMessage';
 import { Field } from '@/components/ui/field';
+import { useTranslations } from '@/translations';
 
 export const RegisterForm = () => {
+  const { t } = useTranslations();
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -36,31 +38,31 @@ export const RegisterForm = () => {
       <Stack gap={4}>
         {error && <ErrorMessage message={error} />}
 
-        <Field label="Name" required>
+        <Field label={t('auth.register.form.name.label')} required>
           <Input
             name="name"
             type="text"
-            placeholder="Your name"
+            placeholder={t('auth.register.form.name.placeholder')}
             required
             px={4}
           />
         </Field>
 
-        <Field label="Email" required>
+        <Field label={t('auth.register.form.email.label')} required>
           <Input
             name="email"
             type="email"
-            placeholder="you@example.com"
+            placeholder={t('auth.register.form.email.placeholder')}
             required
             px={4}
           />
         </Field>
 
-        <Field label="Password" required>
+        <Field label={t('auth.register.form.password.label')} required>
           <Input
             name="password"
             type="password"
-            placeholder="Choose a password"
+            placeholder={t('auth.register.form.password.placeholder')}
             required
             minLength={6}
             px={4}
@@ -75,7 +77,7 @@ export const RegisterForm = () => {
           size="lg"
           py={3}
         >
-          Sign Up
+          {t('auth.register.form.submit')}
         </Button>
       </Stack>
     </Box>

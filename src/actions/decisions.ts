@@ -2,12 +2,14 @@
 
 import { revalidatePath } from 'next/cache';
 
+import { ROUTES } from '@/constants/routes';
 import { prisma } from '@/lib/prisma';
 import { createClient } from '@/lib/supabase/server';
 import {
   type CreateDecisionInput,
   createDecisionSchema,
 } from '@/lib/utils/validation';
+import { ProcessingStatus, SortField, SortOrder } from '@/types/enums';
 
 /**
  * Result type for server actions
@@ -60,14 +62,18 @@ export async function createDecision(
       where: { id: user.id },
       update: {
         email: user.email!,
-        name: user.user_metadata?.name || user.email?.split('@')[0],
-        avatarUrl: user.user_metadata?.avatar_url,
+        name:
+          (user.user_metadata?.name as string | undefined) ??
+          user.email?.split('@')[0],
+        avatarUrl: user.user_metadata?.avatar_url as string | undefined,
       },
       create: {
         id: user.id,
         email: user.email!,
-        name: user.user_metadata?.name || user.email?.split('@')[0],
-        avatarUrl: user.user_metadata?.avatar_url,
+        name:
+          (user.user_metadata?.name as string | undefined) ??
+          user.email?.split('@')[0],
+        avatarUrl: user.user_metadata?.avatar_url as string | undefined,
       },
     });
 
@@ -77,8 +83,8 @@ export async function createDecision(
         userId: user.id,
         situation,
         decision,
-        reasoning: reasoning || null,
-        status: 'PENDING',
+        reasoning: reasoning ?? null,
+        status: ProcessingStatus.PENDING,
       },
       select: {
         id: true,
@@ -86,7 +92,7 @@ export async function createDecision(
     });
 
     // Revalidate decisions page
-    revalidatePath('/decisions');
+    revalidatePath(ROUTES.DECISIONS);
 
     return {
       success: true,
@@ -110,11 +116,11 @@ export async function createDecision(
  * @returns Action result with list of decisions or error
  */
 export async function getUserDecisions(
-  sortBy: 'createdAt' | 'updatedAt' | 'status' = 'createdAt',
-  sortOrder: 'asc' | 'desc' = 'desc'
+  sortBy: SortField = SortField.CREATED_AT,
+  sortOrder: SortOrder = SortOrder.DESC
 ): Promise<
   ActionResult<
-    Array<{
+    {
       id: string;
       situation: string;
       decision: string;
@@ -126,7 +132,7 @@ export async function getUserDecisions(
       insights: string | null;
       createdAt: Date;
       updatedAt: Date;
-    }>
+    }[]
   >
 > {
   try {
@@ -312,7 +318,7 @@ export async function deleteDecision(
     });
 
     // Revalidate decisions page
-    revalidatePath('/decisions');
+    revalidatePath(ROUTES.DECISIONS);
 
     return {
       success: true,
@@ -335,9 +341,9 @@ export interface DashboardAnalytics {
   completedAnalyses: number;
   pendingAnalyses: number;
   failedAnalyses: number;
-  decisionTypeDistribution: Array<{ name: string; value: number }>;
-  biasDistribution: Array<{ name: string; count: number }>;
-  statusDistribution: Array<{ name: string; value: number }>;
+  decisionTypeDistribution: { name: string; value: number }[];
+  biasDistribution: { name: string; count: number }[];
+  statusDistribution: { name: string; value: number }[];
   recentDecisions: number; // Last 7 days
 }
 
@@ -381,13 +387,15 @@ export async function getDashboardAnalytics(): Promise<
     // Calculate total counts
     const totalDecisions = decisions.length;
     const completedAnalyses = decisions.filter(
-      (d) => d.status === 'COMPLETED'
+      (d) => d.status === ProcessingStatus.COMPLETED
     ).length;
     const pendingAnalyses = decisions.filter(
-      (d) => d.status === 'PENDING' || d.status === 'PROCESSING'
+      (d) =>
+        d.status === ProcessingStatus.PENDING ||
+        d.status === ProcessingStatus.PROCESSING
     ).length;
     const failedAnalyses = decisions.filter(
-      (d) => d.status === 'FAILED'
+      (d) => d.status === ProcessingStatus.FAILED
     ).length;
 
     // Calculate recent decisions (last 7 days)
@@ -400,13 +408,13 @@ export async function getDashboardAnalytics(): Promise<
     // Decision type distribution (only completed analyses)
     const decisionTypeMap = new Map<string, number>();
     decisions.forEach((d) => {
-      if (d.decisionType && d.status === 'COMPLETED') {
-        const count = decisionTypeMap.get(d.decisionType) || 0;
+      if (d.decisionType && d.status === ProcessingStatus.COMPLETED) {
+        const count = decisionTypeMap.get(d.decisionType) ?? 0;
         decisionTypeMap.set(d.decisionType, count + 1);
       }
     });
 
-    const decisionTypeDistribution = Array.from(decisionTypeMap.entries()).map(
+    const decisionTypeDistribution = [...decisionTypeMap.entries()].map(
       ([name, value]) => ({
         name: name
           .split('_')
@@ -419,16 +427,20 @@ export async function getDashboardAnalytics(): Promise<
     // Bias distribution (flatten all biases and count)
     const biasMap = new Map<string, number>();
     decisions.forEach((d) => {
-      if (d.biases && d.biases.length > 0 && d.status === 'COMPLETED') {
+      if (
+        d.biases &&
+        d.biases.length > 0 &&
+        d.status === ProcessingStatus.COMPLETED
+      ) {
         d.biases.forEach((bias) => {
-          const count = biasMap.get(bias) || 0;
+          const count = biasMap.get(bias) ?? 0;
           biasMap.set(bias, count + 1);
         });
       }
     });
 
     // Get top 10 biases
-    const biasDistribution = Array.from(biasMap.entries())
+    const biasDistribution = [...biasMap.entries()]
       .map(([name, count]) => ({ name, count }))
       .sort((a, b) => b.count - a.count)
       .slice(0, 10);
@@ -436,11 +448,11 @@ export async function getDashboardAnalytics(): Promise<
     // Status distribution
     const statusMap = new Map<string, number>();
     decisions.forEach((d) => {
-      const count = statusMap.get(d.status) || 0;
+      const count = statusMap.get(d.status) ?? 0;
       statusMap.set(d.status, count + 1);
     });
 
-    const statusDistribution = Array.from(statusMap.entries()).map(
+    const statusDistribution = [...statusMap.entries()].map(
       ([name, value]) => ({
         name: name.charAt(0) + name.slice(1).toLowerCase(),
         value,

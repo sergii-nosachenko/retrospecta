@@ -7,19 +7,21 @@ import { Box, Button, Input, Stack } from '@chakra-ui/react';
 import { login } from '@/actions/auth';
 import { ErrorMessage } from '@/components/auth/ErrorMessage';
 import { Field } from '@/components/ui/field';
+import { useTranslations } from '@/translations';
 
 export const LoginForm = () => {
+  const { t } = useTranslations();
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = useCallback(
-    async (e: React.FormEvent<HTMLDivElement>) => {
-      e.preventDefault();
+    async (event: React.FormEvent<HTMLDivElement>) => {
+      event.preventDefault();
       setLoading(true);
       setError(null);
 
       const formData = new FormData(
-        e.currentTarget as unknown as HTMLFormElement
+        event.currentTarget as unknown as HTMLFormElement
       );
       const result = await login(formData);
 
@@ -36,21 +38,21 @@ export const LoginForm = () => {
       <Stack gap={4}>
         {error && <ErrorMessage message={error} />}
 
-        <Field label="Email" required>
+        <Field label={t('auth.login.form.email.label')} required>
           <Input
             name="email"
             type="email"
-            placeholder="you@example.com"
+            placeholder={t('auth.login.form.email.placeholder')}
             required
             px={4}
           />
         </Field>
 
-        <Field label="Password" required>
+        <Field label={t('auth.login.form.password.label')} required>
           <Input
             name="password"
             type="password"
-            placeholder="Your password"
+            placeholder={t('auth.login.form.password.placeholder')}
             required
             px={4}
           />
@@ -64,7 +66,7 @@ export const LoginForm = () => {
           size="lg"
           py={3}
         >
-          Sign In
+          {t('auth.login.form.submit')}
         </Button>
       </Stack>
     </Box>

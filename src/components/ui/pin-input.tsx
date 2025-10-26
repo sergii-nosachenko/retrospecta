@@ -10,7 +10,7 @@ export interface PinInputProps extends ChakraPinInput.RootProps {
 }
 
 export const PinInput = React.forwardRef<HTMLInputElement, PinInputProps>(
-  function PinInput(props, ref) {
+  (props, ref) => {
     const { count = 4, inputProps, rootRef, attached, ...rest } = props;
     return (
       <ChakraPinInput.Root ref={rootRef} {...rest}>

@@ -12,9 +12,8 @@ import {
   SelectTrigger,
   SelectValueText,
 } from '@/components/ui/select';
-
-export type SortField = 'createdAt' | 'updatedAt' | 'status' | 'decisionType';
-export type SortOrder = 'asc' | 'desc';
+import { useTranslations } from '@/translations';
+import { SortField, SortOrder } from '@/types/enums';
 
 interface SortingControlsProps {
   sortBy: SortField;
@@ -22,20 +21,30 @@ interface SortingControlsProps {
   onSortChange: (sortBy: SortField, sortOrder: SortOrder) => void;
 }
 
-const sortFields = createListCollection({
-  items: [
-    { label: 'Date Created', value: 'createdAt' },
-    { label: 'Last Updated', value: 'updatedAt' },
-    { label: 'Status', value: 'status' },
-    { label: 'Decision Type', value: 'decisionType' },
-  ],
-});
-
 export const SortingControls = ({
   sortBy,
   sortOrder,
   onSortChange,
 }: SortingControlsProps) => {
+  const { t } = useTranslations();
+
+  const sortFields = createListCollection({
+    items: [
+      {
+        label: t('decisions.sorting.fields.createdAt'),
+        value: SortField.CREATED_AT,
+      },
+      {
+        label: t('decisions.sorting.fields.updatedAt'),
+        value: SortField.UPDATED_AT,
+      },
+      { label: t('decisions.sorting.fields.status'), value: SortField.STATUS },
+      {
+        label: t('decisions.sorting.fields.decisionType'),
+        value: SortField.DECISION_TYPE,
+      },
+    ],
+  });
   const handleValueChange = useCallback(
     (e: { value: string[] }) => {
       if (e.value.length > 0) {
@@ -46,13 +55,16 @@ export const SortingControls = ({
   );
 
   const toggleSortOrder = useCallback(() => {
-    onSortChange(sortBy, sortOrder === 'asc' ? 'desc' : 'asc');
+    onSortChange(
+      sortBy,
+      sortOrder === SortOrder.ASC ? SortOrder.DESC : SortOrder.ASC
+    );
   }, [onSortChange, sortBy, sortOrder]);
 
   return (
     <HStack gap={2}>
       <Text fontSize="sm" fontWeight="medium" color="fg.muted">
-        Sort by:
+        {t('decisions.sorting.label')}
       </Text>
 
       <SelectRoot
@@ -63,7 +75,10 @@ export const SortingControls = ({
         width="180px"
       >
         <SelectTrigger>
-          <SelectValueText placeholder="Select field" px={3} />
+          <SelectValueText
+            placeholder={t('decisions.sorting.placeholder')}
+            px={3}
+          />
         </SelectTrigger>
         <SelectContent>
           {sortFields.items.map((item) => (
@@ -78,10 +93,14 @@ export const SortingControls = ({
         variant="outline"
         size="sm"
         onClick={toggleSortOrder}
-        aria-label={`Sort ${sortOrder === 'asc' ? 'descending' : 'ascending'}`}
+        aria-label={
+          sortOrder === SortOrder.ASC
+            ? t('decisions.sorting.descending')
+            : t('decisions.sorting.ascending')
+        }
         px={2}
       >
-        {sortOrder === 'asc' ? <LuArrowUp /> : <LuArrowDown />}
+        {sortOrder === SortOrder.ASC ? <LuArrowUp /> : <LuArrowDown />}
       </Button>
     </HStack>
   );

@@ -10,7 +10,7 @@ export interface BlockquoteProps extends ChakraBlockquote.RootProps {
 }
 
 export const Blockquote = React.forwardRef<HTMLDivElement, BlockquoteProps>(
-  function Blockquote(props, ref) {
+  (props, ref) => {
     const { children, cite, citeUrl, showDash, icon, ...rest } = props;
 
     return (

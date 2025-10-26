@@ -5,9 +5,12 @@ import { LuX } from 'react-icons/lu';
 
 import { Button, HStack, Text } from '@chakra-ui/react';
 
+import { type DecisionType } from '@/constants/decisions';
+import { useTranslations } from '@/translations';
+
 import { BiasFilter } from './BiasFilter';
 import { DateRangeFilter } from './DateRangeFilter';
-import { type DecisionType, DecisionTypeFilter } from './DecisionTypeFilter';
+import { DecisionTypeFilter } from './DecisionTypeFilter';
 
 // Re-export for backwards compatibility
 export type { DecisionType };
@@ -35,6 +38,8 @@ export const FilterControls = ({
   onDateToChange,
   onClearFilters,
 }: FilterControlsProps) => {
+  const { t } = useTranslations();
+
   const hasActiveFilters = useMemo(
     () =>
       selectedDecisionTypes.length > 0 ||
@@ -47,7 +52,7 @@ export const FilterControls = ({
   return (
     <HStack gap={3} flexWrap="wrap" align="center">
       <Text fontSize="sm" fontWeight="medium" color="fg.muted">
-        Filter by:
+        {t('decisions.filters.label')}
       </Text>
 
       <DecisionTypeFilter
@@ -76,7 +81,7 @@ export const FilterControls = ({
           px={3}
         >
           <LuX />
-          Clear filters
+          {t('decisions.filters.clear')}
         </Button>
       )}
     </HStack>

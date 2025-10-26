@@ -11,7 +11,7 @@ interface MenuContentProps extends ChakraMenu.ContentProps {
 }
 
 export const MenuContent = React.forwardRef<HTMLDivElement, MenuContentProps>(
-  function MenuContent(props, ref) {
+  (props, ref) => {
     const { portalled = true, portalRef, ...rest } = props;
     return (
       <Portal disabled={!portalled} container={portalRef}>
@@ -26,7 +26,7 @@ export const MenuContent = React.forwardRef<HTMLDivElement, MenuContentProps>(
 export const MenuArrow = React.forwardRef<
   HTMLDivElement,
   ChakraMenu.ArrowProps
->(function MenuArrow(props, ref) {
+>((props, ref) => {
   return (
     <ChakraMenu.Arrow ref={ref} {...props}>
       <ChakraMenu.ArrowTip />
@@ -37,7 +37,7 @@ export const MenuArrow = React.forwardRef<
 export const MenuCheckboxItem = React.forwardRef<
   HTMLDivElement,
   ChakraMenu.CheckboxItemProps
->(function MenuCheckboxItem(props, ref) {
+>((props, ref) => {
   return (
     <ChakraMenu.CheckboxItem ps="8" ref={ref} {...props}>
       <AbsoluteCenter axis="horizontal" insetStart="4" asChild>
@@ -53,7 +53,7 @@ export const MenuCheckboxItem = React.forwardRef<
 export const MenuRadioItem = React.forwardRef<
   HTMLDivElement,
   ChakraMenu.RadioItemProps
->(function MenuRadioItem(props, ref) {
+>((props, ref) => {
   const { children, ...rest } = props;
   return (
     <ChakraMenu.RadioItem ps="8" ref={ref} {...rest}>
@@ -70,7 +70,7 @@ export const MenuRadioItem = React.forwardRef<
 export const MenuItemGroup = React.forwardRef<
   HTMLDivElement,
   ChakraMenu.ItemGroupProps
->(function MenuItemGroup(props, ref) {
+>((props, ref) => {
   const { title, children, ...rest } = props;
   return (
     <ChakraMenu.ItemGroup ref={ref} {...rest}>
@@ -91,7 +91,7 @@ export interface MenuTriggerItemProps extends ChakraMenu.ItemProps {
 export const MenuTriggerItem = React.forwardRef<
   HTMLDivElement,
   MenuTriggerItemProps
->(function MenuTriggerItem(props, ref) {
+>((props, ref) => {
   const { startIcon, children, ...rest } = props;
   return (
     <ChakraMenu.TriggerItem ref={ref} {...rest}>

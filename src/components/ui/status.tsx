@@ -1,24 +1,24 @@
 import * as React from 'react';
 
-import type { ColorPalette } from '@chakra-ui/react';
 import { Status as ChakraStatus } from '@chakra-ui/react';
+import type { ColorPalette } from '@chakra-ui/react';
 
-type StatusValue = 'success' | 'error' | 'warning' | 'info';
+import { StatusValue } from '@/types/enums';
 
 export interface StatusProps extends ChakraStatus.RootProps {
   value?: StatusValue;
 }
 
 const statusMap: Record<StatusValue, ColorPalette> = {
-  success: 'green',
-  error: 'red',
-  warning: 'orange',
-  info: 'blue',
+  [StatusValue.SUCCESS]: 'green',
+  [StatusValue.ERROR]: 'red',
+  [StatusValue.WARNING]: 'orange',
+  [StatusValue.INFO]: 'blue',
 };
 
 export const Status = React.forwardRef<HTMLDivElement, StatusProps>(
-  function Status(props, ref) {
-    const { children, value = 'info', ...rest } = props;
+  (props, ref) => {
+    const { children, value = StatusValue.INFO, ...rest } = props;
     const colorPalette = rest.colorPalette ?? statusMap[value];
     return (
       <ChakraStatus.Root ref={ref} {...rest} colorPalette={colorPalette}>

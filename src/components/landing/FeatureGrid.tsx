@@ -2,30 +2,31 @@ import { memo } from 'react';
 
 import { Stack } from '@chakra-ui/react';
 
+import { useTranslations } from '@/translations';
+
 import { FeatureCard } from './FeatureCard';
 
-const FEATURES = [
-  {
-    icon: '🎯',
-    title: 'Understand Your Decisions',
-    description:
-      'Get AI-powered analysis that categorizes your decision-making style and identifies patterns.',
-  },
-  {
-    icon: '🧠',
-    title: 'Identify Cognitive Biases',
-    description:
-      'Discover hidden biases that might be influencing your choices.',
-  },
-  {
-    icon: '💡',
-    title: 'Explore Alternatives',
-    description:
-      'Uncover overlooked options and perspectives you might have missed.',
-  },
-] as const;
-
 export const FeatureGrid = memo(() => {
+  const { t } = useTranslations();
+
+  const FEATURES = [
+    {
+      icon: t('landing.features.understand.icon'),
+      title: t('landing.features.understand.title'),
+      description: t('landing.features.understand.description'),
+    },
+    {
+      icon: t('landing.features.biases.icon'),
+      title: t('landing.features.biases.title'),
+      description: t('landing.features.biases.description'),
+    },
+    {
+      icon: t('landing.features.alternatives.icon'),
+      title: t('landing.features.alternatives.title'),
+      description: t('landing.features.alternatives.description'),
+    },
+  ] as const;
+
   return (
     <Stack
       direction={{ base: 'column', lg: 'row' }}

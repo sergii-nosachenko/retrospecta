@@ -10,7 +10,7 @@ interface HoverCardContentProps extends HoverCard.ContentProps {
 export const HoverCardContent = React.forwardRef<
   HTMLDivElement,
   HoverCardContentProps
->(function HoverCardContent(props, ref) {
+>((props, ref) => {
   const { portalled = true, portalRef, ...rest } = props;
 
   return (
@@ -25,7 +25,7 @@ export const HoverCardContent = React.forwardRef<
 export const HoverCardArrow = React.forwardRef<
   HTMLDivElement,
   HoverCard.ArrowProps
->(function HoverCardArrow(props, ref) {
+>((props, ref) => {
   return (
     <HoverCard.Arrow ref={ref} {...props}>
       <HoverCard.ArrowTip />

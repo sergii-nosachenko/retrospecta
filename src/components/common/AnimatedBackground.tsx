@@ -1,6 +1,6 @@
 'use client';
 
-import { ReactNode, memo, useMemo } from 'react';
+import { type ReactNode, memo, useMemo } from 'react';
 
 import { Box } from '@chakra-ui/react';
 

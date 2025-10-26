@@ -3,12 +3,6 @@
 import * as React from 'react';
 import { LuEye, LuEyeOff } from 'react-icons/lu';
 
-import type {
-  ButtonProps,
-  GroupProps,
-  InputProps,
-  StackProps,
-} from '@chakra-ui/react';
 import {
   Box,
   HStack,
@@ -18,6 +12,12 @@ import {
   Stack,
   mergeRefs,
   useControllableState,
+} from '@chakra-ui/react';
+import type {
+  ButtonProps,
+  GroupProps,
+  InputProps,
+  StackProps,
 } from '@chakra-ui/react';
 
 export interface PasswordVisibilityProps {
@@ -48,7 +48,7 @@ export interface PasswordInputProps
 export const PasswordInput = React.forwardRef<
   HTMLInputElement,
   PasswordInputProps
->(function PasswordInput(props, ref) {
+>((props, ref) => {
   const {
     rootProps,
     defaultVisible,
@@ -93,7 +93,7 @@ export const PasswordInput = React.forwardRef<
 });
 
 const VisibilityTrigger = React.forwardRef<HTMLButtonElement, ButtonProps>(
-  function VisibilityTrigger(props, ref) {
+  (props, ref) => {
     return (
       <IconButton
         tabIndex={-1}
@@ -118,7 +118,7 @@ interface PasswordStrengthMeterProps extends StackProps {
 export const PasswordStrengthMeter = React.forwardRef<
   HTMLDivElement,
   PasswordStrengthMeterProps
->(function PasswordStrengthMeter(props, ref) {
+>((props, ref) => {
   const { max = 4, value, ...rest } = props;
 
   const percent = (value / max) * 100;

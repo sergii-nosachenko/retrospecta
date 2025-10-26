@@ -9,7 +9,7 @@ export interface RatingProps extends RatingGroup.RootProps {
 }
 
 export const Rating = React.forwardRef<HTMLDivElement, RatingProps>(
-  function Rating(props, ref) {
+  (props, ref) => {
     const { icon, count = 5, label, ...rest } = props;
     return (
       <RatingGroup.Root ref={ref} count={count} {...rest}>

@@ -1,7 +1,6 @@
 import * as React from 'react';
 import { LuCheck, LuPipette } from 'react-icons/lu';
 
-import type { IconButtonProps, StackProps } from '@chakra-ui/react';
 import {
   ColorPicker as ChakraColorPicker,
   For,
@@ -12,11 +11,12 @@ import {
   Text,
   VStack,
 } from '@chakra-ui/react';
+import type { IconButtonProps, StackProps } from '@chakra-ui/react';
 
 export const ColorPickerTrigger = React.forwardRef<
   HTMLButtonElement,
   ChakraColorPicker.TriggerProps & { fitContent?: boolean }
->(function ColorPickerTrigger(props, ref) {
+>((props, ref) => {
   const { fitContent, ...rest } = props;
   return (
     <ChakraColorPicker.Trigger
@@ -32,7 +32,7 @@ export const ColorPickerTrigger = React.forwardRef<
 export const ColorPickerInput = React.forwardRef<
   HTMLInputElement,
   Omit<ChakraColorPicker.ChannelInputProps, 'channel'>
->(function ColorHexInput(props, ref) {
+>((props, ref) => {
   return <ChakraColorPicker.ChannelInput channel="hex" ref={ref} {...props} />;
 });
 
@@ -44,7 +44,7 @@ interface ColorPickerContentProps extends ChakraColorPicker.ContentProps {
 export const ColorPickerContent = React.forwardRef<
   HTMLDivElement,
   ColorPickerContentProps
->(function ColorPickerContent(props, ref) {
+>((props, ref) => {
   const { portalled = true, portalRef, ...rest } = props;
   return (
     <Portal disabled={!portalled} container={portalRef}>
@@ -58,7 +58,7 @@ export const ColorPickerContent = React.forwardRef<
 export const ColorPickerInlineContent = React.forwardRef<
   HTMLDivElement,
   ChakraColorPicker.ContentProps
->(function ColorPickerInlineContent(props, ref) {
+>((props, ref) => {
   return (
     <ChakraColorPicker.Content
       animation="none"
@@ -71,7 +71,7 @@ export const ColorPickerInlineContent = React.forwardRef<
 });
 
 export const ColorPickerSliders = React.forwardRef<HTMLDivElement, StackProps>(
-  function ColorPickerSliders(props, ref) {
+  (props, ref) => {
     return (
       <Stack gap="1" flex="1" px="1" ref={ref} {...props}>
         <ColorPickerChannelSlider channel="hue" />
@@ -84,7 +84,7 @@ export const ColorPickerSliders = React.forwardRef<HTMLDivElement, StackProps>(
 export const ColorPickerArea = React.forwardRef<
   HTMLDivElement,
   ChakraColorPicker.AreaProps
->(function ColorPickerArea(props, ref) {
+>((props, ref) => {
   return (
     <ChakraColorPicker.Area ref={ref} {...props}>
       <ChakraColorPicker.AreaBackground />
@@ -96,7 +96,7 @@ export const ColorPickerArea = React.forwardRef<
 export const ColorPickerEyeDropper = React.forwardRef<
   HTMLButtonElement,
   IconButtonProps
->(function ColorPickerEyeDropper(props, ref) {
+>((props, ref) => {
   return (
     <ChakraColorPicker.EyeDropperTrigger asChild>
       <IconButton size="xs" variant="outline" ref={ref} {...props}>
@@ -109,7 +109,7 @@ export const ColorPickerEyeDropper = React.forwardRef<
 export const ColorPickerChannelSlider = React.forwardRef<
   HTMLDivElement,
   ChakraColorPicker.ChannelSliderProps
->(function ColorPickerSlider(props, ref) {
+>((props, ref) => {
   return (
     <ChakraColorPicker.ChannelSlider ref={ref} {...props}>
       <ChakraColorPicker.TransparencyGrid size="0.6rem" />
@@ -124,7 +124,7 @@ export const ColorPickerSwatchTrigger = React.forwardRef<
   ChakraColorPicker.SwatchTriggerProps & {
     swatchSize?: ChakraColorPicker.SwatchTriggerProps['boxSize'];
   }
->(function ColorPickerSwatchTrigger(props, ref) {
+>((props, ref) => {
   const { swatchSize, children, ...rest } = props;
   return (
     <ChakraColorPicker.SwatchTrigger
@@ -146,7 +146,7 @@ export const ColorPickerSwatchTrigger = React.forwardRef<
 export const ColorPickerRoot = React.forwardRef<
   HTMLDivElement,
   ChakraColorPicker.RootProps
->(function ColorPickerRoot(props, ref) {
+>((props, ref) => {
   return (
     <ChakraColorPicker.Root ref={ref} {...props}>
       {props.children}
@@ -165,7 +165,7 @@ const formatMap = {
 export const ColorPickerChannelInputs = React.forwardRef<
   HTMLDivElement,
   ChakraColorPicker.ViewProps
->(function ColorPickerChannelInputs(props, ref) {
+>((props, ref) => {
   const channels = formatMap[props.format];
   return (
     <ChakraColorPicker.View flexDirection="row" ref={ref} {...props}>
@@ -190,7 +190,7 @@ export const ColorPickerChannelInputs = React.forwardRef<
 export const ColorPickerChannelSliders = React.forwardRef<
   HTMLDivElement,
   ChakraColorPicker.ViewProps
->(function ColorPickerChannelSliders(props, ref) {
+>((props, ref) => {
   const channels = formatMap[props.format];
   return (
     <ChakraColorPicker.View {...props} ref={ref}>

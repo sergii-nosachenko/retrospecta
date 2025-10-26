@@ -5,7 +5,7 @@ import remarkGfm from 'remark-gfm';
 import ReactMarkdown from 'react-markdown';
 import type { Components } from 'react-markdown';
 
-import { Box, BoxProps } from '@chakra-ui/react';
+import { Box, type BoxProps } from '@chakra-ui/react';
 
 import './markdown-renderer.css';
 

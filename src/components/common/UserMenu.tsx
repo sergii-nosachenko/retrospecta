@@ -13,6 +13,8 @@ import {
   MenuRoot,
   MenuTrigger,
 } from '@/components/ui/menu';
+import { ROUTES } from '@/constants/routes';
+import { useTranslations } from '@/translations';
 
 import { useColorMode } from '../ui/color-mode';
 
@@ -48,26 +50,30 @@ const UserAvatar = memo(({ name, avatarUrl, size = 'sm' }: UserAvatarProps) => (
 UserAvatar.displayName = 'UserAvatar';
 
 const UserMenuTrigger = memo(
-  ({ name, avatarUrl }: { name: string; avatarUrl: string | null }) => (
-    <MenuTrigger asChild>
-      <IconButton
-        variant="ghost"
-        size="sm"
-        aria-label="User menu"
-        css={{
-          borderRadius: 'full',
-          _hover: {
-            bg: 'gray.100',
-            _dark: {
-              bg: 'gray.700',
+  ({ name, avatarUrl }: { name: string; avatarUrl: string | null }) => {
+    const { t } = useTranslations();
+
+    return (
+      <MenuTrigger asChild>
+        <IconButton
+          variant="ghost"
+          size="sm"
+          aria-label={t('common.menu.userMenu')}
+          css={{
+            borderRadius: 'full',
+            _hover: {
+              bg: 'gray.100',
+              _dark: {
+                bg: 'gray.700',
+              },
             },
-          },
-        }}
-      >
-        <UserAvatar name={name} avatarUrl={avatarUrl} size="sm" />
-      </IconButton>
-    </MenuTrigger>
-  )
+          }}
+        >
+          <UserAvatar name={name} avatarUrl={avatarUrl} size="sm" />
+        </IconButton>
+      </MenuTrigger>
+    );
+  }
 );
 
 UserMenuTrigger.displayName = 'UserMenuTrigger';
@@ -106,29 +112,35 @@ const UserInfoHeader = memo(({ user }: { user: UserMenuProps['user'] }) => (
 
 UserInfoHeader.displayName = 'UserInfoHeader';
 
-const DashboardMenuItem = memo(() => (
-  <MenuItem
-    value="dashboard"
-    asChild
-    css={{
-      py: 2,
-      px: 3,
-      cursor: 'pointer',
-    }}
-  >
-    <Link href="/decisions/dashboard">
-      <Group gap={3} alignItems="center">
-        <LuChartBar />
-        <Text fontSize="sm">Dashboard</Text>
-      </Group>
-    </Link>
-  </MenuItem>
-));
+const DashboardMenuItem = memo(() => {
+  const { t } = useTranslations();
+
+  return (
+    <MenuItem
+      value="dashboard"
+      asChild
+      css={{
+        py: 2,
+        px: 3,
+        cursor: 'pointer',
+      }}
+    >
+      <Link href={ROUTES.DASHBOARD}>
+        <Group gap={3} alignItems="center">
+          <LuChartBar />
+          <Text fontSize="sm">{t('common.navigation.dashboard')}</Text>
+        </Group>
+      </Link>
+    </MenuItem>
+  );
+});
 
 DashboardMenuItem.displayName = 'DashboardMenuItem';
 
 const ThemeToggleMenuItem = memo(
   ({ colorMode, onToggle }: { colorMode: string; onToggle: () => void }) => {
+    const { t } = useTranslations();
+
     const handleClick = useCallback(() => {
       onToggle();
     }, [onToggle]);
@@ -147,7 +159,9 @@ const ThemeToggleMenuItem = memo(
         <Group gap={3} alignItems="center">
           {colorMode === 'dark' ? <LuSun /> : <LuMoon />}
           <Text fontSize="sm">
-            {colorMode === 'dark' ? 'Light Mode' : 'Dark Mode'}
+            {colorMode === 'dark'
+              ? t('common.theme.lightMode')
+              : t('common.theme.darkMode')}
           </Text>
         </Group>
       </MenuItem>
@@ -158,6 +172,8 @@ const ThemeToggleMenuItem = memo(
 ThemeToggleMenuItem.displayName = 'ThemeToggleMenuItem';
 
 const SignOutMenuItem = memo(({ onSignOut }: { onSignOut: () => void }) => {
+  const { t } = useTranslations();
+
   const handleClick = useCallback(() => {
     onSignOut();
   }, [onSignOut]);
@@ -180,7 +196,7 @@ const SignOutMenuItem = memo(({ onSignOut }: { onSignOut: () => void }) => {
     >
       <Group gap={3} alignItems="center">
         <LuLogOut />
-        <Text fontSize="sm">Sign Out</Text>
+        <Text fontSize="sm">{t('common.actions.signOut')}</Text>
       </Group>
     </MenuItem>
   );

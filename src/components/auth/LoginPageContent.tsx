@@ -6,23 +6,26 @@ import { AuthDivider } from '@/components/auth/AuthDivider';
 import { AuthPageLayout } from '@/components/auth/AuthPageLayout';
 import { LoginForm } from '@/components/auth/LoginForm';
 import { OAuthButtons } from '@/components/auth/OAuthButtons';
+import { ROUTES } from '@/constants/routes';
+import { useTranslations } from '@/translations';
 
 export const LoginPageContent = () => {
+  const { t } = useTranslations();
   return (
     <AuthPageLayout
-      title="Welcome Back"
-      subtitle="Sign in to your Retrospecta account"
+      title={t('auth.login.title')}
+      subtitle={t('auth.login.subtitle')}
     >
       <OAuthButtons />
-      <AuthDivider text="Or continue with email" />
+      <AuthDivider text={t('auth.login.orContinueWith')} />
       <LoginForm />
       <Text fontSize="sm" textAlign="center" color="gray.600">
-        Don&apos;t have an account?{' '}
+        {t('auth.login.noAccount')}{' '}
         <Link
-          href="/register"
+          href={ROUTES.REGISTER}
           style={{ color: 'var(--chakra-colors-blue-500)' }}
         >
-          Sign up
+          {t('auth.login.signUpLink')}
         </Link>
       </Text>
     </AuthPageLayout>

@@ -13,7 +13,7 @@ interface TagsInputControlProps extends ChakraTagsInput.ControlProps {
 export const TagsInputControl = React.forwardRef<
   HTMLDivElement,
   TagsInputControlProps
->(function TagsInputControl(props, ref) {
+>((props, ref) => {
   const { children, clearable, ...rest } = props;
   return (
     <ChakraTagsInput.Control {...rest} ref={ref}>
@@ -26,7 +26,7 @@ export const TagsInputControl = React.forwardRef<
 const TagsInputClearTrigger = React.forwardRef<
   HTMLButtonElement,
   ChakraTagsInput.ClearTriggerProps
->(function TagsInputClearTrigger(props, ref) {
+>((props, ref) => {
   return (
     <ChakraTagsInput.ClearTrigger asChild {...props} ref={ref}>
       <CloseButton
@@ -43,7 +43,7 @@ const TagsInputClearTrigger = React.forwardRef<
 export const TagsInputItem = React.forwardRef<
   HTMLDivElement,
   ChakraTagsInput.ItemProps
->(function TagsInputItem(props, ref) {
+>((props, ref) => {
   const { children, ...rest } = props;
   return (
     <ChakraTagsInput.Item {...rest} ref={ref}>
@@ -64,7 +64,7 @@ export const TagsInputItem = React.forwardRef<
 export const TagsInputRoot = React.forwardRef<
   HTMLDivElement,
   ChakraTagsInput.RootProps
->(function TagsInputRoot(props, ref) {
+>((props, ref) => {
   return <ChakraTagsInput.Root {...props} ref={ref} />;
 }) as ChakraTagsInput.RootProps;
 

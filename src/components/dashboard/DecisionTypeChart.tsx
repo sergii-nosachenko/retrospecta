@@ -14,10 +14,12 @@ import { memo, useMemo } from 'react';
 import { useChart } from '@chakra-ui/charts';
 import { Box, Heading } from '@chakra-ui/react';
 
+import { useTranslations } from '@/translations';
+
 import { CustomPieTooltip } from './ChartTooltips';
 
 interface DecisionTypeChartProps {
-  data: Array<{ name: string; value: number }>;
+  data: { name: string; value: number }[];
 }
 
 const DECISION_TYPE_COLORS = [
@@ -35,6 +37,8 @@ const DECISION_TYPE_COLORS = [
 const LEGEND_STYLE = { fontSize: '12px' } as const;
 
 export const DecisionTypeChart = memo<DecisionTypeChartProps>(({ data }) => {
+  const { t } = useTranslations();
+
   const chartData = useMemo(
     () =>
       data.map((item, index) => ({
@@ -58,7 +62,7 @@ export const DecisionTypeChart = memo<DecisionTypeChartProps>(({ data }) => {
       overflow="hidden"
     >
       <Heading mb={4} size="md">
-        Decision Types
+        {t('decisions.detail.sections.decisionType')}
       </Heading>
       <Box width="100%" height={{ base: '350px', md: '300px' }}>
         <ResponsiveContainer width="99%" height="100%">

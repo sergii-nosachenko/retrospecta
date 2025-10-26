@@ -11,33 +11,36 @@ import {
   SelectTrigger,
   SelectValueText,
 } from '@/components/ui/select';
-import { type DecisionCategory } from '@/constants/decisions';
-
-export type DecisionType = DecisionCategory;
+import { type DecisionType } from '@/constants/decisions';
+import { useTranslations } from '@/translations';
 
 interface DecisionTypeFilterProps {
   selectedDecisionTypes: DecisionType[];
   onDecisionTypesChange: (decisionTypes: DecisionType[]) => void;
 }
 
-const decisionTypeOptions = createListCollection({
-  items: [
-    { label: 'Emotional', value: 'EMOTIONAL' },
-    { label: 'Strategic', value: 'STRATEGIC' },
-    { label: 'Impulsive', value: 'IMPULSIVE' },
-    { label: 'Analytical', value: 'ANALYTICAL' },
-    { label: 'Intuitive', value: 'INTUITIVE' },
-    { label: 'Collaborative', value: 'COLLABORATIVE' },
-    { label: 'Risk Averse', value: 'RISK_AVERSE' },
-    { label: 'Risk Taking', value: 'RISK_TAKING' },
-    { label: 'Other', value: 'OTHER' },
-  ],
-});
-
 export const DecisionTypeFilter = ({
   selectedDecisionTypes,
   onDecisionTypesChange,
 }: DecisionTypeFilterProps) => {
+  const { t } = useTranslations();
+
+  const decisionTypeOptions = createListCollection({
+    items: [
+      { label: t('decisions.decisionTypes.EMOTIONAL'), value: 'EMOTIONAL' },
+      { label: t('decisions.decisionTypes.STRATEGIC'), value: 'STRATEGIC' },
+      { label: t('decisions.decisionTypes.IMPULSIVE'), value: 'IMPULSIVE' },
+      { label: t('decisions.decisionTypes.ANALYTICAL'), value: 'ANALYTICAL' },
+      { label: t('decisions.decisionTypes.INTUITIVE'), value: 'INTUITIVE' },
+      {
+        label: t('decisions.decisionTypes.COLLABORATIVE'),
+        value: 'COLLABORATIVE',
+      },
+      { label: t('decisions.decisionTypes.RISK_AVERSE'), value: 'RISK_AVERSE' },
+      { label: t('decisions.decisionTypes.RISK_TAKING'), value: 'RISK_TAKING' },
+      { label: t('decisions.decisionTypes.OTHER'), value: 'OTHER' },
+    ],
+  });
   const handleDecisionTypeChange = useCallback(
     (event: { value: string[] }) => {
       onDecisionTypesChange(event.value as DecisionType[]);
@@ -55,11 +58,17 @@ export const DecisionTypeFilter = ({
       multiple
     >
       <SelectTrigger>
-        <SelectValueText placeholder="Decision Type" px={3}>
-          {(items) => {
-            if (items.length === 0) return 'Decision Type';
+        <SelectValueText
+          placeholder={t('decisions.filters.decisionType.label')}
+          px={3}
+        >
+          {(items: { label: string; value: string }[]) => {
+            if (items.length === 0)
+              return t('decisions.filters.decisionType.label');
             if (items.length === 1) return items[0].label;
-            return `${items.length} types selected`;
+            return t('decisions.filters.decisionType.selected', {
+              count: items.length,
+            });
           }}
         </SelectValueText>
       </SelectTrigger>

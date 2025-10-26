@@ -11,13 +11,19 @@ import {
 } from 'react';
 
 import { toaster } from '@/components/ui/toaster';
+import {
+  ProcessingStatus,
+  SortField,
+  SortOrder,
+  StreamEventType,
+} from '@/types/enums';
 
 interface Decision {
   id: string;
   situation: string;
   decision: string;
   reasoning: string | null;
-  status: string;
+  status: ProcessingStatus;
   decisionType: string | null;
   biases: string[];
   alternatives: string | null;
@@ -30,7 +36,7 @@ interface Decision {
 }
 
 interface StreamEvent {
-  type: 'update' | 'pending' | 'error';
+  type: StreamEventType;
   decisions?: Decision[];
   count?: number;
   message?: string;
@@ -38,8 +44,8 @@ interface StreamEvent {
 }
 
 interface FilterOptions {
-  sortBy: 'createdAt' | 'updatedAt' | 'status' | 'decisionType';
-  sortOrder: 'asc' | 'desc';
+  sortBy: SortField;
+  sortOrder: SortOrder;
   decisionTypes: string[];
   biases: string[];
   dateFrom: string | null;
@@ -55,7 +61,10 @@ interface DecisionsContextValue {
   filters: FilterOptions;
   setFilters: (filters: Partial<FilterOptions>) => void;
   refresh: () => void;
-  optimisticUpdateStatus: (decisionId: string, status: string) => void;
+  optimisticUpdateStatus: (
+    decisionId: string,
+    status: ProcessingStatus
+  ) => void;
   optimisticDelete: (decisionId: string) => void;
   getDecision: (decisionId: string) => Decision | undefined;
 }
@@ -81,11 +90,11 @@ const hasDecisionChanged = (
     // Compare dates as strings to handle Date vs string comparison
     new Date(oldDecision.updatedAt).getTime() !==
       new Date(newDecision.updatedAt).getTime() ||
-    !!(
+    Boolean(
       oldDecision.lastAnalyzedAt &&
-      newDecision.lastAnalyzedAt &&
-      new Date(oldDecision.lastAnalyzedAt).getTime() !==
-        new Date(newDecision.lastAnalyzedAt).getTime()
+        newDecision.lastAnalyzedAt &&
+        new Date(oldDecision.lastAnalyzedAt).getTime() !==
+          new Date(newDecision.lastAnalyzedAt).getTime()
     )
   );
 };
@@ -94,13 +103,14 @@ const hasDecisionChanged = (
  * Helper function to show status change notifications
  */
 const showStatusChangeNotification = (
-  previousStatus: string,
-  newStatus: string
+  previousStatus: ProcessingStatus,
+  newStatus: ProcessingStatus
 ): void => {
   // Status changed from PENDING/PROCESSING to COMPLETED
   if (
-    (previousStatus === 'PENDING' || previousStatus === 'PROCESSING') &&
-    newStatus === 'COMPLETED'
+    (previousStatus === ProcessingStatus.PENDING ||
+      previousStatus === ProcessingStatus.PROCESSING) &&
+    newStatus === ProcessingStatus.COMPLETED
   ) {
     toaster.create({
       title: 'Analysis Complete',
@@ -111,7 +121,10 @@ const showStatusChangeNotification = (
   }
 
   // Status changed to FAILED
-  if (previousStatus !== 'FAILED' && newStatus === 'FAILED') {
+  if (
+    previousStatus !== ProcessingStatus.FAILED &&
+    newStatus === ProcessingStatus.FAILED
+  ) {
     toaster.create({
       title: 'Analysis Failed',
       description: 'Unable to analyze your decision. Please try again.',
@@ -136,9 +149,7 @@ const mergeDecisionUpdates = (
   let hasChanges = false;
 
   // Check for new or removed decisions
-  if (newDecisionsMap.size !== prevDecisionsMap.size) {
-    hasChanges = true;
-  } else {
+  if (newDecisionsMap.size === prevDecisionsMap.size) {
     // Check if the order of decisions changed
     const orderChanged = newDecisions.some(
       (decision, index) => decision.id !== prevDecisions[index]?.id
@@ -156,6 +167,8 @@ const mergeDecisionUpdates = (
         }
       }
     }
+  } else {
+    hasChanges = true;
   }
 
   // If nothing changed, return the same array reference (prevents re-render)
@@ -195,8 +208,8 @@ export const DecisionsProvider = ({ children }: DecisionsProviderProps) => {
   const [pendingCount, setPendingCount] = useState(0);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const [filters, setFiltersState] = useState<FilterOptions>({
-    sortBy: 'createdAt',
-    sortOrder: 'desc',
+    sortBy: SortField.CREATED_AT,
+    sortOrder: SortOrder.DESC,
     decisionTypes: [],
     biases: [],
     dateFrom: null,
@@ -207,7 +220,7 @@ export const DecisionsProvider = ({ children }: DecisionsProviderProps) => {
   const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const reconnectAttempts = useRef(0);
   const maxReconnectAttempts = 5;
-  const previousDecisionsRef = useRef<Map<string, string>>(new Map());
+  const previousDecisionsRef = useRef<Map<string, ProcessingStatus>>(new Map());
   const optimisticUpdatesRef = useRef<Map<string, Partial<Decision>>>(
     new Map()
   );
@@ -225,7 +238,7 @@ export const DecisionsProvider = ({ children }: DecisionsProviderProps) => {
 
   // Optimistic update for immediate UI feedback
   const optimisticUpdateStatus = useCallback(
-    (decisionId: string, status: string) => {
+    (decisionId: string, status: ProcessingStatus) => {
       optimisticUpdatesRef.current.set(decisionId, { status });
 
       // Immediately update local state
@@ -234,7 +247,10 @@ export const DecisionsProvider = ({ children }: DecisionsProviderProps) => {
       );
 
       // Update pending count optimistically
-      if (status === 'PROCESSING' || status === 'PENDING') {
+      if (
+        status === ProcessingStatus.PROCESSING ||
+        status === ProcessingStatus.PENDING
+      ) {
         setPendingCount((prev) => prev + 1);
       }
     },
@@ -250,7 +266,8 @@ export const DecisionsProvider = ({ children }: DecisionsProviderProps) => {
       const decision = decisions.find((d) => d.id === decisionId);
       if (
         decision &&
-        (decision.status === 'PROCESSING' || decision.status === 'PENDING')
+        (decision.status === ProcessingStatus.PROCESSING ||
+          decision.status === ProcessingStatus.PENDING)
       ) {
         setPendingCount((prev) => Math.max(0, prev - 1));
       }
@@ -301,9 +318,9 @@ export const DecisionsProvider = ({ children }: DecisionsProviderProps) => {
   const handleSSEMessage = useCallback(
     (event: MessageEvent) => {
       try {
-        const data: StreamEvent = JSON.parse(event.data);
+        const data = JSON.parse(event.data as string) as StreamEvent;
 
-        if (data.type === 'update' && data.decisions) {
+        if (data.type === StreamEventType.UPDATE && data.decisions) {
           // Handle notifications
           handleStatusNotifications(data.decisions);
 
@@ -316,16 +333,19 @@ export const DecisionsProvider = ({ children }: DecisionsProviderProps) => {
           );
 
           setIsLoading(false);
-        } else if (data.type === 'pending' && data.count !== undefined) {
+        } else if (
+          data.type === StreamEventType.PENDING &&
+          data.count !== undefined
+        ) {
           // Update pending count (unless we have optimistic updates)
           if (optimisticUpdatesRef.current.size === 0) {
             setPendingCount(data.count);
           }
-        } else if (data.type === 'error') {
-          setError(data.message || 'An error occurred');
+        } else if (data.type === StreamEventType.ERROR) {
+          setError(data.message ?? 'An error occurred');
         }
-      } catch (err) {
-        console.error('Error parsing SSE message:', err);
+      } catch (error_) {
+        console.error('Error parsing SSE message:', error_);
       }
     },
     [handleStatusNotifications, clearConfirmedOptimisticUpdates]
@@ -363,7 +383,6 @@ export const DecisionsProvider = ({ children }: DecisionsProviderProps) => {
 
   // Handle SSE connection open
   const handleSSEOpen = useCallback(() => {
-    console.log('SSE connection established');
     setIsConnected(true);
     setError(null);
     reconnectAttempts.current = 0;
@@ -377,13 +396,7 @@ export const DecisionsProvider = ({ children }: DecisionsProviderProps) => {
 
     // Attempt to reconnect with exponential backoff
     if (reconnectAttempts.current < maxReconnectAttempts) {
-      const delay = Math.min(
-        1000 * Math.pow(2, reconnectAttempts.current),
-        30000
-      );
-      console.log(
-        `Reconnecting in ${delay}ms (attempt ${reconnectAttempts.current + 1}/${maxReconnectAttempts})`
-      );
+      const delay = Math.min(1000 * 2 ** reconnectAttempts.current, 30_000);
 
       reconnectTimeoutRef.current = setTimeout(() => {
         reconnectAttempts.current++;
@@ -409,11 +422,13 @@ export const DecisionsProvider = ({ children }: DecisionsProviderProps) => {
         const eventSource = new EventSource(url);
         eventSourceRef.current = eventSource;
 
-        eventSource.onopen = handleSSEOpen;
-        eventSource.onmessage = handleSSEMessage;
-        eventSource.onerror = () => handleSSEError(eventSource);
-      } catch (err) {
-        console.error('Error connecting to SSE:', err);
+        eventSource.addEventListener('open', handleSSEOpen);
+        eventSource.addEventListener('message', handleSSEMessage);
+        eventSource.addEventListener('error', () => {
+          handleSSEError(eventSource);
+        });
+      } catch (error_) {
+        console.error('Error connecting to SSE:', error_);
         setError('Failed to establish connection');
       }
     };

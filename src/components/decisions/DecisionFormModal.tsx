@@ -24,6 +24,7 @@ import {
   StepsRoot,
 } from '@/components/ui/steps';
 import { toaster } from '@/components/ui/toaster';
+import { useTranslations } from '@/translations';
 
 interface DecisionFormModalProps {
   trigger?: React.ReactNode;
@@ -34,6 +35,7 @@ export const DecisionFormModal = ({
   trigger,
   onSuccess,
 }: DecisionFormModalProps) => {
+  const { t } = useTranslations();
   const [open, setOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
@@ -45,11 +47,20 @@ export const DecisionFormModal = ({
 
   const steps = useMemo(
     () => [
-      { title: 'Situation', description: 'Describe the context' },
-      { title: 'Decision', description: 'What did you decide?' },
-      { title: 'Reasoning', description: 'Why this choice?' },
+      {
+        title: t('decisions.form.steps.situation'),
+        description: t('decisions.form.fields.situation.modalPlaceholder'),
+      },
+      {
+        title: t('decisions.form.steps.decision'),
+        description: t('decisions.form.fields.decision.modalPlaceholder'),
+      },
+      {
+        title: t('decisions.form.steps.reasoning'),
+        description: t('decisions.form.fields.reasoning.modalPlaceholder'),
+      },
     ],
-    []
+    [t]
   );
 
   const resetForm = useCallback(() => {
@@ -66,8 +77,8 @@ export const DecisionFormModal = ({
       case 0: // Situation
         if (!formData.situation.trim()) {
           toaster.create({
-            title: 'Validation Error',
-            description: 'Please describe the situation',
+            title: t('toasts.validation.title'),
+            description: t('decisions.form.validation.situationRequired'),
             type: 'error',
             duration: 3000,
           });
@@ -75,8 +86,8 @@ export const DecisionFormModal = ({
         }
         if (formData.situation.trim().length < 10) {
           toaster.create({
-            title: 'Validation Error',
-            description: 'Situation must be at least 10 characters',
+            title: t('toasts.validation.title'),
+            description: t('decisions.form.validation.situationMinLength'),
             type: 'error',
             duration: 3000,
           });
@@ -86,8 +97,8 @@ export const DecisionFormModal = ({
       case 1: // Decision
         if (!formData.decision.trim()) {
           toaster.create({
-            title: 'Validation Error',
-            description: 'Please describe your decision',
+            title: t('toasts.validation.title'),
+            description: t('decisions.form.validation.decisionRequired'),
             type: 'error',
             duration: 3000,
           });
@@ -95,8 +106,8 @@ export const DecisionFormModal = ({
         }
         if (formData.decision.trim().length < 5) {
           toaster.create({
-            title: 'Validation Error',
-            description: 'Decision must be at least 5 characters',
+            title: t('toasts.validation.title'),
+            description: t('decisions.form.validation.decisionMinLength'),
             type: 'error',
             duration: 3000,
           });
@@ -108,7 +119,7 @@ export const DecisionFormModal = ({
       default:
         return true;
     }
-  }, [currentStep, formData]);
+  }, [currentStep, formData, t]);
 
   const handleNext = useCallback(() => {
     if (validateCurrentStep()) {
@@ -129,8 +140,8 @@ export const DecisionFormModal = ({
     // Validate all steps before submission
     if (!formData.situation.trim() || !formData.decision.trim()) {
       toaster.create({
-        title: 'Validation Error',
-        description: 'Please complete all required fields',
+        title: t('toasts.validation.title'),
+        description: t('decisions.form.validation.allFieldsRequired'),
         type: 'error',
         duration: 4000,
       });
@@ -149,8 +160,8 @@ export const DecisionFormModal = ({
 
       if (!result.success || !result.data) {
         toaster.create({
-          title: 'Error',
-          description: result.error || 'Failed to create decision',
+          title: t('toasts.error.title'),
+          description: result.error ?? t('toasts.errors.createDecision'),
           type: 'error',
           duration: 5000,
         });
@@ -159,8 +170,8 @@ export const DecisionFormModal = ({
 
       // Show success message
       toaster.create({
-        title: 'Decision Created',
-        description: 'Your decision has been saved and is being analyzed...',
+        title: t('toasts.success.decisionCreated.title'),
+        description: t('toasts.success.decisionCreated.description'),
         type: 'success',
         duration: 3000,
       });
@@ -182,15 +193,15 @@ export const DecisionFormModal = ({
     } catch (error) {
       console.error('Error submitting decision:', error);
       toaster.create({
-        title: 'Error',
-        description: 'An unexpected error occurred. Please try again.',
+        title: t('toasts.error.title'),
+        description: t('toasts.errors.tryAgain'),
         type: 'error',
         duration: 5000,
       });
     } finally {
       setIsSubmitting(false);
     }
-  }, [formData, onSuccess, resetForm]);
+  }, [formData, onSuccess, resetForm, t]);
 
   const handleOpenChange = useCallback(
     (e: { open: boolean }) => {
@@ -236,9 +247,9 @@ export const DecisionFormModal = ({
       placement="center"
     >
       <DialogTrigger asChild>
-        {trigger || (
+        {trigger ?? (
           <Button colorPalette="blue" size="sm" px={4} py={2}>
-            New Decision
+            {t('decisions.form.actions.newDecision')}
           </Button>
         )}
       </DialogTrigger>
@@ -250,7 +261,7 @@ export const DecisionFormModal = ({
       >
         <DialogHeader py={{ base: 4, md: 6 }} px={{ base: 4, md: 6 }}>
           <DialogTitle fontSize="2xl" fontWeight="bold">
-            Record a Decision
+            {t('decisions.form.title')}
           </DialogTitle>
           <DialogCloseTrigger />
         </DialogHeader>
@@ -264,8 +275,7 @@ export const DecisionFormModal = ({
                 fontSize="md"
                 lineHeight="1.6"
               >
-                Describe your decision and receive AI-powered insights about
-                your decision-making process
+                {t('decisions.form.description')}
               </Text>
 
               <StepsRoot
@@ -289,12 +299,16 @@ export const DecisionFormModal = ({
                 <StepsContent index={0}>
                   <VStack gap={4} align="stretch">
                     <Field
-                      label="Situation"
+                      label={t('decisions.form.fields.situation.label')}
                       required
-                      helperText="Describe the situation that led to your decision (min 10 characters)"
+                      helperText={t(
+                        'decisions.form.fields.situation.placeholder'
+                      )}
                     >
                       <Textarea
-                        placeholder="Example: I was choosing between two job offers - one with a higher salary but longer commute, and another with better work-life balance..."
+                        placeholder={t(
+                          'decisions.form.fields.situation.example'
+                        )}
                         value={formData.situation}
                         onChange={handleSituationChange}
                         rows={6}
@@ -313,12 +327,16 @@ export const DecisionFormModal = ({
                 <StepsContent index={1}>
                   <VStack gap={4} align="stretch">
                     <Field
-                      label="Decision"
+                      label={t('decisions.form.fields.decision.label')}
                       required
-                      helperText="What did you decide to do? (min 5 characters)"
+                      helperText={t(
+                        'decisions.form.fields.decision.placeholder'
+                      )}
                     >
                       <Textarea
-                        placeholder="Example: I chose the job with better work-life balance despite the lower salary..."
+                        placeholder={t(
+                          'decisions.form.fields.decision.example'
+                        )}
                         value={formData.decision}
                         onChange={handleDecisionChange}
                         rows={6}
@@ -337,11 +355,15 @@ export const DecisionFormModal = ({
                 <StepsContent index={2}>
                   <VStack gap={4} align="stretch">
                     <Field
-                      label="Reasoning (Optional)"
-                      helperText="Why did you make this decision? What factors influenced you?"
+                      label={t('decisions.form.fields.reasoning.label')}
+                      helperText={t(
+                        'decisions.form.fields.reasoning.placeholder'
+                      )}
                     >
                       <Textarea
-                        placeholder="Example: I realized that my mental health and time with family were more important than a higher salary..."
+                        placeholder={t(
+                          'decisions.form.fields.reasoning.example'
+                        )}
                         value={formData.reasoning}
                         onChange={handleReasoningChange}
                         rows={6}
@@ -379,7 +401,7 @@ export const DecisionFormModal = ({
                     size="lg"
                     px={6}
                   >
-                    Previous
+                    {t('common.actions.previous')}
                   </Button>
                 )}
               </Stack>
@@ -392,7 +414,7 @@ export const DecisionFormModal = ({
                   size="lg"
                   px={6}
                 >
-                  Cancel
+                  {t('common.actions.cancel')}
                 </Button>
                 {currentStep < steps.length - 1 ? (
                   <Button
@@ -402,18 +424,18 @@ export const DecisionFormModal = ({
                     size="lg"
                     px={6}
                   >
-                    Next
+                    {t('common.actions.next')}
                   </Button>
                 ) : (
                   <Button
                     onClick={handleSubmit}
                     colorPalette="blue"
                     loading={isSubmitting}
-                    loadingText="Creating..."
+                    loadingText={t('common.actions.creating')}
                     size="lg"
                     px={6}
                   >
-                    Create Decision
+                    {t('decisions.form.actions.create')}
                   </Button>
                 )}
               </Stack>

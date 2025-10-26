@@ -6,20 +6,26 @@ import { AuthDivider } from '@/components/auth/AuthDivider';
 import { AuthPageLayout } from '@/components/auth/AuthPageLayout';
 import { OAuthButtons } from '@/components/auth/OAuthButtons';
 import { RegisterForm } from '@/components/auth/RegisterForm';
+import { ROUTES } from '@/constants/routes';
+import { useTranslations } from '@/translations';
 
 export const RegisterPageContent = () => {
+  const { t } = useTranslations();
   return (
     <AuthPageLayout
-      title="Create Account"
-      subtitle="Start your decision-making journey"
+      title={t('auth.register.title')}
+      subtitle={t('auth.register.subtitle')}
     >
       <OAuthButtons />
-      <AuthDivider text="Or register with email" />
+      <AuthDivider text={t('auth.register.orRegisterWith')} />
       <RegisterForm />
       <Text fontSize="sm" textAlign="center" color="gray.600">
-        Already have an account?{' '}
-        <Link href="/login" style={{ color: 'var(--chakra-colors-blue-500)' }}>
-          Sign in
+        {t('auth.register.hasAccount')}{' '}
+        <Link
+          href={ROUTES.LOGIN}
+          style={{ color: 'var(--chakra-colors-blue-500)' }}
+        >
+          {t('auth.register.signInLink')}
         </Link>
       </Text>
     </AuthPageLayout>

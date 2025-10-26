@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 
+import { ROUTES } from '@/constants/routes';
 import { prisma } from '@/lib/prisma';
 import { createClient } from '@/lib/supabase/server';
 
@@ -21,7 +22,7 @@ export async function login(formData: FormData) {
   }
 
   revalidatePath('/', 'layout');
-  redirect('/decisions');
+  redirect(ROUTES.DECISIONS);
 }
 
 export async function signup(formData: FormData) {
@@ -55,19 +56,19 @@ export async function signup(formData: FormData) {
   }
 
   revalidatePath('/', 'layout');
-  redirect('/decisions');
+  redirect(ROUTES.DECISIONS);
 }
 
 export async function signOut() {
   const supabase = await createClient();
   await supabase.auth.signOut();
   revalidatePath('/', 'layout');
-  redirect('/login');
+  redirect(ROUTES.LOGIN);
 }
 
 export async function signInWithGoogle() {
   const supabase = await createClient();
-  const origin = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+  const origin = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000';
 
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: 'google',
@@ -110,12 +111,15 @@ export async function getCurrentUser() {
 
   return {
     id: user.id,
-    email: user.email || dbUser?.email || '',
+    email: user.email ?? dbUser?.email ?? '',
     name:
-      dbUser?.name ||
-      user.user_metadata?.name ||
-      user.email?.split('@')[0] ||
+      dbUser?.name ??
+      (user.user_metadata?.name as string | undefined) ??
+      user.email?.split('@')[0] ??
       'User',
-    avatarUrl: dbUser?.avatarUrl || user.user_metadata?.avatar_url || null,
+    avatarUrl:
+      dbUser?.avatarUrl ??
+      (user.user_metadata?.avatar_url as string | undefined) ??
+      null,
   };
 }

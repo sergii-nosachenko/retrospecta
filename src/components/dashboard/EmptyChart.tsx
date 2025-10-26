@@ -2,11 +2,15 @@ import { memo } from 'react';
 
 import { Box, Heading, Text } from '@chakra-ui/react';
 
+import { useTranslations } from '@/translations';
+
 interface EmptyChartProps {
   title: string;
 }
 
 export const EmptyChart = memo<EmptyChartProps>(({ title }) => {
+  const { t } = useTranslations();
+
   return (
     <Box
       bg="white"
@@ -24,7 +28,7 @@ export const EmptyChart = memo<EmptyChartProps>(({ title }) => {
         {title}
       </Heading>
       <Text color="gray.500" _dark={{ color: 'gray.400' }}>
-        No data available yet. Complete some decision analyses to see insights!
+        {t('dashboard.empty.description')}
       </Text>
     </Box>
   );

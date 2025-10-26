@@ -34,9 +34,11 @@ export async function GET(request: Request) {
                 id: data.user.id,
                 email: data.user.email!,
                 name:
-                  data.user.user_metadata.name ||
-                  data.user.user_metadata.full_name,
-                avatarUrl: data.user.user_metadata.avatar_url,
+                  (data.user.user_metadata.name as string | undefined) ??
+                  (data.user.user_metadata.full_name as string | undefined),
+                avatarUrl: data.user.user_metadata.avatar_url as
+                  | string
+                  | undefined,
               },
             });
           }

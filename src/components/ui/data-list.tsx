@@ -14,7 +14,7 @@ interface ItemProps extends ChakraDataList.ItemProps {
 }
 
 export const DataListItem = React.forwardRef<HTMLDivElement, ItemProps>(
-  function DataListItem(props, ref) {
+  (props, ref) => {
     const { label, info, value, children, grow, ...rest } = props;
     return (
       <ChakraDataList.Item ref={ref} {...rest}>

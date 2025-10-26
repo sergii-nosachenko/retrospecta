@@ -8,7 +8,7 @@ function inWhere<T extends string>(selector: T): T {
   const rebuiltSelector = selector.startsWith('& ')
     ? selector.slice(2)
     : selector;
-  const match = selector.match(TRAILING_PSEUDO_REGEX);
+  const match = TRAILING_PSEUDO_REGEX.exec(selector);
   const pseudo = match ? match[0] : '';
   const base = match ? selector.slice(0, -match[0].length) : rebuiltSelector;
   return `& :where(${base}):not(${EXCLUDE_CLASSNAME}, ${EXCLUDE_CLASSNAME} *)${pseudo}` as T;

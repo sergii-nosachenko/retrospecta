@@ -18,7 +18,7 @@ export interface DatePickerRootProps extends ArkDatePicker.RootProps {
 export const DatePickerRoot = React.forwardRef<
   HTMLDivElement,
   DatePickerRootProps
->(function DatePickerRoot(props, ref) {
+>((props, ref) => {
   return (
     <ArkDatePicker.Root
       ref={ref}
@@ -34,7 +34,7 @@ export const DatePickerControl = ArkDatePicker.Control;
 export const DatePickerInput = React.forwardRef<
   HTMLInputElement,
   ArkDatePicker.InputProps
->(function DatePickerInput(props, ref) {
+>((props, ref) => {
   return (
     <ArkDatePicker.Input asChild ref={ref} {...props}>
       <Input />
@@ -45,7 +45,7 @@ export const DatePickerInput = React.forwardRef<
 export const DatePickerTrigger = React.forwardRef<
   HTMLButtonElement,
   ArkDatePicker.TriggerProps
->(function DatePickerTrigger(props, ref) {
+>((props, ref) => {
   return (
     <ArkDatePicker.Trigger asChild ref={ref} {...props}>
       <IconButton variant="outline" size="sm">
@@ -58,7 +58,7 @@ export const DatePickerTrigger = React.forwardRef<
 export const DatePickerContent = React.forwardRef<
   HTMLDivElement,
   ArkDatePicker.ContentProps
->(function DatePickerContent(props, ref) {
+>((props, ref) => {
   const { children, ...rest } = props;
   return (
     <Portal>
@@ -88,7 +88,7 @@ export const DatePickerContext = ArkDatePicker.Context;
 export const DatePickerPrevTrigger = React.forwardRef<
   HTMLButtonElement,
   ArkDatePicker.PrevTriggerProps
->(function DatePickerPrevTrigger(props, ref) {
+>((props, ref) => {
   return (
     <ArkDatePicker.PrevTrigger asChild ref={ref} {...props}>
       <IconButton variant="ghost" size="sm">
@@ -101,7 +101,7 @@ export const DatePickerPrevTrigger = React.forwardRef<
 export const DatePickerNextTrigger = React.forwardRef<
   HTMLButtonElement,
   ArkDatePicker.NextTriggerProps
->(function DatePickerNextTrigger(props, ref) {
+>((props, ref) => {
   return (
     <ArkDatePicker.NextTrigger asChild ref={ref} {...props}>
       <IconButton variant="ghost" size="sm">
@@ -114,7 +114,7 @@ export const DatePickerNextTrigger = React.forwardRef<
 export const DatePickerViewTrigger = React.forwardRef<
   HTMLButtonElement,
   ArkDatePicker.ViewTriggerProps
->(function DatePickerViewTrigger(props, ref) {
+>((props, ref) => {
   return (
     <ArkDatePicker.ViewTrigger asChild ref={ref} {...props}>
       <IconButton variant="ghost" size="sm">
@@ -133,7 +133,7 @@ export const DatePickerTableRow = ArkDatePicker.TableRow;
 export const DatePickerTableHeader = React.forwardRef<
   HTMLTableCellElement,
   ArkDatePicker.TableHeaderProps
->(function DatePickerTableHeader(props, ref) {
+>((props, ref) => {
   return (
     <ArkDatePicker.TableHeader ref={ref} {...props}>
       <Box
@@ -152,14 +152,14 @@ export const DatePickerTableHeader = React.forwardRef<
 export const DatePickerTableCell = React.forwardRef<
   HTMLTableCellElement,
   ArkDatePicker.TableCellProps
->(function DatePickerTableCell(props, ref) {
+>((props, ref) => {
   return <ArkDatePicker.TableCell ref={ref} {...props} />;
 });
 
 export const DatePickerTableCellTrigger = React.forwardRef<
   HTMLDivElement,
   ArkDatePicker.TableCellTriggerProps
->(function DatePickerTableCellTrigger(props, ref) {
+>((props, ref) => {
   return (
     <ArkDatePicker.TableCellTrigger
       ref={ref}
@@ -184,7 +184,7 @@ export const DatePickerTableCellTrigger = React.forwardRef<
 export const DatePickerClearTrigger = React.forwardRef<
   HTMLButtonElement,
   ArkDatePicker.ClearTriggerProps
->(function DatePickerClearTrigger(props, ref) {
+>((props, ref) => {
   return (
     <ArkDatePicker.ClearTrigger asChild ref={ref} {...props}>
       <IconButton variant="ghost" size="sm">

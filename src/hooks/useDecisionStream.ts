@@ -1,6 +1,12 @@
 import { useEffect, useRef, useState } from 'react';
 
 import { toaster } from '@/components/ui/toaster';
+import {
+  ProcessingStatus,
+  SortField,
+  SortOrder,
+  StreamEventType,
+} from '@/types/enums';
 
 interface Decision {
   id: string;
@@ -17,7 +23,7 @@ interface Decision {
 }
 
 interface StreamEvent {
-  type: 'update' | 'pending' | 'error';
+  type: StreamEventType;
   decisions?: Decision[];
   count?: number;
   message?: string;
@@ -34,8 +40,8 @@ interface UseDecisionStreamReturn {
 }
 
 interface UseDecisionStreamOptions {
-  sortBy?: 'createdAt' | 'updatedAt' | 'status' | 'category';
-  sortOrder?: 'asc' | 'desc';
+  sortBy?: SortField;
+  sortOrder?: SortOrder;
   categories?: string[];
   biases?: string[];
   dateFrom?: string | null;
@@ -53,8 +59,8 @@ export function useDecisionStream(
   options: UseDecisionStreamOptions = {}
 ): UseDecisionStreamReturn {
   const {
-    sortBy = 'createdAt',
-    sortOrder = 'desc',
+    sortBy = SortField.CREATED_AT,
+    sortOrder = SortOrder.DESC,
     categories = [],
     biases = [],
     dateFrom = null,
@@ -115,18 +121,17 @@ export function useDecisionStream(
         const eventSource = new EventSource(url);
         eventSourceRef.current = eventSource;
 
-        eventSource.onopen = () => {
-          console.log('SSE connection established');
+        eventSource.addEventListener('open', () => {
           setIsConnected(true);
           setError(null);
           reconnectAttempts.current = 0;
-        };
+        });
 
-        eventSource.onmessage = (event) => {
+        eventSource.addEventListener('message', (event) => {
           try {
-            const data: StreamEvent = JSON.parse(event.data);
+            const data = JSON.parse(event.data as string) as StreamEvent;
 
-            if (data.type === 'update' && data.decisions) {
+            if (data.type === StreamEventType.UPDATE && data.decisions) {
               // Check for status changes and show notifications
               data.decisions.forEach((decision) => {
                 const previousStatus = previousDecisionsRef.current.get(
@@ -136,9 +141,9 @@ export function useDecisionStream(
                 // If status changed from PENDING/PROCESSING to COMPLETED
                 if (
                   previousStatus &&
-                  (previousStatus === 'PENDING' ||
-                    previousStatus === 'PROCESSING') &&
-                  decision.status === 'COMPLETED'
+                  (previousStatus === ProcessingStatus.PENDING ||
+                    previousStatus === ProcessingStatus.PROCESSING) &&
+                  decision.status === ProcessingStatus.COMPLETED
                 ) {
                   toaster.create({
                     title: 'Analysis Complete',
@@ -151,8 +156,8 @@ export function useDecisionStream(
                 // If status changed to FAILED
                 if (
                   previousStatus &&
-                  previousStatus !== 'FAILED' &&
-                  decision.status === 'FAILED'
+                  previousStatus !== ProcessingStatus.FAILED &&
+                  decision.status === ProcessingStatus.FAILED
                 ) {
                   toaster.create({
                     title: 'Analysis Failed',
@@ -170,18 +175,21 @@ export function useDecisionStream(
               // Update decisions list
               setDecisions(data.decisions);
               setIsLoading(false);
-            } else if (data.type === 'pending' && data.count !== undefined) {
+            } else if (
+              data.type === StreamEventType.PENDING &&
+              data.count !== undefined
+            ) {
               // Update pending count
               setPendingCount(data.count);
-            } else if (data.type === 'error') {
-              setError(data.message || 'An error occurred');
+            } else if (data.type === StreamEventType.ERROR) {
+              setError(data.message ?? 'An error occurred');
             }
-          } catch (err) {
-            console.error('Error parsing SSE message:', err);
+          } catch (error_) {
+            console.error('Error parsing SSE message:', error_);
           }
-        };
+        });
 
-        eventSource.onerror = (err) => {
+        eventSource.addEventListener('error', (err) => {
           console.error('SSE connection error:', err);
           setIsConnected(false);
           eventSource.close();
@@ -189,11 +197,8 @@ export function useDecisionStream(
           // Attempt to reconnect with exponential backoff
           if (reconnectAttempts.current < maxReconnectAttempts) {
             const delay = Math.min(
-              1000 * Math.pow(2, reconnectAttempts.current),
-              30000
-            );
-            console.log(
-              `Reconnecting in ${delay}ms (attempt ${reconnectAttempts.current + 1}/${maxReconnectAttempts})`
+              1000 * 2 ** reconnectAttempts.current,
+              30_000
             );
 
             reconnectTimeoutRef.current = setTimeout(() => {
@@ -203,9 +208,9 @@ export function useDecisionStream(
           } else {
             setError('Connection lost. Please refresh the page.');
           }
-        };
-      } catch (err) {
-        console.error('Error connecting to SSE:', err);
+        });
+      } catch (error_) {
+        console.error('Error connecting to SSE:', error_);
         setError('Failed to establish connection');
       }
     };

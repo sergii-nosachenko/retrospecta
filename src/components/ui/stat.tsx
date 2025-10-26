@@ -14,7 +14,7 @@ interface StatLabelProps extends ChakraStat.LabelProps {
 }
 
 export const StatLabel = React.forwardRef<HTMLDivElement, StatLabelProps>(
-  function StatLabel(props, ref) {
+  (props, ref) => {
     const { info, children, ...rest } = props;
     return (
       <ChakraStat.Label {...rest} ref={ref}>
@@ -33,7 +33,7 @@ interface StatValueTextProps extends ChakraStat.ValueTextProps {
 export const StatValueText = React.forwardRef<
   HTMLDivElement,
   StatValueTextProps
->(function StatValueText(props, ref) {
+>((props, ref) => {
   const { value, formatOptions, children, ...rest } = props;
   return (
     <ChakraStat.ValueText {...rest} ref={ref}>
@@ -44,7 +44,7 @@ export const StatValueText = React.forwardRef<
 });
 
 export const StatUpTrend = React.forwardRef<HTMLDivElement, BadgeProps>(
-  function StatUpTrend(props, ref) {
+  (props, ref) => {
     return (
       <Badge colorPalette="green" gap="0" {...props} ref={ref}>
         <ChakraStat.UpIndicator />
@@ -55,7 +55,7 @@ export const StatUpTrend = React.forwardRef<HTMLDivElement, BadgeProps>(
 );
 
 export const StatDownTrend = React.forwardRef<HTMLDivElement, BadgeProps>(
-  function StatDownTrend(props, ref) {
+  (props, ref) => {
     return (
       <Badge colorPalette="red" gap="0" {...props} ref={ref}>
         <ChakraStat.DownIndicator />

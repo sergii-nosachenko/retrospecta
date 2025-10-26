@@ -27,7 +27,14 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { toaster } from '@/components/ui/toaster';
+import {
+  getDecisionTypeIcon,
+  getDecisionTypeLabel,
+  getStatusLabel,
+} from '@/constants/decisions';
 import { useDecisions } from '@/contexts/DecisionsContext';
+import { useTranslations } from '@/translations';
+import { ProcessingStatus } from '@/types/enums';
 
 interface DecisionData {
   id: string;
@@ -54,26 +61,17 @@ interface DecisionDetailModalProps {
 
 const getStatusColor = (status: string): string => {
   switch (status) {
-    case 'COMPLETED':
+    case ProcessingStatus.COMPLETED:
       return 'green';
-    case 'PENDING':
+    case ProcessingStatus.PENDING:
       return 'yellow';
-    case 'PROCESSING':
+    case ProcessingStatus.PROCESSING:
       return 'blue';
-    case 'FAILED':
+    case ProcessingStatus.FAILED:
       return 'red';
     default:
       return 'gray';
   }
-};
-
-const getCategoryLabel = (category: string | null): string | null => {
-  if (!category) return null;
-
-  return category
-    .split('_')
-    .map((word) => word.charAt(0) + word.slice(1).toLowerCase())
-    .join(' ');
 };
 
 export const DecisionDetailModal = ({
@@ -81,6 +79,7 @@ export const DecisionDetailModal = ({
   open,
   onOpenChange,
 }: DecisionDetailModalProps) => {
+  const { t } = useTranslations();
   const {
     optimisticUpdateStatus,
     optimisticDelete,
@@ -91,7 +90,6 @@ export const DecisionDetailModal = ({
   const [isPolling, setIsPolling] = useState(false);
   const [isReanalyzing, setIsReanalyzing] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
-  const [fetchAttempts, setFetchAttempts] = useState(0);
 
   const fetchDecision = useCallback(async () => {
     setIsLoading(true);
@@ -103,17 +101,17 @@ export const DecisionDetailModal = ({
       // Context has all the fields we need
       const decisionData: DecisionData = {
         ...contextDecision,
-        analysisAttempts: contextDecision.analysisAttempts || 0,
-        lastAnalyzedAt: contextDecision.lastAnalyzedAt || null,
-        errorMessage: contextDecision.errorMessage || null,
+        analysisAttempts: contextDecision.analysisAttempts ?? 0,
+        lastAnalyzedAt: contextDecision.lastAnalyzedAt ?? null,
+        errorMessage: contextDecision.errorMessage ?? null,
       };
 
       setDecision(decisionData);
 
       // Start polling if status is PENDING or PROCESSING
       if (
-        contextDecision.status === 'PENDING' ||
-        contextDecision.status === 'PROCESSING'
+        contextDecision.status === ProcessingStatus.PENDING ||
+        contextDecision.status === ProcessingStatus.PROCESSING
       ) {
         setIsPolling(true);
       }
@@ -128,15 +126,15 @@ export const DecisionDetailModal = ({
 
         // Start polling if status is PENDING or PROCESSING
         if (
-          result.data.status === 'PENDING' ||
-          result.data.status === 'PROCESSING'
+          result.data.status === ProcessingStatus.PENDING ||
+          result.data.status === ProcessingStatus.PROCESSING
         ) {
           setIsPolling(true);
         }
       } else {
         toaster.create({
-          title: 'Error',
-          description: result.error || 'Failed to load decision',
+          title: t('toasts.error.title'),
+          description: result.error ?? t('toasts.errors.loadDecision'),
           type: 'error',
           duration: 5000,
         });
@@ -144,7 +142,7 @@ export const DecisionDetailModal = ({
       }
       setIsLoading(false);
     }
-  }, [decisionId, onOpenChange, getDecisionFromContext]);
+  }, [decisionId, onOpenChange, getDecisionFromContext, t]);
 
   // Reset state when modal closes or decisionId changes
   useEffect(() => {
@@ -154,7 +152,6 @@ export const DecisionDetailModal = ({
       setIsLoading(true);
       setIsPolling(false);
       setIsReanalyzing(false);
-      setFetchAttempts(0);
     }
   }, [open]);
 
@@ -164,8 +161,7 @@ export const DecisionDetailModal = ({
       // Reset state when opening a new decision
       setIsReanalyzing(false);
       setIsPolling(false);
-      setFetchAttempts(0);
-      fetchDecision();
+      void fetchDecision();
     }
   }, [open, decisionId, fetchDecision]);
 
@@ -187,14 +183,14 @@ export const DecisionDetailModal = ({
 
         // Stop polling if analysis is complete or failed
         if (
-          updatedDecision.status === 'COMPLETED' ||
-          updatedDecision.status === 'FAILED'
+          updatedDecision.status === ProcessingStatus.COMPLETED ||
+          updatedDecision.status === ProcessingStatus.FAILED
         ) {
           setIsPolling(false);
 
           // Fetch full details one last time to get error message if failed
-          if (updatedDecision.status === 'FAILED') {
-            getDecision(decision.id).then((result) => {
+          if (updatedDecision.status === ProcessingStatus.FAILED) {
+            void getDecision(decision.id).then((result) => {
               if (result.success && result.data) {
                 setDecision(result.data);
               }
@@ -214,10 +210,12 @@ export const DecisionDetailModal = ({
 
     try {
       // Optimistically update status immediately for instant UI feedback
-      optimisticUpdateStatus(decision.id, 'PROCESSING');
+      optimisticUpdateStatus(decision.id, ProcessingStatus.PROCESSING);
 
       // Update local modal state immediately
-      setDecision((prev) => (prev ? { ...prev, status: 'PROCESSING' } : null));
+      setDecision((prev) =>
+        prev ? { ...prev, status: ProcessingStatus.PROCESSING } : null
+      );
       setIsPolling(true);
 
       const result = await reanalyzeDecision(decision.id);
@@ -225,8 +223,8 @@ export const DecisionDetailModal = ({
       if (result.success) {
         // Show brief success notification
         toaster.create({
-          title: 'Re-analysis Started',
-          description: 'Your decision is being re-analyzed...',
+          title: t('toasts.success.reAnalysisStarted.title'),
+          description: t('toasts.success.reAnalysisStarted.description'),
           type: 'info',
           duration: 2000,
         });
@@ -235,13 +233,15 @@ export const DecisionDetailModal = ({
         // Optimistic update already provides instant UI feedback
       } else {
         // Revert optimistic update on error
-        optimisticUpdateStatus(decision.id, 'COMPLETED');
-        setDecision((prev) => (prev ? { ...prev, status: 'COMPLETED' } : null));
+        optimisticUpdateStatus(decision.id, ProcessingStatus.COMPLETED);
+        setDecision((prev) =>
+          prev ? { ...prev, status: ProcessingStatus.COMPLETED } : null
+        );
         setIsPolling(false);
 
         toaster.create({
-          title: 'Error',
-          description: result.error || 'Failed to re-analyze decision',
+          title: t('toasts.error.title'),
+          description: result.error ?? t('toasts.errors.reAnalyze'),
           type: 'error',
           duration: 5000,
         });
@@ -250,20 +250,22 @@ export const DecisionDetailModal = ({
       console.error('Error re-analyzing:', error);
 
       // Revert optimistic update on error
-      optimisticUpdateStatus(decision.id, 'COMPLETED');
-      setDecision((prev) => (prev ? { ...prev, status: 'COMPLETED' } : null));
+      optimisticUpdateStatus(decision.id, ProcessingStatus.COMPLETED);
+      setDecision((prev) =>
+        prev ? { ...prev, status: ProcessingStatus.COMPLETED } : null
+      );
       setIsPolling(false);
 
       toaster.create({
-        title: 'Error',
-        description: 'An unexpected error occurred',
+        title: t('toasts.error.title'),
+        description: t('toasts.errors.unexpected'),
         type: 'error',
         duration: 5000,
       });
     } finally {
       setIsReanalyzing(false);
     }
-  }, [decision, optimisticUpdateStatus]);
+  }, [decision, optimisticUpdateStatus, t]);
 
   const handleDelete = useCallback(async () => {
     if (!decision) return;
@@ -281,15 +283,15 @@ export const DecisionDetailModal = ({
 
       if (result.success) {
         toaster.create({
-          title: 'Decision Deleted',
-          description: 'Your decision has been deleted successfully',
+          title: t('toasts.success.decisionDeleted.title'),
+          description: t('toasts.success.decisionDeleted.description'),
           type: 'success',
           duration: 3000,
         });
       } else {
         toaster.create({
-          title: 'Error',
-          description: result.error || 'Failed to delete decision',
+          title: t('toasts.error.title'),
+          description: result.error ?? t('toasts.errors.deleteDecision'),
           type: 'error',
           duration: 5000,
         });
@@ -300,15 +302,15 @@ export const DecisionDetailModal = ({
       console.error('Error deleting:', error);
 
       toaster.create({
-        title: 'Error',
-        description: 'An unexpected error occurred',
+        title: t('toasts.error.title'),
+        description: t('toasts.errors.unexpected'),
         type: 'error',
         duration: 5000,
       });
     } finally {
       setIsDeleting(false);
     }
-  }, [decision, onOpenChange, optimisticDelete]);
+  }, [decision, onOpenChange, optimisticDelete, t]);
 
   return (
     <DialogRoot
@@ -332,7 +334,7 @@ export const DecisionDetailModal = ({
               gap={4}
             >
               <Box fontSize="2xl" fontWeight="bold">
-                Decision Details
+                {t('decisions.detail.title')}
               </Box>
               {decision && (
                 <Badge
@@ -341,7 +343,7 @@ export const DecisionDetailModal = ({
                   px={3}
                   py={1}
                 >
-                  {decision.status}
+                  {getStatusLabel(t, decision.status)}
                 </Badge>
               )}
             </Stack>
@@ -389,7 +391,7 @@ export const DecisionDetailModal = ({
                   textTransform="uppercase"
                   letterSpacing="wide"
                 >
-                  Situation
+                  {t('decisions.detail.sections.situation')}
                 </Text>
                 <Text whiteSpace="pre-wrap" lineHeight="1.7">
                   {decision.situation}
@@ -406,7 +408,7 @@ export const DecisionDetailModal = ({
                   textTransform="uppercase"
                   letterSpacing="wide"
                 >
-                  Decision
+                  {t('decisions.detail.sections.decision')}
                 </Text>
                 <Text whiteSpace="pre-wrap" lineHeight="1.7">
                   {decision.decision}
@@ -424,7 +426,7 @@ export const DecisionDetailModal = ({
                     textTransform="uppercase"
                     letterSpacing="wide"
                   >
-                    Reasoning
+                    {t('decisions.detail.sections.reasoning')}
                   </Text>
                   <Text whiteSpace="pre-wrap" lineHeight="1.7">
                     {decision.reasoning}
@@ -442,7 +444,7 @@ export const DecisionDetailModal = ({
                   textTransform="uppercase"
                   letterSpacing="wide"
                 >
-                  Created
+                  {t('decisions.detail.sections.created')}
                 </Text>
                 <Text lineHeight="1.7">
                   {new Date(decision.createdAt).toLocaleDateString('en-US', {
@@ -456,7 +458,7 @@ export const DecisionDetailModal = ({
               </Box>
 
               {/* Analysis Results */}
-              {decision.status === 'COMPLETED' && (
+              {decision.status === ProcessingStatus.COMPLETED && (
                 <Box
                   borderTopWidth="1px"
                   pt={4}
@@ -465,7 +467,7 @@ export const DecisionDetailModal = ({
                   _dark={{ borderColor: 'gray.700' }}
                 >
                   <Heading size="lg" mb={4}>
-                    AI Analysis
+                    {t('decisions.detail.sections.analysis')}
                   </Heading>
 
                   <VStack gap={4} align="stretch">
@@ -480,10 +482,15 @@ export const DecisionDetailModal = ({
                           textTransform="uppercase"
                           letterSpacing="wide"
                         >
-                          Decision Type
+                          {t('decisions.detail.sections.decisionType')}
                         </Text>
                         <Badge colorPalette="blue" size="lg" px={4} py={2}>
-                          {getCategoryLabel(decision.decisionType)}
+                          <Stack direction="row" align="center" gap={1.5}>
+                            {getDecisionTypeIcon(decision.decisionType)}
+                            <span>
+                              {getDecisionTypeLabel(t, decision.decisionType)}
+                            </span>
+                          </Stack>
                         </Badge>
                       </Box>
                     )}
@@ -499,7 +506,7 @@ export const DecisionDetailModal = ({
                           textTransform="uppercase"
                           letterSpacing="wide"
                         >
-                          Potential Cognitive Biases
+                          {t('decisions.detail.sections.biases')}
                         </Text>
                         <Stack direction="row" wrap="wrap" gap={2}>
                           {decision.biases.map((bias, index) => (
@@ -527,7 +534,7 @@ export const DecisionDetailModal = ({
                           textTransform="uppercase"
                           letterSpacing="wide"
                         >
-                          Overlooked Alternatives
+                          {t('decisions.detail.sections.alternatives')}
                         </Text>
                         <MarkdownRenderer content={decision.alternatives} />
                       </Box>
@@ -544,7 +551,7 @@ export const DecisionDetailModal = ({
                           textTransform="uppercase"
                           letterSpacing="wide"
                         >
-                          Additional Insights
+                          {t('decisions.detail.sections.insights')}
                         </Text>
                         <MarkdownRenderer content={decision.insights} />
                       </Box>
@@ -554,10 +561,12 @@ export const DecisionDetailModal = ({
                     {decision.analysisAttempts > 1 && (
                       <Box pt={4} borderTopWidth="1px">
                         <Text fontSize="sm" color="gray.500">
-                          Analyzed {decision.analysisAttempts} times
+                          {t('decisions.detail.analysis.attemptCount', {
+                            count: decision.analysisAttempts,
+                          })}
                           {decision.lastAnalyzedAt && (
                             <>
-                              {' · Last analyzed '}
+                              {t('decisions.detail.analysis.lastAnalyzed')}
                               {new Date(
                                 decision.lastAnalyzedAt
                               ).toLocaleDateString('en-US', {
@@ -576,8 +585,8 @@ export const DecisionDetailModal = ({
               )}
 
               {/* Processing State */}
-              {(decision.status === 'PENDING' ||
-                decision.status === 'PROCESSING') && (
+              {(decision.status === ProcessingStatus.PENDING ||
+                decision.status === ProcessingStatus.PROCESSING) && (
                 <Box
                   px={6}
                   py={5}
@@ -589,7 +598,7 @@ export const DecisionDetailModal = ({
                 >
                   <VStack gap={3}>
                     <Text fontWeight="bold" fontSize="lg">
-                      Analysis in Progress
+                      {t('decisions.detail.states.analyzing.title')}
                     </Text>
                     <Text
                       color="gray.600"
@@ -597,15 +606,14 @@ export const DecisionDetailModal = ({
                       lineHeight="1.6"
                       px={2}
                     >
-                      Your decision is being analyzed by AI. This usually takes
-                      a few seconds...
+                      {t('decisions.detail.states.analyzing.description')}
                     </Text>
                   </VStack>
                 </Box>
               )}
 
               {/* Error State */}
-              {decision.status === 'FAILED' && (
+              {decision.status === ProcessingStatus.FAILED && (
                 <Box
                   px={6}
                   py={5}
@@ -622,7 +630,7 @@ export const DecisionDetailModal = ({
                       color="red.700"
                       _dark={{ color: 'red.300' }}
                     >
-                      Analysis Failed
+                      {t('decisions.detail.states.failed.title')}
                     </Text>
                     <Text
                       color="gray.600"
@@ -631,18 +639,18 @@ export const DecisionDetailModal = ({
                       lineHeight="1.6"
                       px={2}
                     >
-                      {decision.errorMessage ||
-                        'An error occurred while analyzing your decision.'}
+                      {decision.errorMessage ??
+                        t('decisions.detail.states.failed.description')}
                     </Text>
                     <Button
                       colorPalette="red"
                       variant="outline"
                       onClick={handleReanalyze}
                       loading={isReanalyzing}
-                      loadingText="Retrying..."
+                      loadingText={t('common.actions.retrying')}
                       size="lg"
                     >
-                      Retry Analysis
+                      {t('decisions.detail.states.failed.retry')}
                     </Button>
                   </VStack>
                 </Box>
@@ -667,23 +675,23 @@ export const DecisionDetailModal = ({
               variant="ghost"
               onClick={handleDelete}
               loading={isDeleting}
-              loadingText="Deleting..."
+              loadingText={t('common.actions.delete')}
               size="lg"
               px={6}
             >
-              Delete
+              {t('common.actions.delete')}
             </Button>
-            {decision?.status === 'COMPLETED' && (
+            {decision?.status === ProcessingStatus.COMPLETED && (
               <Button
                 colorPalette="blue"
                 variant="outline"
                 onClick={handleReanalyze}
                 loading={isReanalyzing}
-                loadingText="Re-analyzing..."
+                loadingText={t('decisions.list.actions.reAnalyze')}
                 size="lg"
                 px={6}
               >
-                Re-analyze
+                {t('decisions.list.actions.reAnalyze')}
               </Button>
             )}
           </Stack>

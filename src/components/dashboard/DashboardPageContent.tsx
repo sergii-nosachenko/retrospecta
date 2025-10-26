@@ -22,6 +22,8 @@ import { BiasChart } from '@/components/dashboard/BiasChart';
 import { DecisionTypeChart } from '@/components/dashboard/DecisionTypeChart';
 import { EmptyChart } from '@/components/dashboard/EmptyChart';
 import { StatCard } from '@/components/dashboard/StatCard';
+import { ROUTES } from '@/constants/routes';
+import { useTranslations } from '@/translations';
 
 const LoadingState = memo(() => {
   return (
@@ -76,6 +78,8 @@ interface DashboardStatsProps {
 }
 
 const DashboardStats = memo<DashboardStatsProps>(({ analytics }) => {
+  const { t } = useTranslations();
+
   return (
     <Grid
       gap={6}
@@ -83,22 +87,22 @@ const DashboardStats = memo<DashboardStatsProps>(({ analytics }) => {
       templateColumns={{ base: '1fr', md: 'repeat(4, 1fr)' }}
     >
       <StatCard
-        label="Total Decisions"
+        label={t('dashboard.stats.totalDecisions')}
         value={analytics.totalDecisions}
         color="blue"
       />
       <StatCard
-        label="Completed Analyses"
+        label={t('dashboard.stats.completedAnalyses')}
         value={analytics.completedAnalyses}
         color="green"
       />
       <StatCard
-        label="Pending/Processing"
+        label={t('dashboard.stats.pendingProcessing')}
         value={analytics.pendingAnalyses}
         color="orange"
       />
       <StatCard
-        label="Recent (7 days)"
+        label={t('dashboard.stats.recent')}
         value={analytics.recentDecisions}
         color="purple"
       />
@@ -113,6 +117,8 @@ interface DashboardChartsProps {
 }
 
 const DashboardCharts = memo<DashboardChartsProps>(({ analytics }) => {
+  const { t } = useTranslations();
+
   const hasDecisionTypeData = useMemo(
     () => analytics.decisionTypeDistribution.length > 0,
     [analytics.decisionTypeDistribution.length]
@@ -128,13 +134,13 @@ const DashboardCharts = memo<DashboardChartsProps>(({ analytics }) => {
       {hasDecisionTypeData ? (
         <DecisionTypeChart data={analytics.decisionTypeDistribution} />
       ) : (
-        <EmptyChart title="Decision Types" />
+        <EmptyChart title={t('decisions.detail.sections.decisionType')} />
       )}
 
       {hasBiasData ? (
         <BiasChart data={analytics.biasDistribution} />
       ) : (
-        <EmptyChart title="Cognitive Biases" />
+        <EmptyChart title={t('decisions.detail.sections.biases')} />
       )}
     </Grid>
   );
@@ -143,19 +149,21 @@ const DashboardCharts = memo<DashboardChartsProps>(({ analytics }) => {
 DashboardCharts.displayName = 'DashboardCharts';
 
 const DashboardHeader = memo(() => {
+  const { t } = useTranslations();
+
   return (
     <Group gap={3} mb={8} alignItems="center">
       <IconButton
         asChild
         variant="ghost"
         size="lg"
-        aria-label="Back to decisions"
+        aria-label={t('common.actions.backToDashboard')}
       >
-        <Link href="/decisions">
+        <Link href={ROUTES.DECISIONS}>
           <LuArrowLeft />
         </Link>
       </IconButton>
-      <Heading size="2xl">Dashboard</Heading>
+      <Heading size="2xl">{t('dashboard.title')}</Heading>
     </Group>
   );
 });
@@ -163,6 +171,7 @@ const DashboardHeader = memo(() => {
 DashboardHeader.displayName = 'DashboardHeader';
 
 export const DashboardPageContent = memo(() => {
+  const { t } = useTranslations();
   const [analytics, setAnalytics] = useState<DashboardAnalytics | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -176,18 +185,18 @@ export const DashboardPageContent = memo(() => {
         setAnalytics(result.data);
         setError(null);
       } else {
-        setError(result.error || 'Failed to load analytics');
+        setError(result.error ?? t('dashboard.errors.loadFailed'));
       }
-    } catch (err) {
-      console.error('Error fetching analytics:', err);
-      setError('An unexpected error occurred');
+    } catch (error_) {
+      console.error('Error fetching analytics:', error_);
+      setError(t('dashboard.errors.loadFailed'));
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [t]);
 
   useEffect(() => {
-    fetchAnalytics();
+    void fetchAnalytics();
   }, [fetchAnalytics]);
 
   if (loading) {
@@ -195,7 +204,7 @@ export const DashboardPageContent = memo(() => {
   }
 
   if (error || !analytics) {
-    return <ErrorState error={error || 'Failed to load analytics'} />;
+    return <ErrorState error={error ?? t('dashboard.errors.loadFailed')} />;
   }
 
   return (

@@ -7,7 +7,7 @@ import { InfoTip } from './toggle-tip';
 export const ProgressBar = React.forwardRef<
   HTMLDivElement,
   ChakraProgress.TrackProps
->(function ProgressBar(props, ref) {
+>((props, ref) => {
   return (
     <ChakraProgress.Track {...props} ref={ref}>
       <ChakraProgress.Range />
@@ -22,7 +22,7 @@ export interface ProgressLabelProps extends ChakraProgress.LabelProps {
 export const ProgressLabel = React.forwardRef<
   HTMLDivElement,
   ProgressLabelProps
->(function ProgressLabel(props, ref) {
+>((props, ref) => {
   const { children, info, ...rest } = props;
   return (
     <ChakraProgress.Label {...rest} ref={ref}>

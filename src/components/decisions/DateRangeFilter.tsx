@@ -24,6 +24,7 @@ import {
   DatePickerViewTrigger,
   parseDate,
 } from '@/components/ui/date-picker';
+import { useTranslations } from '@/translations';
 
 interface DateRangeFilterProps {
   dateFrom: string | null;
@@ -101,7 +102,7 @@ DatePickerCalendarView.displayName = 'DatePickerCalendarView';
 const SingleDatePicker = memo(
   ({ value, onChange, placeholder }: SingleDatePickerProps) => {
     const handleValueChange = useCallback(
-      (event: { value: Array<{ toString: () => string }> }) => {
+      (event: { value: { toString: () => string }[] }) => {
         const dateValue = event.value[0];
         onChange(dateValue ? dateValue.toString() : null);
       },
@@ -110,7 +111,7 @@ const SingleDatePicker = memo(
 
     return (
       <DatePickerRoot
-        key={value || `${placeholder}-empty`}
+        key={value ?? `${placeholder}-empty`}
         value={value ? [parseDate(value)] : undefined}
         onValueChange={handleValueChange}
         size="sm"
@@ -152,17 +153,19 @@ export const DateRangeFilter = ({
   onDateFromChange,
   onDateToChange,
 }: DateRangeFilterProps) => {
+  const { t } = useTranslations();
+
   return (
     <>
       <SingleDatePicker
         value={dateFrom}
         onChange={onDateFromChange}
-        placeholder="From date"
+        placeholder={t('decisions.filters.dateRange.from')}
       />
       <SingleDatePicker
         value={dateTo}
         onChange={onDateToChange}
-        placeholder="To date"
+        placeholder={t('decisions.filters.dateRange.to')}
       />
     </>
   );

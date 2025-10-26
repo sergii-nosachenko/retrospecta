@@ -2,12 +2,12 @@
 
 import * as React from 'react';
 
-import type { ButtonProps } from '@chakra-ui/react';
 import {
   Button,
   Toggle as ChakraToggle,
   useToggleContext,
 } from '@chakra-ui/react';
+import type { ButtonProps } from '@chakra-ui/react';
 
 interface ToggleProps extends ChakraToggle.RootProps {
   variant?: keyof typeof variantMap;
@@ -22,7 +22,7 @@ const variantMap = {
 } as const;
 
 export const Toggle = React.forwardRef<HTMLButtonElement, ToggleProps>(
-  function Toggle(props, ref) {
+  (props, ref) => {
     const { variant = 'subtle', size, children, ...rest } = props;
     const variantConfig = variantMap[variant];
 
@@ -43,7 +43,7 @@ interface ToggleBaseButtonProps extends Omit<ButtonProps, 'variant'> {
 const ToggleBaseButton = React.forwardRef<
   HTMLButtonElement,
   ToggleBaseButtonProps
->(function ToggleBaseButton(props, ref) {
+>((props, ref) => {
   const toggle = useToggleContext();
   const { variant, ...rest } = props;
   return (
