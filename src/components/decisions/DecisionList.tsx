@@ -14,8 +14,6 @@ import { memo, useCallback, useState } from 'react';
 import { HiOutlineDotsVertical } from 'react-icons/hi';
 import { LuBrainCircuit, LuRefreshCw, LuTrash2 } from 'react-icons/lu';
 
-import { reanalyzeDecision } from '@/actions/analysis';
-import { deleteDecision } from '@/actions/decisions';
 import { EmptyState } from '@/components/ui/empty-state';
 import {
   MenuContent,
@@ -23,13 +21,16 @@ import {
   MenuRoot,
   MenuTrigger,
 } from '@/components/ui/menu';
-import { toaster } from '@/components/ui/toaster';
 import {
   getBiasLabel,
   getDecisionTypeIcon,
   getDecisionTypeLabel,
 } from '@/constants/decisions';
 import { useDecisions } from '@/contexts/DecisionsContext';
+import {
+  deleteDecisionAction,
+  reanalyzeDecisionAction,
+} from '@/lib/utils/decision-actions';
 import { type TFunction, useTranslations } from '@/translations';
 import { DecisionActionType, ProcessingStatus } from '@/types/enums';
 
@@ -384,86 +385,27 @@ export const DecisionList = ({ decisions }: DecisionListProps) => {
     setIsModalOpen(true);
   }, []);
 
+  // Wrapper handlers that use the extracted utility functions
   const handleReanalyze = useCallback(
     async (decisionId: string) => {
-      try {
-        // Optimistically update status immediately for instant UI feedback
-        optimisticUpdateStatus(decisionId, ProcessingStatus.PROCESSING);
-
-        const result = await reanalyzeDecision(decisionId);
-
-        if (result.success) {
-          toaster.create({
-            title: t('toasts.success.reAnalysisStarted.title'),
-            description: t('toasts.success.reAnalysisStarted.description'),
-            type: 'info',
-            duration: 2000,
-          });
-        } else {
-          // Revert optimistic update on error
-          optimisticUpdateStatus(decisionId, ProcessingStatus.COMPLETED);
-
-          toaster.create({
-            title: t('toasts.error.title'),
-            description: result.error ?? t('toasts.errors.reAnalyze'),
-            type: 'error',
-            duration: 5000,
-          });
-        }
-      } catch (error) {
-        console.error('Error re-analyzing:', error);
-
-        // Revert optimistic update on error
-        optimisticUpdateStatus(decisionId, ProcessingStatus.COMPLETED);
-
-        toaster.create({
-          title: t('toasts.error.title'),
-          description: t('toasts.errors.unexpected'),
-          type: 'error',
-          duration: 5000,
-        });
-      }
+      await reanalyzeDecisionAction(decisionId, {
+        optimisticUpdateStatus,
+        optimisticDelete,
+        t,
+      });
     },
-    [optimisticUpdateStatus, t]
+    [optimisticUpdateStatus, optimisticDelete, t]
   );
 
   const handleDelete = useCallback(
     async (decisionId: string) => {
-      try {
-        // Optimistically remove decision immediately for instant UI feedback
-        optimisticDelete(decisionId);
-
-        const result = await deleteDecision(decisionId);
-
-        if (result.success) {
-          toaster.create({
-            title: t('toasts.success.decisionDeleted.title'),
-            description: t('toasts.success.decisionDeleted.description'),
-            type: 'success',
-            duration: 3000,
-          });
-        } else {
-          toaster.create({
-            title: t('toasts.error.title'),
-            description: result.error ?? t('toasts.errors.deleteDecision'),
-            type: 'error',
-            duration: 5000,
-          });
-
-          // Note: SSE will restore the decision if deletion failed
-        }
-      } catch (error) {
-        console.error('Error deleting:', error);
-
-        toaster.create({
-          title: t('toasts.error.title'),
-          description: t('toasts.errors.unexpected'),
-          type: 'error',
-          duration: 5000,
-        });
-      }
+      await deleteDecisionAction(decisionId, {
+        optimisticUpdateStatus,
+        optimisticDelete,
+        t,
+      });
     },
-    [optimisticDelete, t]
+    [optimisticUpdateStatus, optimisticDelete, t]
   );
 
   if (decisions.length === 0) {

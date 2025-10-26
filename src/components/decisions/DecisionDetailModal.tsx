@@ -11,10 +11,7 @@ import {
   Text,
   VStack,
 } from '@chakra-ui/react';
-import { useCallback, useState } from 'react';
 
-import { reanalyzeDecision } from '@/actions/analysis';
-import { deleteDecision } from '@/actions/decisions';
 import {
   DialogBody,
   DialogCloseTrigger,
@@ -25,14 +22,13 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { MarkdownRenderer } from '@/components/ui/MarkdownRenderer';
-import { toaster } from '@/components/ui/toaster';
 import {
   getBiasLabel,
   getDecisionTypeIcon,
   getDecisionTypeLabel,
   getStatusLabel,
 } from '@/constants/decisions';
-import { useDecisions } from '@/contexts/DecisionsContext';
+import { useDecisionActions } from '@/hooks/useDecisionActions';
 import { useDecisionPolling } from '@/hooks/useDecisionPolling';
 import { useTranslations } from '@/translations';
 import { ProcessingStatus } from '@/types/enums';
@@ -64,7 +60,6 @@ export const DecisionDetailModal = ({
   onOpenChange,
 }: DecisionDetailModalProps) => {
   const { t } = useTranslations();
-  const { optimisticUpdateStatus, optimisticDelete } = useDecisions();
 
   // Use the polling hook to manage decision state and updates
   const { decision, isLoading } = useDecisionPolling({
@@ -73,103 +68,14 @@ export const DecisionDetailModal = ({
     source: 'context', // Use context-based polling (more efficient)
   });
 
-  const [isReanalyzing, setIsReanalyzing] = useState(false);
-  const [isDeleting, setIsDeleting] = useState(false);
+  // Use the actions hook to manage reanalyze and delete actions
+  const { handleReanalyze, handleDelete, isReanalyzing, isDeleting } =
+    useDecisionActions(decision);
 
-  const handleReanalyze = useCallback(async () => {
-    if (!decision) return;
-
-    setIsReanalyzing(true);
-
-    try {
-      // Optimistically update status immediately for instant UI feedback
-      optimisticUpdateStatus(decision.id, ProcessingStatus.PROCESSING);
-
-      const result = await reanalyzeDecision(decision.id);
-
-      if (result.success) {
-        // Show brief success notification
-        toaster.create({
-          title: t('toasts.success.reAnalysisStarted.title'),
-          description: t('toasts.success.reAnalysisStarted.description'),
-          type: 'info',
-          duration: 2000,
-        });
-
-        // No need to manually update state - the polling hook will automatically
-        // pick up changes from context (updated by SSE) within 1 second
-      } else {
-        // Revert optimistic update on error
-        optimisticUpdateStatus(decision.id, ProcessingStatus.COMPLETED);
-
-        toaster.create({
-          title: t('toasts.error.title'),
-          description: result.error ?? t('toasts.errors.reAnalyze'),
-          type: 'error',
-          duration: 5000,
-        });
-      }
-    } catch (error) {
-      console.error('Error re-analyzing:', error);
-
-      // Revert optimistic update on error
-      optimisticUpdateStatus(decision.id, ProcessingStatus.COMPLETED);
-
-      toaster.create({
-        title: t('toasts.error.title'),
-        description: t('toasts.errors.unexpected'),
-        type: 'error',
-        duration: 5000,
-      });
-    } finally {
-      setIsReanalyzing(false);
-    }
-  }, [decision, optimisticUpdateStatus, t]);
-
-  const handleDelete = useCallback(async () => {
-    if (!decision) return;
-
-    setIsDeleting(true);
-
-    try {
-      // Close modal first
-      onOpenChange(false);
-
-      // Optimistically remove decision immediately for instant UI feedback
-      optimisticDelete(decision.id);
-
-      const result = await deleteDecision(decision.id);
-
-      if (result.success) {
-        toaster.create({
-          title: t('toasts.success.decisionDeleted.title'),
-          description: t('toasts.success.decisionDeleted.description'),
-          type: 'success',
-          duration: 3000,
-        });
-      } else {
-        toaster.create({
-          title: t('toasts.error.title'),
-          description: result.error ?? t('toasts.errors.deleteDecision'),
-          type: 'error',
-          duration: 5000,
-        });
-
-        // Note: SSE will restore the decision if deletion failed
-      }
-    } catch (error) {
-      console.error('Error deleting:', error);
-
-      toaster.create({
-        title: t('toasts.error.title'),
-        description: t('toasts.errors.unexpected'),
-        type: 'error',
-        duration: 5000,
-      });
-    } finally {
-      setIsDeleting(false);
-    }
-  }, [decision, onOpenChange, optimisticDelete, t]);
+  // Wrap handleDelete to close modal on completion
+  const handleDeleteWithClose = () => {
+    void handleDelete(() => onOpenChange(false));
+  };
 
   return (
     <DialogRoot
@@ -532,7 +438,7 @@ export const DecisionDetailModal = ({
             <Button
               colorPalette="red"
               variant="ghost"
-              onClick={handleDelete}
+              onClick={handleDeleteWithClose}
               loading={isDeleting}
               loadingText={t('common.actions.delete')}
               size="lg"
