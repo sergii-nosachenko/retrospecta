@@ -12,6 +12,9 @@ interface StreamEvent {
   type: StreamEventType;
   decisions?: Decision[];
   count?: number;
+  totalCount?: number;
+  page?: number;
+  pageSize?: number;
   message?: string;
   timestamp?: string;
 }
@@ -134,6 +137,7 @@ export const useDecisionsSse = (
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [pendingCount, setPendingCount] = useState(0);
+  const [totalCount, setTotalCount] = useState(0);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
 
   const eventSourceRef = useRef<EventSource | null>(null);
@@ -148,6 +152,8 @@ export const useDecisionsSse = (
     const params = new URLSearchParams({
       sortBy: filters.sortBy,
       sortOrder: filters.sortOrder,
+      page: filters.page.toString(),
+      pageSize: filters.pageSize.toString(),
     });
 
     // Add decision type filters
@@ -198,6 +204,11 @@ export const useDecisionsSse = (
 
             return merged;
           });
+
+          // Update total count if provided
+          if (data.totalCount !== undefined) {
+            setTotalCount(data.totalCount);
+          }
 
           setIsLoading(false);
         } else if (
@@ -314,6 +325,8 @@ export const useDecisionsSse = (
     error,
     pendingCount,
     setPendingCount,
+    totalCount,
+    setTotalCount,
     refresh,
   };
 };

@@ -12,6 +12,8 @@ export interface FilterOptions {
   biases: string[];
   dateFrom: string | null;
   dateTo: string | null;
+  page: number;
+  pageSize: number;
 }
 
 /**
@@ -24,6 +26,8 @@ const defaultFilters: FilterOptions = {
   biases: [],
   dateFrom: null,
   dateTo: null,
+  page: 1,
+  pageSize: 10,
 };
 
 /**

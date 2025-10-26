@@ -30,12 +30,18 @@ export const DecisionsHeader = memo(
     return (
       <Stack
         direction={{ base: 'column', sm: 'row' }}
-        justify="space-between"
-        align={{ base: 'start', sm: 'center' }}
+        justify={{ base: 'center', sm: 'space-between' }}
+        align={{ base: 'center', sm: 'center' }}
         mb={0}
         gap={4}
       >
-        <Stack direction="row" align="center" gap={3} flexWrap="wrap">
+        <Stack
+          direction="row"
+          align="center"
+          gap={3}
+          flexWrap="wrap"
+          justify={{ base: 'center', sm: 'flex-start' }}
+        >
           <Logo size="2xl" />
           <Heading size="2xl">{t('decisions.header.title')}</Heading>
 

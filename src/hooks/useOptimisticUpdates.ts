@@ -80,10 +80,16 @@ export const useOptimisticUpdates = () => {
       decisionId: string,
       decisions: Decision[],
       setDecisions: React.Dispatch<React.SetStateAction<Decision[]>>,
-      setPendingCount: React.Dispatch<React.SetStateAction<number>>
+      setPendingCount: React.Dispatch<React.SetStateAction<number>>,
+      setTotalCount?: React.Dispatch<React.SetStateAction<number>>
     ) => {
       // Immediately remove from local state
       setDecisions((prev) => prev.filter((d) => d.id !== decisionId));
+
+      // Update total count optimistically
+      if (setTotalCount) {
+        setTotalCount((prev) => Math.max(0, prev - 1));
+      }
 
       // Update pending count if necessary
       const decision = decisions.find((d) => d.id === decisionId);
@@ -154,10 +160,25 @@ export const useOptimisticUpdates = () => {
     []
   );
 
+  /**
+   * Optimistically increment total count when a decision is created
+   * The actual decision will be added by SSE
+   */
+  const optimisticCreate = useCallback(
+    (setTotalCount?: React.Dispatch<React.SetStateAction<number>>) => {
+      // Update total count optimistically
+      if (setTotalCount) {
+        setTotalCount((prev) => prev + 1);
+      }
+    },
+    []
+  );
+
   return {
     optimisticUpdateStatus,
     optimisticDelete,
     optimisticMarkAsRead,
+    optimisticCreate,
     clearConfirmedUpdate,
     clearConfirmedUpdates,
     hasOptimisticUpdate,

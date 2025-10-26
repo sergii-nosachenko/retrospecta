@@ -23,6 +23,7 @@ import {
 import { SortingControls } from '@/components/decisions/controls/SortingControls';
 import { DecisionList } from '@/components/decisions/DecisionList';
 import { DecisionsHeader } from '@/components/decisions/DecisionsHeader';
+import { Pagination } from '@/components/decisions/Pagination';
 import { ActionBarContent, ActionBarRoot } from '@/components/ui/action-bar';
 import {
   DrawerBackdrop,
@@ -45,9 +46,11 @@ export const DecisionsPageContent = () => {
     isLoading,
     error,
     pendingCount,
+    totalCount,
     filters,
     setFilters,
     refresh,
+    optimisticCreate,
   } = useDecisions();
   const [user, setUser] = useState<{
     id: string;
@@ -78,35 +81,35 @@ export const DecisionsPageContent = () => {
 
   const handleSortChange = useCallback(
     (newSortBy: SortField, newSortOrder: SortOrder) => {
-      setFilters({ sortBy: newSortBy, sortOrder: newSortOrder });
+      setFilters({ sortBy: newSortBy, sortOrder: newSortOrder, page: 1 });
     },
     [setFilters]
   );
 
   const handleDecisionTypesChange = useCallback(
     (decisionTypes: DecisionType[]) => {
-      setFilters({ decisionTypes });
+      setFilters({ decisionTypes, page: 1 });
     },
     [setFilters]
   );
 
   const handleBiasesChange = useCallback(
     (biases: string[]) => {
-      setFilters({ biases });
+      setFilters({ biases, page: 1 });
     },
     [setFilters]
   );
 
   const handleDateFromChange = useCallback(
     (date: string | null) => {
-      setFilters({ dateFrom: date });
+      setFilters({ dateFrom: date, page: 1 });
     },
     [setFilters]
   );
 
   const handleDateToChange = useCallback(
     (date: string | null) => {
-      setFilters({ dateTo: date });
+      setFilters({ dateTo: date, page: 1 });
     },
     [setFilters]
   );
@@ -117,8 +120,21 @@ export const DecisionsPageContent = () => {
       biases: [],
       dateFrom: null,
       dateTo: null,
+      page: 1, // Reset to first page when clearing filters
     });
   }, [setFilters]);
+
+  const handlePageChange = useCallback(
+    (page: number) => {
+      setFilters({ page });
+      // Scroll to top of the page when changing pages
+      window.scrollTo({
+        top: 0,
+        behavior: 'smooth',
+      });
+    },
+    [setFilters]
+  );
 
   const handleTriggerDrawer = useCallback(
     (details: DrawerOpenChangeDetails) => {
@@ -128,12 +144,18 @@ export const DecisionsPageContent = () => {
   );
 
   const handleDecisionCreated = useCallback(() => {
+    // Update total count optimistically and reset to page 1
+    optimisticCreate();
+
+    // Force immediate SSE refresh to fetch the new decision
+    refresh();
+
     // Scroll to top of the page when a new decision is created
     window.scrollTo({
       top: 0,
       behavior: 'smooth',
     });
-  }, []);
+  }, [optimisticCreate, refresh]);
 
   const activeFiltersCount = useMemo(() => {
     let count = 0;
@@ -182,13 +204,23 @@ export const DecisionsPageContent = () => {
         />
       </Box>
 
-      <Box py={6}>
-        {error ? (
-          <ErrorState message={error} onRetry={refresh} />
-        ) : isLoading ? (
-          <DecisionListSkeleton />
-        ) : (
-          <DecisionList decisions={decisions} />
+      <Box py={6} pb={{ base: 16, md: 8 }}>
+        {error && <ErrorState message={error} onRetry={refresh} />}
+        {!error && isLoading && <DecisionListSkeleton />}
+        {!error && !isLoading && (
+          <>
+            <DecisionList decisions={decisions} />
+
+            {/* Pagination */}
+            {totalCount > 0 && (
+              <Pagination
+                currentPage={filters.page}
+                pageSize={filters.pageSize}
+                totalCount={totalCount}
+                onPageChange={handlePageChange}
+              />
+            )}
+          </>
         )}
       </Box>
 

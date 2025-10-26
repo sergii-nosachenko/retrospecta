@@ -22,6 +22,7 @@ interface DecisionsContextValue {
   isLoading: boolean;
   error: string | null;
   pendingCount: number;
+  totalCount: number;
   filters: FilterOptions;
   setFilters: (filters: Partial<FilterOptions>) => void;
   refresh: () => void;
@@ -31,6 +32,7 @@ interface DecisionsContextValue {
   ) => void;
   optimisticDelete: (decisionId: string) => void;
   optimisticMarkAsRead: (decisionId: string) => void;
+  optimisticCreate: () => void;
   getDecision: (decisionId: string) => Decision | undefined;
 }
 
@@ -82,6 +84,7 @@ export const DecisionsProvider = ({ children }: DecisionsProviderProps) => {
     optimisticUpdateStatus: optimisticUpdateStatusFn,
     optimisticDelete: optimisticDeleteFn,
     optimisticMarkAsRead: optimisticMarkAsReadFn,
+    optimisticCreate: optimisticCreateFn,
     clearConfirmedUpdates,
     hasOptimisticUpdate,
     getOptimisticUpdateCount,
@@ -95,6 +98,8 @@ export const DecisionsProvider = ({ children }: DecisionsProviderProps) => {
     error,
     pendingCount,
     setPendingCount,
+    totalCount,
+    setTotalCount,
     refresh,
   } = useDecisionsSse(
     filters,
@@ -122,9 +127,38 @@ export const DecisionsProvider = ({ children }: DecisionsProviderProps) => {
 
   const optimisticDelete = useCallback(
     (decisionId: string) => {
-      optimisticDeleteFn(decisionId, decisions, setDecisions, setPendingCount);
+      // Perform optimistic delete
+      optimisticDeleteFn(
+        decisionId,
+        decisions,
+        setDecisions,
+        setPendingCount,
+        setTotalCount
+      );
+
+      // Check if we need to adjust the page after deletion
+      const newTotalCount = totalCount - 1;
+      const lastValidPage = Math.max(
+        1,
+        Math.ceil(newTotalCount / filters.pageSize)
+      );
+
+      // If current page becomes invalid, reset to last valid page
+      if (filters.page > lastValidPage) {
+        setFilters({ page: lastValidPage });
+      }
     },
-    [optimisticDeleteFn, decisions, setDecisions, setPendingCount]
+    [
+      optimisticDeleteFn,
+      decisions,
+      setDecisions,
+      setPendingCount,
+      setTotalCount,
+      totalCount,
+      filters.page,
+      filters.pageSize,
+      setFilters,
+    ]
   );
 
   const optimisticMarkAsRead = useCallback(
@@ -133,6 +167,16 @@ export const DecisionsProvider = ({ children }: DecisionsProviderProps) => {
     },
     [optimisticMarkAsReadFn, decisions, setDecisions]
   );
+
+  const optimisticCreate = useCallback(() => {
+    // Increment total count optimistically
+    optimisticCreateFn(setTotalCount);
+
+    // Reset to page 1 to see the new decision
+    if (filters.page !== 1) {
+      setFilters({ page: 1 });
+    }
+  }, [optimisticCreateFn, setTotalCount, filters.page, setFilters]);
 
   // Get a specific decision by ID
   const getDecision = useCallback(
@@ -149,12 +193,14 @@ export const DecisionsProvider = ({ children }: DecisionsProviderProps) => {
       isLoading,
       error,
       pendingCount,
+      totalCount,
       filters,
       setFilters,
       refresh,
       optimisticUpdateStatus,
       optimisticDelete,
       optimisticMarkAsRead,
+      optimisticCreate,
       getDecision,
     }),
     [
@@ -162,12 +208,14 @@ export const DecisionsProvider = ({ children }: DecisionsProviderProps) => {
       isLoading,
       error,
       pendingCount,
+      totalCount,
       filters,
       setFilters,
       refresh,
       optimisticUpdateStatus,
       optimisticDelete,
       optimisticMarkAsRead,
+      optimisticCreate,
       getDecision,
     ]
   );

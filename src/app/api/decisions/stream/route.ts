@@ -44,6 +44,16 @@ export async function GET(request: NextRequest) {
   const dateFrom = searchParams.get('dateFrom');
   const dateTo = searchParams.get('dateTo');
 
+  // Get pagination parameters
+  const page = Math.max(
+    1,
+    Number.parseInt(searchParams.get('page') ?? '1', 10)
+  );
+  const pageSize = Math.max(
+    1,
+    Math.min(100, Number.parseInt(searchParams.get('pageSize') ?? '10', 10))
+  );
+
   // Validate sortBy parameter
   // Support both 'category' (old) and 'decisionType' (new) for backwards compatibility
   const validSortFields = [
@@ -162,12 +172,23 @@ export async function GET(request: NextRequest) {
             }
           }
 
-          // Get all user decisions to send complete list
+          // Get total count for pagination
+          const totalCount = await prisma.decision.count({
+            where: whereClause,
+          });
+
+          // Calculate pagination
+          const skip = (page - 1) * pageSize;
+          const take = pageSize;
+
+          // Get paginated user decisions
           const allDecisions = await prisma.decision.findMany({
             where: whereClause,
             orderBy: {
               [sortField]: order,
             } as Prisma.DecisionOrderByWithRelationInput,
+            skip,
+            take,
             select: {
               id: true,
               situation: true,
@@ -190,6 +211,9 @@ export async function GET(request: NextRequest) {
           sendEvent({
             type: StreamEventType.UPDATE,
             decisions: allDecisions,
+            totalCount,
+            page,
+            pageSize,
             timestamp: new Date().toISOString(),
           });
         } catch (error) {

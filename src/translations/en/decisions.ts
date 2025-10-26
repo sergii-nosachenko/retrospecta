@@ -133,6 +133,9 @@ export const decisions = {
     ascending: 'Sort ascending',
     descending: 'Sort descending',
   },
+  pagination: {
+    showing: 'Showing {start}-{end} of {total} decisions',
+  },
   // Decision type labels
   decisionTypes: {
     EMOTIONAL: 'Emotional',
