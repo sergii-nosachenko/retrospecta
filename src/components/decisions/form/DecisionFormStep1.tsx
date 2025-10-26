@@ -1,6 +1,7 @@
 'use client';
 
 import { VStack } from '@chakra-ui/react';
+import { memo } from 'react';
 
 import { FormTextareaField } from '@/components/common';
 import { StepsContent } from '@/components/ui/steps';
@@ -22,7 +23,7 @@ interface DecisionFormStep1Props {
  * @param onChange - Change handler for textarea
  * @param disabled - Whether the input should be disabled (during submission)
  */
-export const DecisionFormStep1 = ({
+const DecisionFormStep1Component = ({
   value,
   onChange,
   disabled = false,
@@ -48,4 +49,5 @@ export const DecisionFormStep1 = ({
   );
 };
 
+export const DecisionFormStep1 = memo(DecisionFormStep1Component);
 DecisionFormStep1.displayName = 'DecisionFormStep1';

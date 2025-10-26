@@ -130,25 +130,38 @@ export const DecisionFormModal = ({
   /**
    * Handle cancel button click
    */
-  const handleCancel = useCallback(() => {
+  const handleCancel = () => {
     setOpen(false);
-  }, []);
+  };
 
   /**
    * Prevent form auto-submit on Enter key
    */
-  const handleFormSubmit = useCallback((e: React.FormEvent) => {
+  const handleFormSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-  }, []);
+  };
 
   /**
-   * Generic field change handler
+   * Field change handlers
    */
-  const createChangeHandler = useCallback(
-    (field: 'situation' | 'decision' | 'reasoning') =>
-      (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-        updateField(field, e.target.value);
-      },
+  const handleSituationChange = useCallback(
+    (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+      updateField('situation', e.target.value);
+    },
+    [updateField]
+  );
+
+  const handleDecisionChange = useCallback(
+    (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+      updateField('decision', e.target.value);
+    },
+    [updateField]
+  );
+
+  const handleReasoningChange = useCallback(
+    (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+      updateField('reasoning', e.target.value);
+    },
     [updateField]
   );
 
@@ -207,19 +220,19 @@ export const DecisionFormModal = ({
 
             <DecisionFormStep1
               value={formData.situation}
-              onChange={createChangeHandler('situation')}
+              onChange={handleSituationChange}
               disabled={isSubmitting}
             />
 
             <DecisionFormStep2
               value={formData.decision}
-              onChange={createChangeHandler('decision')}
+              onChange={handleDecisionChange}
               disabled={isSubmitting}
             />
 
             <DecisionFormStep3
               value={formData.reasoning}
-              onChange={createChangeHandler('reasoning')}
+              onChange={handleReasoningChange}
               disabled={isSubmitting}
             />
           </StepsRoot>

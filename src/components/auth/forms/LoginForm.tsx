@@ -1,7 +1,7 @@
 'use client';
 
 import { Box, Button, Input, Stack } from '@chakra-ui/react';
-import { useCallback, useState } from 'react';
+import { useState } from 'react';
 
 import { login } from '@/actions/auth';
 import { ErrorMessage } from '@/components/auth/ErrorMessage';
@@ -13,24 +13,21 @@ export const LoginForm = () => {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
-  const handleSubmit = useCallback(
-    async (event: React.FormEvent<HTMLDivElement>) => {
-      event.preventDefault();
-      setLoading(true);
-      setError(null);
+  const handleSubmit = async (event: React.FormEvent<HTMLDivElement>) => {
+    event.preventDefault();
+    setLoading(true);
+    setError(null);
 
-      const formData = new FormData(
-        event.currentTarget as unknown as HTMLFormElement
-      );
-      const result = await login(formData);
+    const formData = new FormData(
+      event.currentTarget as unknown as HTMLFormElement
+    );
+    const result = await login(formData);
 
-      if (result?.error) {
-        setError(result.error);
-        setLoading(false);
-      }
-    },
-    []
-  );
+    if (result?.error) {
+      setError(result.error);
+      setLoading(false);
+    }
+  };
 
   return (
     <Box as="form" onSubmit={handleSubmit}>

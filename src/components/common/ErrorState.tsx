@@ -1,5 +1,5 @@
 import { Box, Button, Stack } from '@chakra-ui/react';
-import { memo, useCallback } from 'react';
+import { memo } from 'react';
 
 import { useTranslations } from '@/translations';
 
@@ -16,13 +16,10 @@ ErrorMessage.displayName = 'ErrorMessage';
 
 const RetryButton = memo(({ onRetry }: { onRetry: () => void }) => {
   const { t } = useTranslations();
-  const handleClick = useCallback(() => {
-    onRetry();
-  }, [onRetry]);
 
   return (
     <Box>
-      <Button onClick={handleClick} colorPalette="red" size="sm" px={4}>
+      <Button onClick={onRetry} colorPalette="red" size="sm" px={4}>
         {t('common.actions.refresh')}
       </Button>
     </Box>

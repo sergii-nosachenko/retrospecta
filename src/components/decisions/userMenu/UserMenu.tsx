@@ -2,7 +2,7 @@
 
 import { Avatar, Group, IconButton, Separator, Text } from '@chakra-ui/react';
 import Link from 'next/link';
-import { memo, useCallback } from 'react';
+import { memo } from 'react';
 import { LuChartBar, LuLogOut, LuMoon, LuSun } from 'react-icons/lu';
 
 import {
@@ -139,14 +139,10 @@ const ThemeToggleMenuItem = memo(
   ({ colorMode, onToggle }: { colorMode: string; onToggle: () => void }) => {
     const { t } = useTranslations();
 
-    const handleClick = useCallback(() => {
-      onToggle();
-    }, [onToggle]);
-
     return (
       <MenuItem
         value="theme"
-        onClick={handleClick}
+        onClick={onToggle}
         closeOnSelect={false}
         css={{
           py: 2,
@@ -172,14 +168,10 @@ ThemeToggleMenuItem.displayName = 'ThemeToggleMenuItem';
 const SignOutMenuItem = memo(({ onSignOut }: { onSignOut: () => void }) => {
   const { t } = useTranslations();
 
-  const handleClick = useCallback(() => {
-    onSignOut();
-  }, [onSignOut]);
-
   return (
     <MenuItem
       value="signout"
-      onClick={handleClick}
+      onClick={onSignOut}
       css={{
         py: 2,
         px: 3,
@@ -205,14 +197,6 @@ SignOutMenuItem.displayName = 'SignOutMenuItem';
 export const UserMenu = memo(({ user, onSignOut }: UserMenuProps) => {
   const { colorMode, toggleColorMode } = useColorMode();
 
-  const handleToggleColorMode = useCallback(() => {
-    toggleColorMode();
-  }, [toggleColorMode]);
-
-  const handleSignOut = useCallback(() => {
-    onSignOut();
-  }, [onSignOut]);
-
   return (
     <MenuRoot positioning={{ placement: 'bottom-end' }}>
       <UserMenuTrigger name={user.name} avatarUrl={user.avatarUrl} />
@@ -224,14 +208,11 @@ export const UserMenu = memo(({ user, onSignOut }: UserMenuProps) => {
 
         <DashboardMenuItem />
 
-        <ThemeToggleMenuItem
-          colorMode={colorMode}
-          onToggle={handleToggleColorMode}
-        />
+        <ThemeToggleMenuItem colorMode={colorMode} onToggle={toggleColorMode} />
 
         <Separator my={1} />
 
-        <SignOutMenuItem onSignOut={handleSignOut} />
+        <SignOutMenuItem onSignOut={onSignOut} />
       </MenuContent>
     </MenuRoot>
   );
