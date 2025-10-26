@@ -3,8 +3,6 @@
 import { Button, Stack, Text, Textarea, VStack } from '@chakra-ui/react';
 import { useCallback, useMemo, useState } from 'react';
 
-import { analyzeDecision } from '@/actions/analysis';
-import { createDecision } from '@/actions/decisions';
 import {
   DialogBody,
   DialogCloseTrigger,
@@ -22,7 +20,8 @@ import {
   StepsList,
   StepsRoot,
 } from '@/components/ui/steps';
-import { toaster } from '@/components/ui/toaster';
+import { useDecisionForm } from '@/hooks/useDecisionForm';
+import { useMultiStepForm } from '@/hooks/useMultiStepForm';
 import { useTranslations } from '@/translations';
 
 interface DecisionFormModalProps {
@@ -36,14 +35,8 @@ export const DecisionFormModal = ({
 }: DecisionFormModalProps) => {
   const { t } = useTranslations();
   const [open, setOpen] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [currentStep, setCurrentStep] = useState(0);
-  const [formData, setFormData] = useState({
-    situation: '',
-    decision: '',
-    reasoning: '',
-  });
 
+  // Define form steps
   const steps = useMemo(
     () => [
       {
@@ -62,175 +55,102 @@ export const DecisionFormModal = ({
     [t]
   );
 
-  const resetForm = useCallback(() => {
-    setFormData({
-      situation: '',
-      decision: '',
-      reasoning: '',
-    });
-    setCurrentStep(0);
-  }, []);
+  // Use custom hooks for form logic
+  const {
+    currentStep,
+    isFirstStep,
+    isLastStep,
+    next,
+    previous,
+    reset: resetStep,
+  } = useMultiStepForm({ steps });
 
-  const validateCurrentStep = useCallback(() => {
-    switch (currentStep) {
-      case 0: // Situation
-        if (!formData.situation.trim()) {
-          toaster.create({
-            title: t('toasts.validation.title'),
-            description: t('decisions.form.validation.situationRequired'),
-            type: 'error',
-            duration: 3000,
-          });
-          return false;
-        }
-        if (formData.situation.trim().length < 10) {
-          toaster.create({
-            title: t('toasts.validation.title'),
-            description: t('decisions.form.validation.situationMinLength'),
-            type: 'error',
-            duration: 3000,
-          });
-          return false;
-        }
-        return true;
-      case 1: // Decision
-        if (!formData.decision.trim()) {
-          toaster.create({
-            title: t('toasts.validation.title'),
-            description: t('decisions.form.validation.decisionRequired'),
-            type: 'error',
-            duration: 3000,
-          });
-          return false;
-        }
-        if (formData.decision.trim().length < 5) {
-          toaster.create({
-            title: t('toasts.validation.title'),
-            description: t('decisions.form.validation.decisionMinLength'),
-            type: 'error',
-            duration: 3000,
-          });
-          return false;
-        }
-        return true;
-      case 2: // Reasoning (optional)
-        return true;
-      default:
-        return true;
-    }
-  }, [currentStep, formData, t]);
+  const {
+    formData,
+    isSubmitting,
+    updateField,
+    validateStep,
+    submit,
+    reset: resetForm,
+  } = useDecisionForm();
 
+  /**
+   * Reset both form and step state
+   */
+  const resetAll = useCallback(() => {
+    resetForm();
+    resetStep();
+  }, [resetForm, resetStep]);
+
+  /**
+   * Handle next button click with validation
+   */
   const handleNext = useCallback(() => {
-    if (validateCurrentStep()) {
-      setCurrentStep((prev) => Math.min(prev + 1, steps.length - 1));
+    if (validateStep(currentStep)) {
+      next();
     }
-  }, [steps.length, validateCurrentStep]);
+  }, [currentStep, validateStep, next]);
 
-  const handlePrevious = useCallback(() => {
-    setCurrentStep((prev) => Math.max(prev - 1, 0));
-  }, []);
-
-  const handleFormSubmit = useCallback((e: React.FormEvent) => {
-    e.preventDefault();
-    // Prevent auto-submit, only allow manual button click
-  }, []);
-
+  /**
+   * Handle form submission
+   */
   const handleSubmit = useCallback(async () => {
-    // Validate all steps before submission
-    if (!formData.situation.trim() || !formData.decision.trim()) {
-      toaster.create({
-        title: t('toasts.validation.title'),
-        description: t('decisions.form.validation.allFieldsRequired'),
-        type: 'error',
-        duration: 4000,
-      });
-      return;
-    }
+    const result = await submit();
 
-    setIsSubmitting(true);
-
-    try {
-      // Create decision
-      const result = await createDecision({
-        situation: formData.situation,
-        decision: formData.decision,
-        reasoning: formData.reasoning || undefined,
-      });
-
-      if (!result.success || !result.data) {
-        toaster.create({
-          title: t('toasts.error.title'),
-          description: result.error ?? t('toasts.errors.createDecision'),
-          type: 'error',
-          duration: 5000,
-        });
-        return;
-      }
-
-      // Show success message
-      toaster.create({
-        title: t('toasts.success.decisionCreated.title'),
-        description: t('toasts.success.decisionCreated.description'),
-        type: 'success',
-        duration: 3000,
-      });
-
+    if (result.success) {
       // Close modal and reset form
       setOpen(false);
-      resetForm();
+      resetAll();
 
       // Call success callback if provided
       if (onSuccess) {
         onSuccess();
       }
-
-      // Trigger analysis in the background (non-blocking)
-      // The SSE connection will automatically update the UI
-      analyzeDecision(result.data.id).catch((error) => {
-        console.error('Background analysis error:', error);
-      });
-    } catch (error) {
-      console.error('Error submitting decision:', error);
-      toaster.create({
-        title: t('toasts.error.title'),
-        description: t('toasts.errors.tryAgain'),
-        type: 'error',
-        duration: 5000,
-      });
-    } finally {
-      setIsSubmitting(false);
     }
-  }, [formData, onSuccess, resetForm, t]);
+  }, [submit, resetAll, onSuccess]);
 
+  /**
+   * Handle modal open/close state changes
+   */
   const handleOpenChange = useCallback(
     (e: { open: boolean }) => {
       setOpen(e.open);
       if (!e.open) {
-        resetForm();
+        resetAll();
       }
     },
-    [resetForm]
+    [resetAll]
   );
 
+  /**
+   * Prevent form auto-submit on Enter key
+   */
+  const handleFormSubmit = useCallback((e: React.FormEvent) => {
+    e.preventDefault();
+  }, []);
+
+  /**
+   * Handle field change events
+   */
   const handleSituationChange = useCallback(
     (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-      setFormData((prev) => ({ ...prev, situation: e.target.value }));
+      updateField('situation', e.target.value);
     },
-    []
+    [updateField]
   );
 
   const handleDecisionChange = useCallback(
     (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-      setFormData((prev) => ({ ...prev, decision: e.target.value }));
+      updateField('decision', e.target.value);
     },
-    []
+    [updateField]
   );
 
   const handleReasoningChange = useCallback(
     (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-      setFormData((prev) => ({ ...prev, reasoning: e.target.value }));
+      updateField('reasoning', e.target.value);
     },
-    []
+    [updateField]
   );
 
   const handleCloseClick = useCallback(() => {
@@ -392,10 +312,10 @@ export const DecisionFormModal = ({
               justifyContent="space-between"
             >
               <Stack direction="row" gap={3}>
-                {currentStep > 0 && (
+                {!isFirstStep && (
                   <Button
                     variant="outline"
-                    onClick={handlePrevious}
+                    onClick={previous}
                     disabled={isSubmitting}
                     size="lg"
                     px={6}
@@ -415,17 +335,7 @@ export const DecisionFormModal = ({
                 >
                   {t('common.actions.cancel')}
                 </Button>
-                {currentStep < steps.length - 1 ? (
-                  <Button
-                    onClick={handleNext}
-                    colorPalette="blue"
-                    disabled={isSubmitting}
-                    size="lg"
-                    px={6}
-                  >
-                    {t('common.actions.next')}
-                  </Button>
-                ) : (
+                {isLastStep ? (
                   <Button
                     onClick={handleSubmit}
                     colorPalette="blue"
@@ -435,6 +345,16 @@ export const DecisionFormModal = ({
                     px={6}
                   >
                     {t('decisions.form.actions.create')}
+                  </Button>
+                ) : (
+                  <Button
+                    onClick={handleNext}
+                    colorPalette="blue"
+                    disabled={isSubmitting}
+                    size="lg"
+                    px={6}
+                  >
+                    {t('common.actions.next')}
                   </Button>
                 )}
               </Stack>
