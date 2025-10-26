@@ -87,7 +87,6 @@ export const DecisionsProvider = ({ children }: DecisionsProviderProps) => {
     optimisticCreate: optimisticCreateFn,
     clearConfirmedUpdates,
     hasOptimisticUpdate,
-    getOptimisticUpdateCount,
   } = useOptimisticUpdates();
 
   // SSE connection with decision updates
@@ -105,7 +104,7 @@ export const DecisionsProvider = ({ children }: DecisionsProviderProps) => {
     filters,
     undefined, // onDecisionsUpdate - handled by notifications hook
     clearConfirmedUpdates,
-    getOptimisticUpdateCount
+    hasOptimisticUpdate
   );
 
   useDecisionNotifications(decisions, hasOptimisticUpdate);

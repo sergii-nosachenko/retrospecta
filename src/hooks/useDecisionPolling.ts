@@ -121,35 +121,33 @@ export const useDecisionPolling = ({
    * Uses context data (updated by SSE) instead of making API calls
    */
   useEffect(() => {
-    if (!isPolling || !enabled || !decision) return;
+    if (!enabled || !decisionId) return;
 
     const intervalId = setInterval(() => {
       if (source === 'context') {
-        const updatedDecision = getDecisionFromContext(decision.id);
+        const updatedDecision = getDecisionFromContext(decisionId);
 
         if (updatedDecision) {
           setDecision(updatedDecision);
 
-          if (isTerminalStatus(updatedDecision.status)) {
-            setIsPolling(false);
+          const shouldPoll = !isTerminalStatus(updatedDecision.status);
+          setIsPolling(shouldPoll);
 
-            if (updatedDecision.status === ProcessingStatus.FAILED) {
-              void getDecision(decision.id).then((result) => {
-                if (result.success && result.data) {
-                  setDecision(result.data as Decision);
-                }
-              });
-            }
+          if (updatedDecision.status === ProcessingStatus.FAILED) {
+            void getDecision(decisionId).then((result) => {
+              if (result.success && result.data) {
+                setDecision(result.data as Decision);
+              }
+            });
           }
         }
       } else {
-        void getDecision(decision.id).then((result) => {
+        void getDecision(decisionId).then((result) => {
           if (result.success && result.data) {
             setDecision(result.data as Decision);
 
-            if (isTerminalStatus(result.data.status)) {
-              setIsPolling(false);
-            }
+            const shouldPoll = !isTerminalStatus(result.data.status);
+            setIsPolling(shouldPoll);
           }
         });
       }
@@ -157,8 +155,7 @@ export const useDecisionPolling = ({
 
     return () => clearInterval(intervalId);
   }, [
-    decision,
-    isPolling,
+    decisionId,
     enabled,
     source,
     interval,

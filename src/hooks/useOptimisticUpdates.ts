@@ -51,15 +51,37 @@ export const useOptimisticUpdates = () => {
     ) => {
       optimisticUpdatesRef.current.set(decisionId, { status });
 
-      setDecisions((prev) =>
-        prev.map((d) => (d.id === decisionId ? { ...d, status } : d))
-      );
+      const shouldUpdatePendingCountRef = { current: false };
 
-      if (
-        status === ProcessingStatus.PROCESSING ||
-        status === ProcessingStatus.PENDING
-      ) {
-        setPendingCount((prev) => prev + 1);
+      setDecisions((previousDecisions) => {
+        const currentDecision = previousDecisions.find(
+          (decision) => decision.id === decisionId
+        );
+
+        if (currentDecision?.status === status) {
+          return previousDecisions;
+        }
+
+        const isMovingToPendingState =
+          status === ProcessingStatus.PROCESSING ||
+          status === ProcessingStatus.PENDING;
+
+        const wasNotPending =
+          currentDecision &&
+          currentDecision.status !== ProcessingStatus.PROCESSING &&
+          currentDecision.status !== ProcessingStatus.PENDING;
+
+        if (isMovingToPendingState && wasNotPending) {
+          shouldUpdatePendingCountRef.current = true;
+        }
+
+        return previousDecisions.map((decision) =>
+          decision.id === decisionId ? { ...decision, status } : decision
+        );
+      });
+
+      if (shouldUpdatePendingCountRef.current) {
+        setPendingCount((previous) => previous + 1);
       }
     },
     []
@@ -93,8 +115,15 @@ export const useOptimisticUpdates = () => {
 
   const clearConfirmedUpdate = useCallback((decision: Decision) => {
     const optimistic = optimisticUpdatesRef.current.get(decision.id);
-    if (optimistic && optimistic.status === decision.status) {
-      optimisticUpdatesRef.current.delete(decision.id);
+    if (optimistic) {
+      if (optimistic.status === decision.status) {
+        optimisticUpdatesRef.current.delete(decision.id);
+      } else if (
+        decision.status !== ProcessingStatus.PENDING &&
+        decision.status !== ProcessingStatus.PROCESSING
+      ) {
+        optimisticUpdatesRef.current.delete(decision.id);
+      }
     }
   }, []);
 

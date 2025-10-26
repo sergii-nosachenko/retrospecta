@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 
-import { StreamEventType } from '@/types/enums';
+import { ProcessingStatus, StreamEventType } from '@/types/enums';
 
 import type { FilterOptions } from './useDecisionFilters';
 import type { Decision } from '@/types/decision';
@@ -49,20 +49,23 @@ const hasDecisionChanged = (
 /**
  * Helper function to merge decision updates
  * Returns the same array reference if nothing changed to prevent re-renders
+ * Preserves optimistic updates over stale server data
  */
 const mergeDecisionUpdates = (
   prevDecisions: Decision[],
-  newDecisions: Decision[]
+  newDecisions: Decision[],
+  hasOptimisticUpdate?: (decisionId: string) => boolean
 ): Decision[] => {
-  const newDecisionsMap = new Map(newDecisions.map((d) => [d.id, d]));
-  const prevDecisionsMap = new Map(prevDecisions.map((d) => [d.id, d]));
+  const newDecisionsMap = new Map(
+    newDecisions.map((decision) => [decision.id, decision])
+  );
+  const prevDecisionsMap = new Map(
+    prevDecisions.map((decision) => [decision.id, decision])
+  );
 
-  // Check if anything actually changed
   let hasChanges = false;
 
-  // Check for new or removed decisions
   if (newDecisionsMap.size === prevDecisionsMap.size) {
-    // Check if the order of decisions changed
     const orderChanged = newDecisions.some(
       (decision, index) => decision.id !== prevDecisions[index]?.id
     );
@@ -70,10 +73,14 @@ const mergeDecisionUpdates = (
     if (orderChanged) {
       hasChanges = true;
     } else {
-      // Check if any decision data changed
       for (const [id, newDecision] of newDecisionsMap) {
         const oldDecision = prevDecisionsMap.get(id);
-        if (!oldDecision || hasDecisionChanged(oldDecision, newDecision)) {
+        const hasOptimistic = hasOptimisticUpdate?.(id) ?? false;
+
+        if (
+          !hasOptimistic &&
+          (!oldDecision || hasDecisionChanged(oldDecision, newDecision))
+        ) {
           hasChanges = true;
           break;
         }
@@ -83,17 +90,21 @@ const mergeDecisionUpdates = (
     hasChanges = true;
   }
 
-  // If nothing changed, return the same array reference (prevents re-render)
   if (!hasChanges) {
     return prevDecisions;
   }
 
-  // Merge: keep old objects for unchanged decisions, use new objects for changed ones
   return newDecisions.map((newDecision) => {
     const oldDecision = prevDecisionsMap.get(newDecision.id);
+
+    if (hasOptimisticUpdate?.(newDecision.id)) {
+      return oldDecision ?? newDecision;
+    }
+
     if (oldDecision && !hasDecisionChanged(oldDecision, newDecision)) {
       return oldDecision;
     }
+
     return newDecision;
   });
 };
@@ -108,13 +119,14 @@ const mergeDecisionUpdates = (
  * - Automatic connection management
  * - Reconnection with exponential backoff
  * - Smart decision merging to prevent unnecessary re-renders
+ * - Preserves optimistic updates over stale server data
  * - Pending count tracking
  * - Error handling and reporting
  *
  * @param filters - Filter options for the decisions stream
  * @param onDecisionsUpdate - Callback when decisions are updated
  * @param clearConfirmedUpdates - Optional callback to clear confirmed optimistic updates
- * @param getOptimisticUpdateCount - Optional function to get count of optimistic updates
+ * @param hasOptimisticUpdate - Optional function to check if a decision has an optimistic update
  *
  * @returns SSE connection state and control functions
  *
@@ -125,13 +137,13 @@ const mergeDecisionUpdates = (
  *   error,
  *   pendingCount,
  *   refresh
- * } = useDecisionsSse(filters, handleUpdate);
+ * } = useDecisionsSse(filters, handleUpdate, clearUpdates, hasOptimistic);
  */
 export const useDecisionsSse = (
   filters: FilterOptions,
   onDecisionsUpdate?: (decisions: Decision[]) => void,
   clearConfirmedUpdates?: (decisions: Decision[]) => void,
-  getOptimisticUpdateCount?: () => number
+  hasOptimisticUpdate?: (decisionId: string) => boolean
 ) => {
   const [decisions, setDecisions] = useState<Decision[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -184,7 +196,11 @@ export const useDecisionsSse = (
           }
 
           setDecisions((prevDecisions) => {
-            const merged = mergeDecisionUpdates(prevDecisions, data.decisions!);
+            const merged = mergeDecisionUpdates(
+              prevDecisions,
+              data.decisions ?? [],
+              hasOptimisticUpdate
+            );
 
             if (merged !== prevDecisions && onDecisionsUpdate) {
               onDecisionsUpdate(merged);
@@ -198,17 +214,27 @@ export const useDecisionsSse = (
           }
 
           setIsLoading(false);
-        } else if (
-          data.type === StreamEventType.PENDING &&
-          data.count !== undefined
-        ) {
-          const hasOptimisticUpdates = getOptimisticUpdateCount
-            ? getOptimisticUpdateCount() > 0
-            : false;
+        } else if (data.type === StreamEventType.PENDING) {
+          const serverCount = data.count ?? 0;
 
-          if (!hasOptimisticUpdates) {
-            setPendingCount(data.count);
-          }
+          setDecisions((currentDecisions) => {
+            const hasAnyOptimisticUpdates = currentDecisions.some((decision) =>
+              hasOptimisticUpdate?.(decision.id)
+            );
+
+            if (hasAnyOptimisticUpdates) {
+              const localPendingCount = currentDecisions.filter(
+                (decision) =>
+                  decision.status === ProcessingStatus.PROCESSING ||
+                  decision.status === ProcessingStatus.PENDING
+              ).length;
+              setPendingCount(localPendingCount);
+              return currentDecisions;
+            }
+
+            setPendingCount(serverCount);
+            return currentDecisions;
+          });
         } else if (data.type === StreamEventType.ERROR) {
           setError(data.message ?? 'An error occurred');
         }
@@ -216,7 +242,7 @@ export const useDecisionsSse = (
         console.error('Error parsing SSE message:', error_);
       }
     },
-    [clearConfirmedUpdates, onDecisionsUpdate, getOptimisticUpdateCount]
+    [clearConfirmedUpdates, onDecisionsUpdate, hasOptimisticUpdate]
   );
 
   const handleSSEOpen = useCallback(() => {

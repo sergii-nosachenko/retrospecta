@@ -31,6 +31,15 @@ export async function analyzeDecision(
       };
     }
 
+    // Prevent re-analyzing if already processing
+    if (decision.status === ProcessingStatus.PROCESSING) {
+      console.warn('Decision is already being analyzed:', decisionId);
+      return {
+        success: false,
+        error: 'Analysis already in progress',
+      };
+    }
+
     await prisma.decision.update({
       where: { id: decisionId },
       data: { status: ProcessingStatus.PROCESSING },
