@@ -1,6 +1,8 @@
 'use client';
 
-import { LuLogOut, LuMoon, LuSun } from 'react-icons/lu';
+import { LuChartBar, LuLogOut, LuMoon, LuSun } from 'react-icons/lu';
+
+import Link from 'next/link';
 
 import { Avatar, Group, IconButton, Separator, Text } from '@chakra-ui/react';
 
@@ -98,6 +100,24 @@ export function UserMenu({ user, onSignOut }: UserMenuProps) {
         </MenuItem>
 
         <Separator my={1} />
+
+        {/* Dashboard Link */}
+        <MenuItem
+          value="dashboard"
+          asChild
+          css={{
+            py: 2,
+            px: 3,
+            cursor: 'pointer',
+          }}
+        >
+          <Link href="/decisions/dashboard">
+            <Group gap={3} alignItems="center">
+              <LuChartBar />
+              <Text fontSize="sm">Dashboard</Text>
+            </Group>
+          </Link>
+        </MenuItem>
 
         {/* Theme Toggle */}
         <MenuItem

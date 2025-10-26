@@ -326,3 +326,147 @@ export async function deleteDecision(
     };
   }
 }
+
+/**
+ * Dashboard analytics data types
+ */
+export interface DashboardAnalytics {
+  totalDecisions: number;
+  completedAnalyses: number;
+  pendingAnalyses: number;
+  failedAnalyses: number;
+  categoryDistribution: Array<{ name: string; value: number }>;
+  biasDistribution: Array<{ name: string; count: number }>;
+  statusDistribution: Array<{ name: string; value: number }>;
+  recentDecisions: number; // Last 7 days
+}
+
+/**
+ * Gets dashboard analytics for the authenticated user
+ * Aggregates decision data for visualization
+ *
+ * @returns Action result with analytics data or error
+ */
+export async function getDashboardAnalytics(): Promise<
+  ActionResult<DashboardAnalytics>
+> {
+  try {
+    // Get authenticated user
+    const supabase = await createClient();
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
+
+    if (authError || !user) {
+      return {
+        success: false,
+        error: 'You must be logged in to view analytics',
+      };
+    }
+
+    // Get all user decisions
+    const decisions = await prisma.decision.findMany({
+      where: {
+        userId: user.id,
+      },
+      select: {
+        status: true,
+        category: true,
+        biases: true,
+        createdAt: true,
+      },
+    });
+
+    // Calculate total counts
+    const totalDecisions = decisions.length;
+    const completedAnalyses = decisions.filter(
+      (d) => d.status === 'COMPLETED'
+    ).length;
+    const pendingAnalyses = decisions.filter(
+      (d) => d.status === 'PENDING' || d.status === 'PROCESSING'
+    ).length;
+    const failedAnalyses = decisions.filter(
+      (d) => d.status === 'FAILED'
+    ).length;
+
+    // Calculate recent decisions (last 7 days)
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+    const recentDecisions = decisions.filter(
+      (d) => d.createdAt >= sevenDaysAgo
+    ).length;
+
+    // Category distribution (only completed analyses)
+    const categoryMap = new Map<string, number>();
+    decisions.forEach((d) => {
+      if (d.category && d.status === 'COMPLETED') {
+        const count = categoryMap.get(d.category) || 0;
+        categoryMap.set(d.category, count + 1);
+      }
+    });
+
+    const categoryDistribution = Array.from(categoryMap.entries()).map(
+      ([name, value]) => ({
+        name: name
+          .split('_')
+          .map((word) => word.charAt(0) + word.slice(1).toLowerCase())
+          .join(' '),
+        value,
+      })
+    );
+
+    // Bias distribution (flatten all biases and count)
+    const biasMap = new Map<string, number>();
+    decisions.forEach((d) => {
+      if (d.biases && d.biases.length > 0 && d.status === 'COMPLETED') {
+        d.biases.forEach((bias) => {
+          const count = biasMap.get(bias) || 0;
+          biasMap.set(bias, count + 1);
+        });
+      }
+    });
+
+    // Get top 10 biases
+    const biasDistribution = Array.from(biasMap.entries())
+      .map(([name, count]) => ({ name, count }))
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 10);
+
+    // Status distribution
+    const statusMap = new Map<string, number>();
+    decisions.forEach((d) => {
+      const count = statusMap.get(d.status) || 0;
+      statusMap.set(d.status, count + 1);
+    });
+
+    const statusDistribution = Array.from(statusMap.entries()).map(
+      ([name, value]) => ({
+        name: name.charAt(0) + name.slice(1).toLowerCase(),
+        value,
+      })
+    );
+
+    const analytics: DashboardAnalytics = {
+      totalDecisions,
+      completedAnalyses,
+      pendingAnalyses,
+      failedAnalyses,
+      categoryDistribution,
+      biasDistribution,
+      statusDistribution,
+      recentDecisions,
+    };
+
+    return {
+      success: true,
+      data: analytics,
+    };
+  } catch (error) {
+    console.error('Error fetching dashboard analytics:', error);
+    return {
+      success: false,
+      error: 'Failed to fetch analytics. Please try again.',
+    };
+  }
+}
