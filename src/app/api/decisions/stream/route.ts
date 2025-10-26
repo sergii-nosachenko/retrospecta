@@ -2,7 +2,7 @@ import { Prisma } from '@prisma/client';
 
 import { NextRequest } from 'next/server';
 
-import { DecisionCategory } from '@/components/decisions/CategoryFilter';
+import { DecisionType } from '@/components/decisions/DecisionTypeFilter';
 import { prisma } from '@/lib/prisma';
 import { createClient } from '@/lib/supabase/server';
 
@@ -32,18 +32,37 @@ export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const sortBy = searchParams.get('sortBy') || 'createdAt';
   const sortOrder = searchParams.get('sortOrder') || 'desc';
-  const categories = searchParams.getAll('categories');
+  // Support both old 'categories' and new 'decisionTypes' parameter names
+  const decisionTypes =
+    searchParams.getAll('decisionTypes').length > 0
+      ? searchParams.getAll('decisionTypes')
+      : searchParams.getAll('categories');
   const biases = searchParams.getAll('biases');
   const dateFrom = searchParams.get('dateFrom');
   const dateTo = searchParams.get('dateTo');
 
   // Validate sortBy parameter
-  const validSortFields = ['createdAt', 'updatedAt', 'status', 'category'];
-  const sortField = validSortFields.includes(sortBy) ? sortBy : 'createdAt';
+  // Support both 'category' (old) and 'decisionType' (new) for backwards compatibility
+  const validSortFields = [
+    'createdAt',
+    'updatedAt',
+    'status',
+    'decisionType',
+    'category',
+  ] as const;
+  type ValidSortField = (typeof validSortFields)[number];
+  let sortField: 'createdAt' | 'updatedAt' | 'status' | 'decisionType' =
+    'createdAt';
+
+  if (validSortFields.includes(sortBy as ValidSortField)) {
+    // Map old 'category' to new 'decisionType'
+    sortField =
+      sortBy === 'category' ? 'decisionType' : (sortBy as typeof sortField);
+  }
 
   // Validate sortOrder parameter
-  const validSortOrders = ['asc', 'desc'];
-  const order = validSortOrders.includes(sortOrder) ? sortOrder : 'desc';
+  const order =
+    sortOrder === 'asc' || sortOrder === 'desc' ? sortOrder : ('desc' as const);
 
   // Create a readable stream for SSE
   const encoder = new TextEncoder();
@@ -85,10 +104,10 @@ export async function GET(request: NextRequest) {
             userId,
           };
 
-          // Add category filter
-          if (categories.length > 0) {
-            whereClause.category = {
-              in: categories as DecisionCategory[],
+          // Add decision type filter
+          if (decisionTypes.length > 0) {
+            whereClause.decisionType = {
+              in: decisionTypes as DecisionType[],
             };
           }
 
@@ -118,14 +137,14 @@ export async function GET(request: NextRequest) {
             where: whereClause,
             orderBy: {
               [sortField]: order,
-            },
+            } as Prisma.DecisionOrderByWithRelationInput,
             select: {
               id: true,
               situation: true,
               decision: true,
               reasoning: true,
               status: true,
-              category: true,
+              decisionType: true,
               biases: true,
               alternatives: true,
               insights: true,
