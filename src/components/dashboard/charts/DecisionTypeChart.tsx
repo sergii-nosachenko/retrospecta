@@ -39,11 +39,21 @@ export const DecisionTypeChart = memo<DecisionTypeChartProps>(({ data }) => {
 
   const chartData = useMemo(
     () =>
-      data.map((item, index) => ({
-        ...item,
-        color: DECISION_TYPE_COLORS[index % DECISION_TYPE_COLORS.length],
-      })),
-    [data]
+      data.map((item, index) => {
+        // Convert formatted name back to enum key or use original
+        // "Risk Taking" -> "RISK_TAKING", "Emotional" -> "EMOTIONAL"
+        const enumKey = item.name.replaceAll(' ', '_').toUpperCase();
+        const translatedName =
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          t(`decisions.decisionTypes.${enumKey}` as any) || item.name;
+
+        return {
+          ...item,
+          name: translatedName,
+          color: DECISION_TYPE_COLORS[index % DECISION_TYPE_COLORS.length],
+        };
+      }),
+    [data, t]
   );
 
   const chart = useChart({

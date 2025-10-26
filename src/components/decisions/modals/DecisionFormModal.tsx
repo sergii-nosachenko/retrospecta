@@ -3,16 +3,7 @@
 import { Button, Text, VStack } from '@chakra-ui/react';
 import { useCallback, useMemo, useState } from 'react';
 
-import {
-  DialogBody,
-  DialogCloseTrigger,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogRoot,
-  DialogTitle,
-  DialogTrigger,
-} from '@/components/ui/dialog';
+import { BaseModal } from '@/components/common';
 import { StepsItem, StepsList, StepsRoot } from '@/components/ui/steps';
 import { useDecisionForm } from '@/hooks/useDecisionForm';
 import { useMultiStepForm } from '@/hooks/useMultiStepForm';
@@ -161,101 +152,79 @@ export const DecisionFormModal = ({
   );
 
   return (
-    <DialogRoot
+    <BaseModal
       open={open}
-      onOpenChange={handleOpenChange}
-      size={{ base: 'full', sm: 'lg', md: 'xl' }}
-      scrollBehavior="inside"
-      placement="center"
-    >
-      <DialogTrigger asChild>
-        {trigger ?? (
+      onOpenChange={(isOpen) => handleOpenChange({ open: isOpen })}
+      title={t('decisions.form.title')}
+      paddingVariant="comfortable"
+      trigger={
+        trigger ?? (
           <Button colorPalette="blue" size="sm" px={4} py={2}>
             {t('decisions.form.actions.newDecision')}
           </Button>
-        )}
-      </DialogTrigger>
-
-      <DialogContent
-        h={{ base: 'auto', smDown: 'fit-content' }}
-        maxH={{ base: '90dvh', smDown: '100dvh' }}
-        minH={{ base: 'auto', smDown: '100dvh' }}
-      >
-        <DialogHeader py={{ base: 4, md: 6 }} px={{ base: 4, md: 6 }}>
-          <DialogTitle fontSize="2xl" fontWeight="bold">
-            {t('decisions.form.title')}
-          </DialogTitle>
-          <DialogCloseTrigger />
-        </DialogHeader>
-
-        <form onSubmit={handleFormSubmit} style={{ display: 'contents' }}>
-          <DialogBody py={{ base: 4, md: 6 }} px={{ base: 4, md: 6 }}>
-            <VStack gap={6} align="stretch">
-              <Text
-                color="gray.600"
-                _dark={{ color: 'gray.400' }}
-                fontSize="md"
-                lineHeight="1.6"
-              >
-                {t('decisions.form.description')}
-              </Text>
-
-              <StepsRoot
-                step={currentStep}
-                count={steps.length}
-                orientation="horizontal"
-                size="sm"
-              >
-                <StepsList mb={6}>
-                  {steps.map((step, index) => (
-                    <StepsItem
-                      key={index}
-                      index={index}
-                      title={step.title}
-                      description={step.description}
-                    />
-                  ))}
-                </StepsList>
-
-                <DecisionFormStep1
-                  value={formData.situation}
-                  onChange={createChangeHandler('situation')}
-                  disabled={isSubmitting}
-                />
-
-                <DecisionFormStep2
-                  value={formData.decision}
-                  onChange={createChangeHandler('decision')}
-                  disabled={isSubmitting}
-                />
-
-                <DecisionFormStep3
-                  value={formData.reasoning}
-                  onChange={createChangeHandler('reasoning')}
-                  disabled={isSubmitting}
-                />
-              </StepsRoot>
-            </VStack>
-          </DialogBody>
-
-          <DialogFooter
-            py={{ base: 4, md: 6 }}
-            px={{ base: 4, md: 6 }}
-            pb={{ base: 'max(1rem, env(safe-area-inset-bottom))', md: 6 }}
+        )
+      }
+      footer={
+        <FormNavigation
+          isFirstStep={isFirstStep}
+          isLastStep={isLastStep}
+          isSubmitting={isSubmitting}
+          onPrevious={previous}
+          onNext={handleNext}
+          onCancel={handleCancel}
+          onSubmit={handleSubmit}
+        />
+      }
+    >
+      <form onSubmit={handleFormSubmit} style={{ display: 'contents' }}>
+        <VStack gap={6} align="stretch">
+          <Text
+            color="gray.600"
+            _dark={{ color: 'gray.400' }}
+            fontSize="md"
+            lineHeight="1.6"
           >
-            <FormNavigation
-              isFirstStep={isFirstStep}
-              isLastStep={isLastStep}
-              isSubmitting={isSubmitting}
-              onPrevious={previous}
-              onNext={handleNext}
-              onCancel={handleCancel}
-              onSubmit={handleSubmit}
+            {t('decisions.form.description')}
+          </Text>
+
+          <StepsRoot
+            step={currentStep}
+            count={steps.length}
+            orientation="horizontal"
+            size="sm"
+          >
+            <StepsList mb={6}>
+              {steps.map((step, index) => (
+                <StepsItem
+                  key={index}
+                  index={index}
+                  title={step.title}
+                  description={step.description}
+                />
+              ))}
+            </StepsList>
+
+            <DecisionFormStep1
+              value={formData.situation}
+              onChange={createChangeHandler('situation')}
+              disabled={isSubmitting}
             />
-          </DialogFooter>
-        </form>
-      </DialogContent>
-    </DialogRoot>
+
+            <DecisionFormStep2
+              value={formData.decision}
+              onChange={createChangeHandler('decision')}
+              disabled={isSubmitting}
+            />
+
+            <DecisionFormStep3
+              value={formData.reasoning}
+              onChange={createChangeHandler('reasoning')}
+              disabled={isSubmitting}
+            />
+          </StepsRoot>
+        </VStack>
+      </form>
+    </BaseModal>
   );
 };
 

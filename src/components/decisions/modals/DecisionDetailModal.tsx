@@ -1,5 +1,6 @@
 'use client';
 
+import { BaseModal } from '@/components/common';
 import { DecisionDetailSkeleton } from '@/components/common/skeletons';
 import {
   DecisionAnalysisResults,
@@ -9,15 +10,6 @@ import {
   DecisionErrorState,
   DecisionProcessingState,
 } from '@/components/decisions/detail';
-import {
-  DialogBody,
-  DialogCloseTrigger,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogRoot,
-  DialogTitle,
-} from '@/components/ui/dialog';
 import { useDecisionActions } from '@/hooks/useDecisionActions';
 import { useDecisionPolling } from '@/hooks/useDecisionPolling';
 import { ProcessingStatus } from '@/types/enums';
@@ -69,67 +61,46 @@ export const DecisionDetailModal = ({
   };
 
   return (
-    <DialogRoot
+    <BaseModal
       open={open}
-      onOpenChange={(e) => onOpenChange(e.open)}
-      size={{ base: 'full', sm: 'lg', md: 'xl' }}
-      scrollBehavior="inside"
-      placement="center"
+      onOpenChange={onOpenChange}
+      title={<DecisionDetailHeader decision={decision} />}
+      paddingVariant="compact"
+      footer={
+        <DecisionDetailFooter
+          decision={decision}
+          onDelete={handleDeleteWithClose}
+          onReanalyze={handleReanalyze}
+          isDeleting={isDeleting}
+          isReanalyzing={isReanalyzing}
+        />
+      }
     >
-      <DialogContent
-        h={{ base: 'auto', smDown: 'fit-content' }}
-        maxH={{ base: '90dvh', smDown: '100dvh' }}
-        minH={{ base: 'auto', smDown: '100dvh' }}
-      >
-        <DialogHeader py={{ base: 3, md: 4 }} px={{ base: 4, md: 6 }}>
-          <DialogTitle>
-            <DecisionDetailHeader decision={decision} />
-          </DialogTitle>
-          <DialogCloseTrigger />
-        </DialogHeader>
+      {isLoading ? (
+        <DecisionDetailSkeleton />
+      ) : decision ? (
+        <>
+          <DecisionDetailBody decision={decision} />
 
-        <DialogBody py={{ base: 3, md: 4 }} px={{ base: 4, md: 6 }}>
-          {isLoading ? (
-            <DecisionDetailSkeleton />
-          ) : decision ? (
-            <>
-              <DecisionDetailBody decision={decision} />
+          {decision.status === ProcessingStatus.COMPLETED && (
+            <DecisionAnalysisResults decision={decision} />
+          )}
 
-              {decision.status === ProcessingStatus.COMPLETED && (
-                <DecisionAnalysisResults decision={decision} />
-              )}
+          {(decision.status === ProcessingStatus.PENDING ||
+            decision.status === ProcessingStatus.PROCESSING) && (
+            <DecisionProcessingState />
+          )}
 
-              {(decision.status === ProcessingStatus.PENDING ||
-                decision.status === ProcessingStatus.PROCESSING) && (
-                <DecisionProcessingState />
-              )}
-
-              {decision.status === ProcessingStatus.FAILED && (
-                <DecisionErrorState
-                  error={decision.errorMessage}
-                  onRetry={handleReanalyze}
-                  isRetrying={isReanalyzing}
-                />
-              )}
-            </>
-          ) : null}
-        </DialogBody>
-
-        <DialogFooter
-          py={{ base: 3, md: 4 }}
-          px={{ base: 4, md: 6 }}
-          pb={{ base: 'max(1rem, env(safe-area-inset-bottom))', md: 4 }}
-        >
-          <DecisionDetailFooter
-            decision={decision}
-            onDelete={handleDeleteWithClose}
-            onReanalyze={handleReanalyze}
-            isDeleting={isDeleting}
-            isReanalyzing={isReanalyzing}
-          />
-        </DialogFooter>
-      </DialogContent>
-    </DialogRoot>
+          {decision.status === ProcessingStatus.FAILED && (
+            <DecisionErrorState
+              error={decision.errorMessage}
+              onRetry={handleReanalyze}
+              isRetrying={isReanalyzing}
+            />
+          )}
+        </>
+      ) : null}
+    </BaseModal>
   );
 };
 

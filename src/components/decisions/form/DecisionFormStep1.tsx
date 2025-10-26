@@ -1,8 +1,8 @@
 'use client';
 
-import { Textarea, VStack } from '@chakra-ui/react';
+import { VStack } from '@chakra-ui/react';
 
-import { Field } from '@/components/ui/field';
+import { FormTextareaField } from '@/components/common';
 import { StepsContent } from '@/components/ui/steps';
 import { useTranslations } from '@/translations';
 
@@ -32,24 +32,17 @@ export const DecisionFormStep1 = ({
   return (
     <StepsContent index={0}>
       <VStack gap={4} align="stretch">
-        <Field
+        <FormTextareaField
           label={t('decisions.form.fields.situation.label')}
-          required
+          value={value}
+          onChange={onChange}
+          placeholder={t('decisions.form.fields.situation.example')}
           helperText={t('decisions.form.fields.situation.placeholder')}
-        >
-          <Textarea
-            placeholder={t('decisions.form.fields.situation.example')}
-            value={value}
-            onChange={onChange}
-            rows={6}
-            minH="150px"
-            maxH="150px"
-            disabled={disabled}
-            maxLength={5000}
-            p={3}
-            autoFocus
-          />
-        </Field>
+          required
+          disabled={disabled}
+          maxLength={5000}
+          autoFocus
+        />
       </VStack>
     </StepsContent>
   );

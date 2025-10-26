@@ -7,6 +7,7 @@ import {
   Bar,
   BarChart,
   CartesianGrid,
+  Cell,
   ResponsiveContainer,
   Tooltip,
   XAxis,
@@ -21,16 +22,36 @@ interface BiasChartProps {
   data: { name: string; count: number }[];
 }
 
-const CHART_SERIES = [{ name: 'count' as const, color: 'teal.solid' }];
 const CHART_MARGIN = { top: 5, right: 5, left: -20, bottom: 80 } as const;
 const BAR_RADIUS: [number, number, number, number] = [8, 8, 0, 0];
+
+const BIAS_COLORS = [
+  'teal.solid',
+  'blue.solid',
+  'purple.solid',
+  'orange.solid',
+  'pink.solid',
+  'green.solid',
+  'red.solid',
+  'cyan.solid',
+  'yellow.solid',
+  'violet.solid',
+] as const;
 
 export const BiasChart = memo<BiasChartProps>(({ data }) => {
   const { t } = useTranslations();
 
+  // Translate bias names from enum keys to human-readable labels and assign colors
+  const translatedData = data.map((item, index) => ({
+    ...item,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    name: t(`decisions.biases.${item.name}` as any) || item.name,
+    fill: BIAS_COLORS[index % BIAS_COLORS.length],
+  }));
+
   const chart = useChart({
-    data,
-    series: CHART_SERIES,
+    data: translatedData,
+    series: [{ name: 'count' as const }],
   });
 
   return (
@@ -62,14 +83,11 @@ export const BiasChart = memo<BiasChartProps>(({ data }) => {
             />
             <YAxis tick={{ fontSize: 10 }} width={40} />
             <Tooltip content={<CustomBarTooltip />} />
-            {chart.series.map((item) => (
-              <Bar
-                key={item.name}
-                dataKey={chart.key(item.name)}
-                fill={chart.color(item.color)}
-                radius={BAR_RADIUS}
-              />
-            ))}
+            <Bar dataKey={chart.key('count')} radius={BAR_RADIUS}>
+              {chart.data.map((entry) => (
+                <Cell key={entry.name} fill={chart.color(entry.fill)} />
+              ))}
+            </Bar>
           </BarChart>
         </ResponsiveContainer>
       </Box>

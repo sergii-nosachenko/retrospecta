@@ -1,30 +1,16 @@
 'use client';
 
-import {
-  Box,
-  Button,
-  Card,
-  IconButton,
-  Stack,
-  Text,
-  VStack,
-} from '@chakra-ui/react';
-import { memo, useCallback, useState } from 'react';
-import { HiOutlineDotsVertical } from 'react-icons/hi';
+import { Box, Button, Card, Stack, Text, VStack } from '@chakra-ui/react';
+import { memo, useCallback, useMemo, useState } from 'react';
 import { LuBrainCircuit, LuRefreshCw, LuTrash2 } from 'react-icons/lu';
 
+import { ActionMenu } from '@/components/common';
 import {
   BiasesBadgeList,
   DecisionTypeBadge,
   StatusBadge,
 } from '@/components/decisions/shared';
 import { EmptyState } from '@/components/ui/empty-state';
-import {
-  MenuContent,
-  MenuItem,
-  MenuRoot,
-  MenuTrigger,
-} from '@/components/ui/menu';
 import { useDecisions } from '@/contexts/DecisionsContext';
 import {
   deleteDecisionAction,
@@ -90,6 +76,27 @@ const DecisionCard = memo(
       [decision.id, onReanalyze, onDelete]
     );
 
+    const menuItems = useMemo(
+      () => [
+        {
+          value: DecisionActionType.REANALYZE,
+          label: t('decisions.list.actions.reAnalyze'),
+          icon: <LuRefreshCw />,
+          onClick: (event: React.MouseEvent) =>
+            handleMenuAction(DecisionActionType.REANALYZE, event),
+        },
+        {
+          value: DecisionActionType.DELETE,
+          label: t('decisions.list.actions.delete'),
+          icon: <LuTrash2 />,
+          onClick: (event: React.MouseEvent) =>
+            handleMenuAction(DecisionActionType.DELETE, event),
+          destructive: true,
+        },
+      ],
+      [t, handleMenuAction]
+    );
+
     return (
       <Card.Root
         _hover={{ shadow: 'md', cursor: 'pointer' }}
@@ -119,48 +126,7 @@ const DecisionCard = memo(
                 </Stack>
 
                 {/* Menu on the right */}
-                <MenuRoot positioning={{ placement: 'bottom-end' }}>
-                  <MenuTrigger asChild>
-                    <IconButton
-                      variant="ghost"
-                      size="sm"
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      <HiOutlineDotsVertical />
-                    </IconButton>
-                  </MenuTrigger>
-                  <MenuContent minW="150px">
-                    <MenuItem
-                      value={DecisionActionType.REANALYZE}
-                      onClick={(event) =>
-                        handleMenuAction(DecisionActionType.REANALYZE, event)
-                      }
-                      gap={2}
-                      px={3}
-                      py={2}
-                    >
-                      <LuRefreshCw />
-                      {t('decisions.list.actions.reAnalyze')}
-                    </MenuItem>
-                    <MenuItem
-                      value={DecisionActionType.DELETE}
-                      color="red.500"
-                      _dark={{ color: 'red.400' }}
-                      onClick={(e) =>
-                        handleMenuAction(
-                          DecisionActionType.DELETE,
-                          e as unknown as React.MouseEvent
-                        )
-                      }
-                      gap={2}
-                      px={3}
-                      py={2}
-                    >
-                      <LuTrash2 />
-                      {t('decisions.list.actions.delete')}
-                    </MenuItem>
-                  </MenuContent>
-                </MenuRoot>
+                <ActionMenu items={menuItems} />
               </Stack>
 
               {/* Decision Type */}
@@ -196,48 +162,7 @@ const DecisionCard = memo(
                     day: 'numeric',
                   })}
                 </Text>
-                <MenuRoot positioning={{ placement: 'bottom-end' }}>
-                  <MenuTrigger asChild>
-                    <IconButton
-                      variant="ghost"
-                      size="sm"
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      <HiOutlineDotsVertical />
-                    </IconButton>
-                  </MenuTrigger>
-                  <MenuContent minW="150px">
-                    <MenuItem
-                      value={DecisionActionType.REANALYZE}
-                      onClick={(event) =>
-                        handleMenuAction(DecisionActionType.REANALYZE, event)
-                      }
-                      gap={2}
-                      px={3}
-                      py={2}
-                    >
-                      <LuRefreshCw />
-                      {t('decisions.list.actions.reAnalyze')}
-                    </MenuItem>
-                    <MenuItem
-                      value={DecisionActionType.DELETE}
-                      color="red.500"
-                      _dark={{ color: 'red.400' }}
-                      onClick={(e) =>
-                        handleMenuAction(
-                          DecisionActionType.DELETE,
-                          e as unknown as React.MouseEvent
-                        )
-                      }
-                      gap={2}
-                      px={3}
-                      py={2}
-                    >
-                      <LuTrash2 />
-                      {t('decisions.list.actions.delete')}
-                    </MenuItem>
-                  </MenuContent>
-                </MenuRoot>
+                <ActionMenu items={menuItems} />
               </Stack>
             </Stack>
 
