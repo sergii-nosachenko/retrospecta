@@ -163,19 +163,27 @@ export const DecisionsPageContent = () => {
     []
   );
 
-  const handleDecisionCreated = useCallback(() => {
-    // Update total count optimistically and reset to page 1
-    optimisticCreate();
+  const handleDecisionCreated = useCallback(
+    (decisionData: {
+      id: string;
+      situation: string;
+      decision: string;
+      reasoning: string | null;
+    }) => {
+      // Create optimistic decision card immediately
+      optimisticCreate(decisionData);
 
-    // Force immediate SSE refresh to fetch the new decision
-    refresh();
+      // Force immediate SSE refresh to fetch the real decision
+      refresh();
 
-    // Scroll to top of the page when a new decision is created
-    window.scrollTo({
-      top: 0,
-      behavior: 'smooth',
-    });
-  }, [optimisticCreate, refresh]);
+      // Scroll to top of the page when a new decision is created
+      window.scrollTo({
+        top: 0,
+        behavior: 'smooth',
+      });
+    },
+    [optimisticCreate, refresh]
+  );
 
   const activeFiltersCount = useMemo(() => {
     let count = 0;
@@ -226,8 +234,10 @@ export const DecisionsPageContent = () => {
 
       <Box py={6} pb={{ base: 16, md: 8 }}>
         {error && <ErrorState message={error} onRetry={refresh} />}
-        {!error && isLoading && <DecisionListSkeleton />}
-        {!error && !isLoading && (
+        {!error && isLoading && decisions.length === 0 && (
+          <DecisionListSkeleton />
+        )}
+        {!error && (!isLoading || decisions.length > 0) && (
           <>
             <DecisionList decisions={decisions} />
 

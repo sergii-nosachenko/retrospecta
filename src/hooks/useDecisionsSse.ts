@@ -33,6 +33,7 @@ const hasDecisionChanged = (
     oldDecision.analysisAttempts !== newDecision.analysisAttempts ||
     oldDecision.errorMessage !== newDecision.errorMessage ||
     oldDecision.isNew !== newDecision.isNew ||
+    oldDecision.isOptimistic !== newDecision.isOptimistic ||
     oldDecision.biases.length !== newDecision.biases.length ||
     oldDecision.biases.some((bias, i) => bias !== newDecision.biases[i]) ||
     new Date(oldDecision.updatedAt).getTime() !==
@@ -96,6 +97,22 @@ const mergeDecisionUpdates = (
 
   return newDecisions.map((newDecision) => {
     const oldDecision = prevDecisionsMap.get(newDecision.id);
+
+    // If the old decision was optimistic, preserve the optimistic flag
+    // until the decision completes processing (reaches COMPLETED or FAILED status)
+    if (oldDecision?.isOptimistic) {
+      const isStillProcessing =
+        newDecision.status === ProcessingStatus.PENDING ||
+        newDecision.status === ProcessingStatus.PROCESSING;
+
+      if (isStillProcessing) {
+        // Keep showing optimistic state (with spinner) while processing
+        return { ...newDecision, isOptimistic: true };
+      }
+
+      // Analysis complete, remove optimistic flag and show final state
+      return newDecision;
+    }
 
     if (hasOptimisticUpdate?.(newDecision.id)) {
       return oldDecision ?? newDecision;
