@@ -21,4 +21,5 @@ export interface Decision {
   isNew: boolean;
   createdAt: Date;
   updatedAt: Date;
+  isOptimistic?: boolean;
 }

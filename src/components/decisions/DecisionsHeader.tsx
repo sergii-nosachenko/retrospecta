@@ -15,7 +15,12 @@ interface DecisionsHeaderProps {
     avatarUrl: string | null;
   } | null;
   onSignOut: () => void;
-  onDecisionCreated?: () => void;
+  onDecisionCreated?: (decisionData: {
+    id: string;
+    situation: string;
+    decision: string;
+    reasoning: string | null;
+  }) => void;
 }
 
 /**

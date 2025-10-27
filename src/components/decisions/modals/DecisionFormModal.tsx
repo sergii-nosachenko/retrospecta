@@ -16,7 +16,12 @@ import { FormNavigation } from '../form/FormNavigation';
 
 interface DecisionFormModalProps {
   trigger?: React.ReactNode;
-  onSuccess?: () => void;
+  onSuccess?: (decisionData: {
+    id: string;
+    situation: string;
+    decision: string;
+    reasoning: string | null;
+  }) => void;
 }
 
 /**
@@ -31,7 +36,7 @@ interface DecisionFormModalProps {
  * automatically in the background via SSE.
  *
  * @param trigger - Optional custom trigger element (defaults to "New Decision" button)
- * @param onSuccess - Optional callback invoked after successful submission
+ * @param onSuccess - Optional callback invoked after successful submission with decision data
  */
 export const DecisionFormModal = ({
   trigger,
@@ -90,12 +95,12 @@ export const DecisionFormModal = ({
   const handleSubmit = useCallback(async () => {
     const result = await submit();
 
-    if (result.success) {
+    if (result.success && result.data) {
       setOpen(false);
       resetAll();
 
       if (onSuccess) {
-        onSuccess();
+        onSuccess(result.data);
       }
     }
   }, [submit, resetAll, onSuccess]);
@@ -111,13 +116,13 @@ export const DecisionFormModal = ({
     [resetAll]
   );
 
-  const handleCancel = () => {
+  const handleCancel = useCallback(() => {
     setOpen(false);
-  };
+  }, []);
 
-  const handleFormSubmit = (e: React.FormEvent) => {
+  const handleFormSubmit = useCallback((e: React.FormEvent) => {
     e.preventDefault();
-  };
+  }, []);
 
   const handleSituationChange = useCallback(
     (e: React.ChangeEvent<HTMLTextAreaElement>) => {

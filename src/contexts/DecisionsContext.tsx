@@ -32,7 +32,12 @@ interface DecisionsContextValue {
   ) => void;
   optimisticDelete: (decisionId: string) => void;
   optimisticMarkAsRead: (decisionId: string) => void;
-  optimisticCreate: () => void;
+  optimisticCreate: (decisionData?: {
+    id: string;
+    situation: string;
+    decision: string;
+    reasoning: string | null;
+  }) => void;
   getDecision: (decisionId: string) => Decision | undefined;
 }
 
@@ -85,6 +90,7 @@ export const DecisionsProvider = ({ children }: DecisionsProviderProps) => {
     optimisticDelete: optimisticDeleteFn,
     optimisticMarkAsRead: optimisticMarkAsReadFn,
     optimisticCreate: optimisticCreateFn,
+    optimisticCreateDecision: optimisticCreateDecisionFn,
     clearConfirmedUpdates,
     hasOptimisticUpdate,
   } = useOptimisticUpdates();
@@ -162,13 +168,40 @@ export const DecisionsProvider = ({ children }: DecisionsProviderProps) => {
     [optimisticMarkAsReadFn, decisions, setDecisions]
   );
 
-  const optimisticCreate = useCallback(() => {
-    optimisticCreateFn(setTotalCount);
+  const optimisticCreate = useCallback(
+    (decisionData?: {
+      id: string;
+      situation: string;
+      decision: string;
+      reasoning: string | null;
+    }) => {
+      if (decisionData) {
+        optimisticCreateDecisionFn(
+          decisionData,
+          decisions,
+          setDecisions,
+          setPendingCount,
+          setTotalCount
+        );
+      } else {
+        optimisticCreateFn(setTotalCount);
+      }
 
-    if (filters.page !== 1) {
-      setFilters({ page: 1 });
-    }
-  }, [optimisticCreateFn, setTotalCount, filters.page, setFilters]);
+      if (filters.page !== 1) {
+        setFilters({ page: 1 });
+      }
+    },
+    [
+      optimisticCreateDecisionFn,
+      optimisticCreateFn,
+      decisions,
+      setDecisions,
+      setPendingCount,
+      setTotalCount,
+      filters.page,
+      setFilters,
+    ]
+  );
 
   const getDecision = useCallback(
     (decisionId: string) => {

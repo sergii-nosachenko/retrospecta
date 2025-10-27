@@ -12,6 +12,7 @@ import type { Decision } from '@/types/decision';
  * manages their lifecycle.
  *
  * Features:
+ * - Optimistic decision creation with placeholder cards
  * - Optimistic status updates
  * - Optimistic delete operations
  * - Tracks which updates are confirmed by server
@@ -21,11 +22,21 @@ import type { Decision } from '@/types/decision';
  *
  * @example
  * const {
+ *   optimisticCreateDecision,
  *   optimisticUpdateStatus,
  *   optimisticDelete,
  *   clearConfirmedUpdate,
  *   hasOptimisticUpdate
  * } = useOptimisticUpdates();
+ *
+ * // Create decision optimistically
+ * optimisticCreateDecision(
+ *   { id, situation, decision, reasoning },
+ *   decisions,
+ *   setDecisions,
+ *   setPendingCount,
+ *   setTotalCount
+ * );
  *
  * // Update status optimistically
  * optimisticUpdateStatus(
@@ -116,7 +127,10 @@ export const useOptimisticUpdates = () => {
   const clearConfirmedUpdate = useCallback((decision: Decision) => {
     const optimistic = optimisticUpdatesRef.current.get(decision.id);
     if (optimistic) {
-      if (optimistic.status === decision.status) {
+      // If decision was optimistic and now is not, it's been confirmed by server
+      if (optimistic.isOptimistic && !decision.isOptimistic) {
+        optimisticUpdatesRef.current.delete(decision.id);
+      } else if (optimistic.status === decision.status) {
         optimisticUpdatesRef.current.delete(decision.id);
       } else if (
         decision.status !== ProcessingStatus.PENDING &&
@@ -168,11 +182,59 @@ export const useOptimisticUpdates = () => {
     []
   );
 
+  const optimisticCreateDecision = useCallback(
+    (
+      decisionData: {
+        id: string;
+        situation: string;
+        decision: string;
+        reasoning: string | null;
+      },
+      decisions: Decision[],
+      setDecisions: React.Dispatch<React.SetStateAction<Decision[]>>,
+      setPendingCount: React.Dispatch<React.SetStateAction<number>>,
+      setTotalCount?: React.Dispatch<React.SetStateAction<number>>
+    ) => {
+      const optimisticDecision: Decision = {
+        id: decisionData.id,
+        situation: decisionData.situation,
+        decision: decisionData.decision,
+        reasoning: decisionData.reasoning,
+        status: ProcessingStatus.PENDING,
+        decisionType: null,
+        biases: [],
+        alternatives: null,
+        insights: null,
+        analysisAttempts: 0,
+        lastAnalyzedAt: null,
+        errorMessage: null,
+        isNew: true,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        isOptimistic: true,
+      };
+
+      optimisticUpdatesRef.current.set(decisionData.id, {
+        isOptimistic: true,
+      });
+
+      setDecisions((prev) => [optimisticDecision, ...prev]);
+
+      setPendingCount((prev) => prev + 1);
+
+      if (setTotalCount) {
+        setTotalCount((prev) => prev + 1);
+      }
+    },
+    []
+  );
+
   return {
     optimisticUpdateStatus,
     optimisticDelete,
     optimisticMarkAsRead,
     optimisticCreate,
+    optimisticCreateDecision,
     clearConfirmedUpdate,
     clearConfirmedUpdates,
     hasOptimisticUpdate,

@@ -18,7 +18,12 @@ interface ValidationResult {
 
 interface SubmitResult {
   success: boolean;
-  data?: { id: string };
+  data?: {
+    id: string;
+    situation: string;
+    decision: string;
+    reasoning: string | null;
+  };
   error?: string;
 }
 
@@ -213,7 +218,15 @@ export const useDecisionForm = (): UseDecisionFormReturn => {
         console.error('Background analysis error:', error);
       });
 
-      return { success: true, data: result.data };
+      return {
+        success: true,
+        data: {
+          id: result.data.id,
+          situation: formData.situation,
+          decision: formData.decision,
+          reasoning: formData.reasoning || null,
+        },
+      };
     } catch (error) {
       console.error('Error submitting decision:', error);
 
