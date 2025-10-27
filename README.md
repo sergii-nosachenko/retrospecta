@@ -17,7 +17,7 @@ Retrospecta enables you to:
 ### Decision Management
 
 - Create decision entries with detailed context
-- Real-time AI analysis using Google Gemini 2.5 Flash
+- Real-time AI analysis using Google Gemini 2.0 Flash
 - Live status updates via Server-Sent Events
 - Re-analyze decisions to get fresh perspectives
 - Delete decisions with optimistic UI updates
@@ -70,7 +70,7 @@ Retrospecta enables you to:
 
 ### AI Integration
 
-- **Google Gemini 2.5 Flash** - Advanced LLM for decision analysis
+- **Google Gemini 2.0 Flash** - Advanced LLM for decision analysis
 - **Vercel AI SDK** - Framework-agnostic AI integration
 - **Structured Output** - Type-safe AI responses with Zod schemas
 

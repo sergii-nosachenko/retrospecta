@@ -2,10 +2,10 @@ import { google } from '@ai-sdk/google';
 
 /**
  * Google Gemini AI client configuration
- * Uses Gemini 2.5 Flash model for fast, cost-effective analysis
+ * Uses Gemini 2.0 Flash model for fast, cost-effective analysis
  * Supports up to 65,536 output tokens for detailed markdown responses
  */
-export const geminiModel = google('gemini-2.5-flash');
+export const geminiModel = google('gemini-2.0-flash-exp');
 
 /**
  * Verify that the Google Gemini API key is configured

@@ -13,6 +13,7 @@ export const DecisionProcessingState = () => {
 
   return (
     <Box
+      mt={6}
       px={6}
       py={5}
       borderWidth="1px"
